@@ -1,25 +1,5 @@
-import type { ValidationResult, ValidationError, ValidationWarning, LinkResult, HealthScore } from "./types";
+import type { ValidationResult, ValidationError, ValidationWarning, LinkResult } from "./types";
 import { parseMarkdown } from "./markdown-parser";
-
-export function calculateHealthScore(result: ValidationResult): HealthScore {
-  const totalLinks = result.linkResults?.length ?? 0;
-  const errorCount = result.errors?.length ?? 0;
-  const warningCount = result.warnings?.length ?? 0;
-  const brokenLinks = result.linkResults?.filter((l) => !l.ok).length ?? 0;
-
-  const score = Math.max(
-    0,
-    100 - errorCount * 20 - warningCount * 5 - brokenLinks * 10
-  );
-
-  return {
-    score,
-    status: score >= 70 ? "pass" : "fail",
-    totalLinks,
-    errorCount,
-    warningCount,
-  };
-}
 
 export function validateLlmsTxt(content: string, linkResults?: LinkResult[]): ValidationResult {
   const errors: ValidationError[] = [];

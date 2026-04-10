@@ -4,6 +4,15 @@ interface MarkdownPreviewProps {
   content: string;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderMarkdown(content: string): string {
   const lines = content.split('\n');
   const result: string[] = [];
@@ -29,7 +38,7 @@ function renderMarkdown(content: string): string {
         result.push('</ul>');
         inList = false;
       }
-      result.push(`<h1 class="text-2xl font-bold text-slate-900 mb-4">${h1Match[1]}</h1>`);
+      result.push(`<h1 class="text-2xl font-bold text-zinc-900 mb-4">${escapeHtml(h1Match[1] ?? "")}</h1>`);
       continue;
     }
 
@@ -40,7 +49,7 @@ function renderMarkdown(content: string): string {
         result.push('</ul>');
         inList = false;
       }
-      result.push(`<h2 class="text-lg font-semibold text-slate-800 mt-6 mb-3">${h2Match[1]}</h2>`);
+      result.push(`<h2 class="text-lg font-semibold text-zinc-800 mt-6 mb-3">${escapeHtml(h2Match[1] ?? "")}</h2>`);
       continue;
     }
 
@@ -53,7 +62,7 @@ function renderMarkdown(content: string): string {
       }
       const level = h3Match[1]?.length ?? 3;
       const sizeClass = level === 3 ? 'text-base' : 'text-sm';
-      result.push(`<h${level} class="${sizeClass} font-medium text-slate-700 mt-4 mb-2">${h3Match[2] ?? trimmed}</h${level}>`);
+      result.push(`<h${level} class="${sizeClass} font-medium text-zinc-700 mt-4 mb-2">${escapeHtml(h3Match[2] ?? "")}</h${level}>`);
       continue;
     }
 
@@ -64,7 +73,7 @@ function renderMarkdown(content: string): string {
         result.push('</ul>');
         inList = false;
       }
-      result.push(`<blockquote class="border-l-4 border-blue-400 pl-4 py-1 my-4 text-slate-600 italic bg-blue-50 rounded-r-lg">${bqMatch[1]}</blockquote>`);
+      result.push(`<blockquote class="border-l-4 border-zinc-300 pl-4 py-1 my-4 text-zinc-600 italic bg-zinc-50 rounded-r-md">${escapeHtml(bqMatch[1] ?? "")}</blockquote>`);
       continue;
     }
 
@@ -79,9 +88,9 @@ function renderMarkdown(content: string): string {
       const url = linkMatch[2] ?? '';
       const description = linkMatch[3] ?? '';
       if (description) {
-        result.push(`<li><a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">${title}</a><span class="text-slate-500 text-sm ml-2">— ${description}</span></li>`);
+        result.push(`<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:underline font-medium">${escapeHtml(title)}</a><span class="text-[var(--color-text-secondary)] text-sm ml-2">— ${escapeHtml(description)}</span></li>`);
       } else {
-        result.push(`<li><a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${title}</a></li>`);
+        result.push(`<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:underline">${escapeHtml(title)}</a></li>`);
       }
       continue;
     }
@@ -98,7 +107,7 @@ function renderMarkdown(content: string): string {
     }
 
     // Paragraph — just text
-    result.push(`<p class="text-slate-700 leading-relaxed my-2">${line}</p>`);
+    result.push(`<p class="text-zinc-700 leading-relaxed my-2">${escapeHtml(trimmed)}</p>`);
   }
 
   if (inList) {
@@ -111,7 +120,7 @@ function renderMarkdown(content: string): string {
 export default function MarkdownPreview({ content }: MarkdownPreviewProps) {
   if (!content) {
     return (
-      <div className="p-6 text-center text-slate-400 text-sm">
+      <div className="p-6 text-center text-[var(--color-text-muted)] text-sm">
         No content available
       </div>
     );

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateLlmsTxt, calculateHealthScore } from "@/lib/validator";
+import { validateLlmsTxt } from "@/lib/validator";
 import { parseMarkdown } from "@/lib/markdown-parser";
-import type { LinkResult, Suggestion } from "@/lib/types";
+import { sniffContentType, detectWafResponse } from "@/lib/content-sniffer";
+import { mapNetworkError } from "@/lib/network-error-mapper";
+import { decodeWithCharset } from "@/lib/charset-decoder";
+import type { LinkResult } from "@/lib/types";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const LINK_TIMEOUT_MS = 5_000;
@@ -68,9 +71,11 @@ export async function POST(request: NextRequest) {
 
   const llmsUrl = `${origin}/llms.txt`;
 
+  let res: Response;
   let content: string;
+  let ctHeader: string | null = null;
   try {
-    const res = await fetchWithTimeout(llmsUrl, FETCH_TIMEOUT_MS);
+    res = await fetchWithTimeout(llmsUrl, FETCH_TIMEOUT_MS);
     if (res.status === 404) {
       return notFound("File not found", "not_found");
     }
@@ -83,11 +88,37 @@ export async function POST(request: NextRequest) {
     if (!res.ok) {
       return notFound(`This website returned an error (HTTP ${res.status})`, "http_error", 200);
     }
-    content = await res.text();
+    ctHeader = res.headers.get("content-type");
+    const arrayBuffer = await res.arrayBuffer();
+    const decodeResult = decodeWithCharset(arrayBuffer, ctHeader);
+
+    if (!decodeResult.success) {
+      return notFound(
+        decodeResult.message ?? "Unsupported encoding",
+        "unsupported_encoding"
+      );
+    }
+    content = decodeResult.text ?? "";
   } catch (e) {
-    const errorCode = e instanceof Error && e.name === "AbortError" ? "timeout" : "connection_error";
-    const msg = e instanceof Error && e.name === "AbortError" ? "Request timeout" : "Cannot access website";
-    return notFound(msg, errorCode);
+    const { errorCode, displayMessage } = mapNetworkError(e);
+    return notFound(displayMessage, errorCode);
+  }
+
+  const sample = content.trimStart().substring(0, 2048);
+  const sniff = sniffContentType(ctHeader, sample);
+
+  if (!sniff.allowed) {
+    return notFound(
+      sniff.message ??
+        "This URL does not return a valid llms.txt file. The Content-Type or file content was not recognized.",
+      "not_llms_txt"
+    );
+  }
+
+  // WAF / Anti-bot detection: check for HTML structure even when MIME type is text/plain
+  const waf = detectWafResponse(content);
+  if (waf.blocked) {
+    return notFound(waf.message, "not_llms_txt");
   }
 
   let parsedData;
@@ -117,40 +148,5 @@ export async function POST(request: NextRequest) {
 
   const validationResult = validateLlmsTxt(content, linkResults);
 
-  const healthScore = calculateHealthScore(validationResult);
-
-  const suggestions: Suggestion[] = [];
-  for (const error of validationResult.errors) {
-    suggestions.push({
-      id: `suggestion-${suggestions.length + 1}`,
-      title: `Fix error: ${error.rule}`,
-      description: error.message,
-      priority: "high",
-    });
-  }
-  for (const warning of validationResult.warnings) {
-    if (warning.rule === "link_validation" && warning.message.includes("HTTP ")) {
-      suggestions.push({
-        id: `suggestion-${suggestions.length + 1}`,
-        title: `Fix link: ${warning.rule}`,
-        description: warning.message,
-        priority: "medium",
-      });
-    } else {
-      suggestions.push({
-        id: `suggestion-${suggestions.length + 1}`,
-        title: `Improve: ${warning.rule}`,
-        description: warning.message,
-        priority: "low",
-      });
-    }
-  }
-
-  const finalResult = {
-    ...validationResult,
-    healthScore,
-    suggestions,
-  };
-
-  return NextResponse.json(finalResult);
+  return NextResponse.json(validationResult);
 }

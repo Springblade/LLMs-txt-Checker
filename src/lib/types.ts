@@ -33,29 +33,20 @@ export interface LinkResult {
   ok: boolean;
 }
 
-export interface HealthScore {
-  score: number; // 0-100
-  status: "pass" | "fail";
-  totalLinks: number;
-  errorCount: number;
-  warningCount: number;
-}
-
-export interface Suggestion {
-  id: string;
-  title: string;
-  description: string;
-  priority: "high" | "medium" | "low";
-}
-
 export type ErrorCode =
-  | "not_found"
   | "access_denied"
-  | "timeout"
-  | "invalid_response"
-  | "server_error"
+  | "not_found"
   | "http_error"
-  | "connection_error";
+  | "invalid_response"
+  | "connection_error"
+  | "timeout"
+  | "server_error"
+  | "not_llms_txt"
+  | "ssl_error"
+  | "redirect_loop"
+  | "dns_error"
+  | "geo_blocked"
+  | "unsupported_encoding";
 
 export interface ValidationResult {
   found: boolean;
@@ -66,6 +57,4 @@ export interface ValidationResult {
   content?: string;
   parsedData?: ParsedData;
   linkResults?: LinkResult[];
-  healthScore?: HealthScore;
-  suggestions?: Suggestion[];
 }

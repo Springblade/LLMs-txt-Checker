@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import type { ValidationResult } from "@/lib/types";
-import { ResultSidebar } from "@/components/result-sidebar";
 import ResultTabs from "@/components/result-tabs";
-import { QuickSuggestions } from "@/components/quick-suggestions";
+import { ResultsErrorPanel } from "@/components/results-error-panel";
 
 interface ResultsPageProps {
   result: ValidationResult;
@@ -28,7 +27,7 @@ function BreadcrumbLink({ url }: { url: string }) {
   return (
     <div className="flex items-center gap-2 text-sm">
       <svg
-        className="w-4 h-4 text-slate-400"
+        className="w-4 h-4 text-[var(--color-text-muted)]"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -40,12 +39,12 @@ function BreadcrumbLink({ url }: { url: string }) {
           d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
         />
       </svg>
-      <span className="text-slate-500">Analyzed:</span>
+      <span className="text-[var(--color-text-secondary)]">Analyzed:</span>
       <a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[var(--color-primary)] hover:underline font-medium truncate max-w-[300px]"
+        className="text-zinc-600 hover:underline font-medium truncate max-w-[300px]"
         title={url}
       >
         {displayUrl}
@@ -56,17 +55,17 @@ function BreadcrumbLink({ url }: { url: string }) {
 
 export default function ResultsPage({ result, checkedUrl, onBack }: ResultsPageProps) {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-[var(--color-bg-secondary)]">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-20">
+      <header className="border-b border-[var(--color-border)] bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
           {/* Logo + breadcrumb */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-9 h-9 rounded-lg bg-[var(--color-primary)] flex items-center justify-center">
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0 hover-scale">
+              <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center">
                 <svg
-                  className="w-5 h-5 text-white"
+                  className="w-4 h-4 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -79,13 +78,13 @@ export default function ResultsPage({ result, checkedUrl, onBack }: ResultsPageP
                   />
                 </svg>
               </div>
-              <span className="text-lg font-bold text-slate-900 tracking-tight hidden sm:block">
+              <span className="text-base font-semibold text-zinc-900 tracking-tight hidden sm:block">
                 LLMs.txt Checker
               </span>
             </Link>
 
             {/* Breadcrumb separator */}
-            <span className="text-slate-300 hidden sm:block">/</span>
+            <span className="text-[var(--color-text-muted)] hidden sm:block">/</span>
 
             {/* URL breadcrumb */}
             <BreadcrumbLink url={checkedUrl} />
@@ -96,7 +95,7 @@ export default function ResultsPage({ result, checkedUrl, onBack }: ResultsPageP
             {/* Back button */}
             <button
               onClick={onBack}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-all duration-150"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -105,7 +104,7 @@ export default function ResultsPage({ result, checkedUrl, onBack }: ResultsPageP
             </button>
 
             {/* Open Source badge */}
-            <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
+            <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 rounded-full">
               <svg
                 className="w-3 h-3"
                 fill="none"
@@ -127,7 +126,7 @@ export default function ResultsPage({ result, checkedUrl, onBack }: ResultsPageP
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 text-[var(--color-text-secondary)] hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-all duration-150"
               aria-label="GitHub"
             >
               <GitHubIcon />
@@ -136,65 +135,34 @@ export default function ResultsPage({ result, checkedUrl, onBack }: ResultsPageP
         </div>
       </header>
 
-      {/* Main content area - three-column layout */}
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[240px_1fr_240px] xl:grid-cols-[260px_1fr_260px]">
-        {/* Left sidebar - ResultSidebar */}
-        {result.healthScore && (
-          <div className="hidden lg:block">
-            <ResultSidebar healthScore={result.healthScore} />
+      {/* Main content area */}
+      <main
+        className={
+          result.found
+            ? "flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-6"
+            : "flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-8"
+        }
+      >
+        {result.found ? (
+          <ResultTabs result={result} />
+        ) : (
+          <div className="w-full max-w-2xl">
+            <ResultsErrorPanel
+              message={result.message}
+              errorCode={result.errorCode}
+              checkedUrl={checkedUrl}
+              onRetry={onBack}
+            />
           </div>
         )}
-
-        {/* Center content - ResultTabs */}
-        <div className="min-w-0 p-4 sm:p-6">
-          <ResultTabs result={result} />
-        </div>
-
-        {/* Right sidebar - QuickSuggestions */}
-        <div className="hidden lg:block">
-          {result.suggestions && result.suggestions.length > 0 && (
-            <QuickSuggestions suggestions={result.suggestions} />
-          )}
-        </div>
       </main>
 
-      {/* Mobile sidebar collapse */}
-      <div className="lg:hidden border-t border-slate-200 bg-white">
-        <details className="group">
-          <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none">
-            <span className="text-sm font-medium text-slate-700">
-              {result.healthScore ? `Health Score: ${result.healthScore.score}/100` : "View Stats"}
-            </span>
-            <svg
-              className="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </summary>
-          <div className="border-t border-slate-100">
-            {result.healthScore && (
-              <div className="p-4">
-                <ResultSidebar healthScore={result.healthScore} />
-              </div>
-            )}
-          </div>
-        </details>
-      </div>
-
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white mt-auto">
+      <footer className="border-t border-[var(--color-border)] bg-white mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Left copyright */}
-            <div className="text-sm text-slate-500 order-2 sm:order-1">
+            <div className="text-sm text-[var(--color-text-secondary)] order-2 sm:order-1">
               © 2026 LLMs.txt Checker. Open source under MIT License.
             </div>
 
@@ -202,13 +170,13 @@ export default function ResultsPage({ result, checkedUrl, onBack }: ResultsPageP
             <div className="flex items-center gap-5 text-sm order-1 sm:order-2">
               <Link
                 href="/privacy"
-                className="text-slate-500 hover:text-slate-700 transition-colors"
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
               >
                 Privacy Policy
               </Link>
               <Link
                 href="/terms"
-                className="text-slate-500 hover:text-slate-700 transition-colors"
+                className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
               >
                 Terms of Service
               </Link>

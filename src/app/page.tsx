@@ -69,20 +69,20 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b border-slate-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-[var(--color-border)] bg-white sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--color-primary)] flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 rounded-lg bg-zinc-900 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-slate-900 tracking-tight">LLMs.txt Checker</span>
+            <span className="text-lg font-semibold text-zinc-900 tracking-tight">LLMs.txt Checker</span>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full border border-yellow-200">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200 rounded-full">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
               Open Source
@@ -92,7 +92,7 @@ export default function HomePage() {
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-all duration-150"
               aria-label="GitHub"
             >
               <GitHubIcon />
@@ -102,19 +102,18 @@ export default function HomePage() {
       </header>
 
       {/* Hero section */}
-      <section className="flex-1 bg-gradient-hero bg-dot-pattern">
+      <section className="flex-1 bg-[var(--color-bg-secondary)]">
         <div className="max-w-5xl mx-auto px-6 py-16 sm:py-24">
           <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight mb-6">
-              Ensure your site is{" "}
-              <span className="text-[var(--color-primary)]">LLM-ready</span>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-zinc-900 tracking-tight mb-6 animate-slide-up">
+              Ensure your site is LLM-ready
             </h1>
-            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+            <p className="text-lg sm:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto mb-10 leading-relaxed animate-slide-up stagger-1">
               Validate your llms.txt file against the official standard. Check syntax, verify links, and ensure AI models can read your documentation.
             </p>
 
             {/* URL input form using ValidatorForm component */}
-            <div className="w-full max-w-xl mx-auto">
+            <div className="w-full max-w-xl mx-auto animate-slide-up stagger-2">
               <ValidatorForm onResult={handleResult} />
             </div>
           </div>
@@ -124,28 +123,31 @@ export default function HomePage() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-200"
+                className={`card-interactive bg-white rounded-lg p-6 border border-[var(--color-border)] animate-slide-up stagger-${index + 1}`}
               >
-                <div className="w-12 h-12 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center mb-4">
+                <div className="w-10 h-10 rounded-md bg-zinc-100 text-zinc-600 flex items-center justify-center mb-4">
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-base font-semibold text-zinc-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
 
           {/* Additional info section */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 text-center">
-            <p className="text-slate-600">
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-8 border border-[var(--color-border)] text-center animate-slide-up stagger-4">
+            <p className="text-[var(--color-text-secondary)]">
               The llms.txt specification is a proposed standard to help Large Language Models discover and understand your website content.{" "}
               <a
                 href="https://llmstxt.cloud"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[var(--color-primary)] hover:underline font-medium"
+                className="text-zinc-600 hover:underline font-medium hover-arrow inline-flex items-center gap-1 group"
               >
-                Learn more about the standard →
+                Learn more about the standard
+                <svg className="w-4 h-4 arrow-icon transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </a>
             </p>
           </div>
@@ -153,18 +155,18 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-100 bg-white">
+      <footer className="border-t border-[var(--color-border)] bg-white">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-[var(--color-text-secondary)]">
               © 2026 LLMs.txt Checker. Open source under MIT License.
             </div>
 
             <div className="flex items-center gap-6 text-sm">
-              <Link href="/privacy" className="text-slate-500 hover:text-slate-700 transition-colors">
+              <Link href="/privacy" className="text-[var(--color-text-secondary)] hover:text-zinc-900 transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-slate-500 hover:text-slate-700 transition-colors">
+              <Link href="/terms" className="text-[var(--color-text-secondary)] hover:text-zinc-900 transition-colors">
                 Terms of Service
               </Link>
             </div>

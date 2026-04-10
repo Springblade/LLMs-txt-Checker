@@ -138,11 +138,11 @@ export default function ValidatorForm({ onResult }: ValidatorFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-[var(--radius)] border border-slate-100 p-6 shadow-sm">
-      <label htmlFor="url-input" className="block text-sm font-medium text-slate-700 mb-2">
+    <form onSubmit={handleSubmit} className="bg-white border border-[var(--color-border)] rounded-lg p-5">
+      <label htmlFor="url-input" className="block text-sm font-medium text-zinc-700 mb-2">
         Website URL
       </label>
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <div className="flex-1">
           <input
             id="url-input"
@@ -154,20 +154,20 @@ export default function ValidatorForm({ onResult }: ValidatorFormProps) {
             }}
             placeholder="https://example.com"
             required
-            className={`w-full px-4 py-2.5 text-sm border rounded-[var(--radius)] focus:ring-2 focus:border-[var(--color-primary)] placeholder-slate-400 ${
+            className={`w-full px-3 py-2.5 text-sm border rounded-md input-focus-ring placeholder-[var(--color-text-muted)] bg-white ${
               inputError
-                ? "border-red-400 focus:ring-red-300"
-                : "border-slate-200 focus:ring-[var(--color-primary)]"
+                ? "border-red-500 focus:ring-red-950 focus:ring-offset-0"
+                : "border-[var(--color-border)] focus:ring-zinc-950 focus:ring-offset-0"
             }`}
           />
           {inputError && (
-            <p className="mt-1.5 text-xs text-red-500">{inputError}</p>
+            <p className="mt-1.5 text-xs text-[var(--color-error)]">{inputError}</p>
           )}
         </div>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-6 py-2.5 text-sm font-medium text-white bg-[var(--color-primary)] rounded-[var(--radius)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center gap-2"
+          className="btn-primary px-5 py-2.5 text-sm font-medium text-white bg-zinc-900 hover:bg-zinc-800 rounded-md flex items-center gap-2 whitespace-nowrap"
         >
           {isLoading ? (
             <>
@@ -178,7 +178,12 @@ export default function ValidatorForm({ onResult }: ValidatorFormProps) {
               Analyzing...
             </>
           ) : (
-            "Analyze URL"
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Analyze URL
+            </>
           )}
         </button>
       </div>

@@ -35,3 +35,10 @@ AGENTS.md
 # OS files
 .DS_Store
 Thumbs.db
+.gitnexus
+
+# Test
+scripts/
+
+# Docs
+docs/
