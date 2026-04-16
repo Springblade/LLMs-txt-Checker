@@ -48,6 +48,32 @@ export type ErrorCode =
   | "geo_blocked"
   | "unsupported_encoding";
 
+// Supported AI Discovery File types
+export type FileType =
+  | "llms.txt"
+  | "llm.txt"
+  | "ai.txt"
+  | "faq-ai.txt"
+  | "brand.txt"
+  | "developer-ai.txt"
+  | "llms.html"
+  | "robots-ai.txt"
+  | "identity.json"
+  | "ai.json";
+
+export const ALL_FILE_TYPES: FileType[] = [
+  "llms.txt",
+  "llm.txt",
+  "ai.txt",
+  "faq-ai.txt",
+  "brand.txt",
+  "developer-ai.txt",
+  "llms.html",
+  "robots-ai.txt",
+  "identity.json",
+  "ai.json",
+];
+
 export interface ValidationResult {
   found: boolean;
   message?: string;

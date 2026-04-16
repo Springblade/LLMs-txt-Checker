@@ -35,19 +35,52 @@ function getOrigin(url: string): string {
   }
 }
 
-export function ResultsErrorPanel({ message, errorCode, checkedUrl, onRetry }: ResultsErrorPanelProps) {
-  const title = errorCode ? (ERROR_TITLES[errorCode] ?? DEFAULT_TITLE) : DEFAULT_TITLE;
+export function ResultsErrorPanel({
+  message,
+  errorCode,
+  checkedUrl,
+  onRetry,
+}: ResultsErrorPanelProps) {
+  const title = errorCode
+    ? ERROR_TITLES[errorCode] ?? DEFAULT_TITLE
+    : DEFAULT_TITLE;
   const origin = getOrigin(checkedUrl);
   const expectedUrl = origin + "/llms.txt";
 
   return (
-    <div className="flex items-center justify-center min-h-[360px] px-4">
-      <div className="w-full max-w-lg bg-white border border-[var(--color-border)] rounded-lg overflow-hidden">
-        <div className="px-6 py-8 flex flex-col items-center text-center gap-5">
-          {/* Icon */}
-          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+    <div className="flex items-center justify-center min-h-[400px] px-4">
+      <div
+        className="w-full max-w-lg"
+        style={{
+          backgroundColor: "white",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius)",
+          boxShadow: "var(--shadow-golden-lg)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Mistral Block top bar */}
+        <div className="mistral-block" />
+
+        {/* Content */}
+        <div className="px-8 py-10 flex flex-col items-center text-center gap-6">
+          {/* Amber/Orange icon */}
+          <div
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "var(--radius)",
+              background:
+                "linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)",
+              border: "1px solid #f5d080",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <svg
-              className="w-7 h-7 text-red-600"
+              className="w-7 h-7"
+              style={{ color: "var(--color-primary)" }}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -61,43 +94,99 @@ export function ResultsErrorPanel({ message, errorCode, checkedUrl, onRetry }: R
             </svg>
           </div>
 
-          {/* Title */}
+          {/* Title + message */}
           <div>
-            <h2 className="text-base font-semibold text-zinc-900">
+            <h2
+              className="font-display"
+              style={{
+                fontSize: "var(--font-size-h3)",
+                color: "var(--color-text)",
+                letterSpacing: "-0.01em",
+                fontWeight: 400,
+              }}
+            >
               {title}
             </h2>
             {message && (
-              <p className="mt-2 text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              <p
+                className="mt-3 text-sm leading-relaxed"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
                 {message}
               </p>
             )}
           </div>
 
           {/* Expected URL hint */}
-          <p className="text-xs text-[var(--color-text-secondary)] bg-zinc-100 px-3 py-2 rounded-md w-full font-mono truncate" title={expectedUrl}>
-            {expectedUrl}
-          </p>
+          <div
+            className="w-full"
+            style={{
+              backgroundColor: "var(--color-bg-secondary)",
+              padding: "0.625rem 0.875rem",
+              borderRadius: "var(--radius)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <p
+              className="text-xs font-mono truncate"
+              style={{ color: "var(--color-text-muted)" }}
+              title={expectedUrl}
+            >
+              {expectedUrl}
+            </p>
+          </div>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-2 w-full">
+          {/* Action buttons */}
+          <div className="flex flex-col gap-3 w-full">
+            {/* Primary: Mistral dark solid */}
             <button
               onClick={onRetry}
-              className="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white font-medium text-sm rounded-md transition-colors cursor-pointer"
+              className="btn-dark w-full min-h-[44px] flex items-center justify-center gap-2 text-sm font-medium btn-primary"
+              style={{
+                padding: "0.625rem 1rem",
+                borderRadius: "var(--radius)",
+              }}
             >
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <svg
+                className="w-4 h-4 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
               Check another URL
             </button>
 
+            {/* Secondary: Cream surface */}
             <a
               href={expectedUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 text-[var(--color-text-secondary)] hover:text-zinc-900 font-medium text-sm rounded-md transition-colors"
+              className="btn-cream w-full min-h-[44px] flex items-center justify-center gap-2 text-sm font-medium"
+              style={{
+                padding: "0.625rem 1rem",
+                borderRadius: "var(--radius)",
+                color: "var(--color-text)",
+              }}
             >
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              <svg
+                className="w-4 h-4 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
               </svg>
               Open expected file
             </a>

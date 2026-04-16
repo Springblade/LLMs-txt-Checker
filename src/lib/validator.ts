@@ -74,7 +74,7 @@ export function validateLlmsTxt(content: string, linkResults?: LinkResult[]): Va
     const trimmed = line.trim();
     if (trimmed === '') continue;
 
-    if (/^\-/.test(trimmed) && !trimmed.startsWith('- [')) {
+    if (/^\-/.test(trimmed) && !trimmed.startsWith('- [') && !/^-+$/.test(trimmed)) {
       warnings.push({
         rule: "file_list_format",
         message: `Invalid format: "${trimmed}". Expected: "- [Title](url)" or "- [Title](url): description"`,

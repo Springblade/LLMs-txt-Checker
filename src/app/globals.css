@@ -1,38 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400&family=DM+Sans:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Surface — zinc neutral */
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f4f4f5;
-  --color-bg-tertiary: #e4e4e7;
-  --color-border: #e4e4e7;
+  /* ── Surface — warm Ivory/Cream ──────────────────────────────────── */
+  --color-bg: #fffaeb;
+  --color-bg-secondary: #fff0c2;
+  --color-bg-tertiary: #ffeeba;
+  --color-border: #e8d5a0;
+  --color-border-strong: #c9a84c;
 
-  /* Text — zinc neutral */
-  --color-text: #09090b;
-  --color-text-secondary: #71717a;
-  --color-text-muted: #a1a1aa;
-  --color-ring: #09090b;
+  /* ── Text — Mistral Black ────────────────────────────────────────── */
+  --color-text: #1f1f1f;
+  --color-text-secondary: #3d3d3d;
+  --color-text-muted: #5a4a2a;  /* warm-tinted gray, readable on ivory */
+  --color-ring: #fa520f;
 
-  /* Status Colors — kept for errors/success/warnings */
-  --color-success: #16a34a;
-  --color-success-light: #22c55e;
-  --color-error: #dc2626;
-  --color-error-light: #ef4444;
-  --color-warning: #d97706;
-  --color-warning-light: #f59e0b;
+  /* ── Status Colors — warm-tinted ────────���───────────────────────── */
+  --color-success: #b85a00;
+  --color-success-light: #d97706;
+  --color-error: #c0392b;
+  --color-error-light: #e74c3c;
+  --color-warning: #b8600a;
+  --color-warning-light: #e67e22;
 
-  /* Border Radius — shadcn uses 6px rounded-lg */
-  --radius: 6px;
-  --radius-sm: 4px;
-  --radius-lg: 6px;
+  /* ── Brand Accent — Mistral Orange ──────────────────────────────── */
+  --color-primary: #fa520f;
+  --color-primary-light: #fb6424;
+  --color-primary-dark: #d4400d;
+
+  /* ── Border Radius — near-zero, sharp ───────────────────────────── */
+  --radius: 2px;
+  --radius-sm: 0px;
+  --radius-lg: 2px;
   --radius-full: 9999px;
 
-  /* Typography Scale */
-  --font-size-hero: clamp(2.5rem, 5vw, 4rem);
+  /* ── Typography Scale ─────────────────────────────────────────────── */
+  --font-size-hero: clamp(4rem, 8vw, 5.125rem);
+  --font-size-display: clamp(3rem, 6vw, 4rem);
   --font-size-h1: 2.5rem;
   --font-size-h2: 1.75rem;
   --font-size-h3: 1.25rem;
@@ -40,14 +47,12 @@
   --font-size-small: 0.875rem;
   --font-size-xs: 0.75rem;
 
-  /* Font Weights */
+  /* ── Font Weights — weight 400 everywhere (Mistral style) ─────────── */
   --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --font-weight-extrabold: 800;
+  --font-weight-medium: 500;   /* only for: button labels, nav links, badges */
+  --font-weight-semibold: 600; /* only for: data table numbers, code labels */
 
-  /* Spacing Scale */
+  /* ── Spacing Scale ───────────────────────────────────────────────── */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -56,22 +61,116 @@
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 8px 16px -4px rgb(0 0 0 / 0.1), 0 4px 8px -4px rgb(0 0 0 / 0.1);
+  /* ── Shadows — cool gray → warm golden ──────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(127, 99, 21, 0.08);
+  --shadow-md: 0 2px 8px rgba(127, 99, 21, 0.10), 0 8px 16px rgba(127, 99, 21, 0.06);
+  --shadow-lg: 0 4px 12px rgba(127, 99, 21, 0.12), 0 16px 32px rgba(127, 99, 21, 0.08);
+
+  /* ── Golden Cascading Shadows — Mistral signature ────────────────── */
+  --shadow-golden-sm:
+    0 2px 8px rgba(127, 99, 21, 0.10),
+    0 6px 16px rgba(127, 99, 21, 0.06);
+  --shadow-golden-md:
+    rgba(127, 99, 21, 0.12) -4px 8px 16px,
+    rgba(127, 99, 21, 0.08) -16px 32px 40px,
+    rgba(127, 99, 21, 0.06) -36px 72px 56px;
+  --shadow-golden-lg:
+    rgba(127, 99, 21, 0.12) -8px 16px 39px,
+    rgba(127, 99, 21, 0.10) -33px 64px 72px,
+    rgba(127, 99, 21, 0.06) -73px 144px 97px,
+    rgba(127, 99, 21, 0.04) -130px 256px 130px;
+
+  /* ── Mistral Block Gradient ──────────────────────────────────────── */
+  --gradient-block:
+    linear-gradient(90deg,
+      #ffd900 0%,
+      #ffe295 16%,
+      #ffa110 33%,
+      #ff8105 50%,
+      #fb6424 66%,
+      #fa520f 100%
+    );
 }
 
+/* Global near-zero border-radius — áp dụng mọi component, override Tailwind */
+*,
+*::before,
+*::after {
+  border-radius: 2px !important;
+}
+
+/* Loại trừ scrollbar thumb */
+::-webkit-scrollbar {
+  border-radius: 3px !important;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 3px !important;
+}
+
+/* Loại trừ progress bar */
+.progress-amber,
+.progress-amber-100 {
+  border-radius: 0 !important;
+}
+
+/* Loại trừ focus ring */
+*:focus-visible {
+  outline-offset: 2px;
+}
+
+/* ── Base Styles ─────────────────────────────────────────────────────────── */
+
 body {
-  font-family: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
-  background-color: var(--color-bg-secondary);
+  font-family: 'DM Sans', ui-sans-serif, system-ui, Apple Color Emoji, sans-serif;
+  background-color: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
+/* Display font for headlines — weight 400, letter-spacing -0.025em (~-2.05px) */
+.font-display {
+  font-family: 'Sora', ui-sans-serif, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.0;
+}
+
+/* Mistral Block Identity bar */
+.mistral-block {
+  height: 4px;
+  background: var(--gradient-block);
+  border-radius: 0;
+}
+
+/* Sunset footer gradient — Warm Ivory → Amber → Mistral Black → Black */
+.footer-sunset {
+  background: linear-gradient(
+    to bottom,
+    #fff5d6 0%,
+    #ffa110 22%,
+    #d4400d 48%,
+    #1f1f1f 78%,
+    #0f0f0f 100%
+  );
+  color: #ffffff;
+  position: relative;
+}
+
+/* Footer gradient separator strip — Mistral brand */
+.footer-sunset::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: var(--gradient-block);
+}
+
+.footer-sunset .footer-text {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── Custom Scrollbar — warm-tinted ─────────────────────────────────────── */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -82,65 +181,73 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: #c9a84c;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
+  background-color: #b8922a;
 }
 
-/* Focus ring */
+/* ── Focus Ring — Mistral Orange ────────────────────────────────────────── */
+
 *:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
 
-/* ============================================
-   RESPONSIVE BREAKPOINTS
-   ============================================ */
+/* ── Responsive Breakpoints ──────────────────────────────────────────────── */
 
-/* Mobile: < 768px */
 @media (max-width: 767px) {
-  /* Stack flex containers vertically */
   .flex-row {
     flex-direction: column;
   }
 }
 
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
+/* ── Card Styles ─────────────────────────────────────────────────────────── */
 
-/* Card styles */
 .card {
-  background-color: white;
+  background-color: var(--color-bg-secondary);
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
   padding: 1.5rem;
 }
 
-/* ============================================
-   ANIMATION UTILITIES
-   ============================================ */
-@keyframes pulse-subtle {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+.card-golden {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-golden-md);
+  padding: 1.5rem;
 }
 
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s ease-in-out infinite;
+/* ── Golden Floating Card (Mistral style) ──────────────────────────────── */
+
+.card-float {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-golden-lg);
 }
 
-/* Fade in animation */
-@keyframes fade-in {
+/* ValidatorForm wrapper card — Mistral golden shadow elevation */
+.form-landing-zone {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-golden-lg);
+  border-radius: var(--radius);
+}
+
+html.dark .form-landing-zone {
+  background-color: #2a2a2a;
+  border-color: #3d3d3d;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+
+@keyframes golden-fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -148,67 +255,159 @@ body {
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+.animate-golden-fade {
+  animation: golden-fade-in 0.5s ease-out forwards;
 }
 
-/* Slide up animation for page load */
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Staggered animation delays */
+.stagger-1  { animation-delay: 0.05s; opacity: 0; }
+.stagger-2  { animation-delay: 0.10s; opacity: 0; }
+.stagger-3  { animation-delay: 0.15s; opacity: 0; }
+.stagger-4  { animation-delay: 0.20s; opacity: 0; }
+.stagger-5  { animation-delay: 0.25s; opacity: 0; }
+.stagger-6  { animation-delay: 0.30s; opacity: 0; }
+.stagger-7  { animation-delay: 0.35s; opacity: 0; }
+.stagger-8  { animation-delay: 0.40s; opacity: 0; }
+.stagger-9  { animation-delay: 0.45s; opacity: 0; }
+.stagger-10 { animation-delay: 0.50s; opacity: 0; }
+
+/* Card entrance stagger — each card in the grid */
+.card-stagger {
+  opacity: 0;
+  animation: golden-fade-in 0.5s ease-out forwards;
 }
 
-.animate-slide-up {
-  animation: slide-up 0.5s ease-out forwards;
-}
+.card-stagger:nth-child(1)  { animation-delay: 0.05s; }
+.card-stagger:nth-child(2)  { animation-delay: 0.10s; }
+.card-stagger:nth-child(3)  { animation-delay: 0.15s; }
+.card-stagger:nth-child(4)  { animation-delay: 0.20s; }
+.card-stagger:nth-child(5)  { animation-delay: 0.25s; }
+.card-stagger:nth-child(6)  { animation-delay: 0.30s; }
+.card-stagger:nth-child(7)  { animation-delay: 0.35s; }
+.card-stagger:nth-child(8)  { animation-delay: 0.40s; }
+.card-stagger:nth-child(9)  { animation-delay: 0.45s; }
+.card-stagger:nth-child(10) { animation-delay: 0.50s; }
 
-/* Staggered animation delays for lists */
-.stagger-1 { animation-delay: 0.1s; opacity: 0; }
-.stagger-2 { animation-delay: 0.2s; opacity: 0; }
-.stagger-3 { animation-delay: 0.3s; opacity: 0; }
-.stagger-4 { animation-delay: 0.4s; opacity: 0; }
+/* ── Card Interactive Hover — golden lift ──────────────────────────────── */
 
-/* Card interactive hover effect */
 .card-interactive {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .card-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: #d4d4d8;
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-golden-md);
+  border-color: var(--color-border-strong);
 }
 
-/* Primary button styles */
+/* ── Primary Button ─────────────────────────────────────────────────────── */
+
 .btn-primary {
   transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .btn-primary:hover {
   transform: scale(1.01);
+  background-color: var(--color-primary) !important;
 }
 
 .btn-primary:active {
   transform: scale(0.99);
 }
 
-/* Input focus ring animation */
+/* ── Dark Solid Button (Mistral style) ─────────────────────────────────── */
+
+.btn-dark {
+  background-color: var(--color-text);
+  color: white;
+  border: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+html.dark .btn-dark {
+  background-color: #fffaeb;
+  color: #1f1f1f;
+}
+
+html.dark .btn-dark:hover {
+  background-color: #d4d0c8;
+}
+
+.btn-dark:active {
+  transform: scale(0.99);
+}
+
+/* ── Mistral Orange Button ──────────────────────────────────────────────── */
+
+.btn-orange {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-orange:hover {
+  background-color: var(--color-primary-light);
+  transform: scale(1.01);
+}
+
+.btn-orange:active {
+  transform: scale(0.99);
+}
+
+/* ── Cream Surface Button ───────────────────────────────────────────────── */
+
+.btn-cream {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-cream:hover {
+  background-color: #ffe8a0;
+  border-color: var(--color-border-strong);
+}
+
+/* ── Input Focus Ring — warm ───────────────────────────────────────────── */
+
 .input-focus-ring {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .input-focus-ring:focus {
-  border-color: var(--color-ring);
-  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-ring);
+  border-color: var(--color-ring) !important;
+  box-shadow: 0 0 0 2px rgba(250, 82, 15, 0.15);
+  outline: none;
 }
 
-/* Spin animation for loading */
+/* ── Tab Underline Active ───────────────────────────────────────────────── */
+
+.tab-underline {
+  position: relative;
+}
+
+.tab-underline.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--color-primary);
+  border-radius: 0;
+}
+
+/* ── Spin Animation ──────────────────────────────────────────────────────── */
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -217,7 +416,8 @@ body {
   animation: spin 1s linear infinite;
 }
 
-/* Pulse ring animation */
+/* ── Pulse Ring ─────────────────────────────────────────────────────────── */
+
 @keyframes pulse-ring {
   0%, 100% {
     transform: scale(1);
@@ -233,14 +433,11 @@ body {
   animation: pulse-ring 1.5s ease-in-out infinite;
 }
 
-/* Icon arrow animation */
+/* ── Arrow Slide ───────────────���────────────────────────────────────────── */
+
 @keyframes arrow-slide {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(4px);
-  }
+  from { transform: translateX(0); }
+  to   { transform: translateX(4px); }
 }
 
 .hover-arrow:hover svg,
@@ -248,11 +445,346 @@ body {
   animation: arrow-slide 0.3s ease-out forwards;
 }
 
-/* Subtle scale on hover */
+/* ── Hover Scale ────────────────────────────────────────────────────────── */
+
 .hover-scale {
   transition: transform 0.2s ease;
 }
 
 .hover-scale:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
+}
+
+/* ── Badge Status ──────────────────────────────────────────────────────── */
+
+.badge-success {
+  background-color: #fff3e0;
+  color: #b85a00;
+  border: 1px solid #f0c060;
+}
+
+.badge-error {
+  background-color: #fdecea;
+  color: #c0392b;
+  border: 1px solid #f5a099;
+}
+
+.badge-warning {
+  background-color: #fff8e1;
+  color: #b8600a;
+  border: 1px solid #f5d080;
+}
+
+.badge-neutral {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+/* ── Status Dots — replace colored border anti-pattern ─────────────────── */
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-success { background-color: var(--color-success); }
+.status-dot-error   { background-color: var(--color-error); }
+.status-dot-warning { background-color: var(--color-warning); }
+.status-dot-info    { background-color: var(--color-text-muted); }
+
+/* ── Warm code / pre block ──────────────────────────────────────────────── */
+
+.code-dark {
+  background-color: #1f1f1f;
+  color: #f5d882;
+}
+
+.pre-warm {
+  background-color: #1f1f1f;
+  color: #f5d882;
+  border: 1px solid rgba(127, 99, 21, 0.3);
+}
+
+/* ── Empty state warm ───────────────────────────────────────────────────── */
+
+.empty-warm {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* ── Open Source Badge warm ─────────────────────────────────────────────── */
+
+.badge-opensource {
+  background-color: #fff3e0;
+  color: #b8600a;
+  border: 1px solid #f5d080;
+}
+
+/* ── Progress bar warm ───────────────────���─────────────────────────────── */
+
+.progress-amber {
+  background-color: #ffa110;
+  border-radius: 0;
+}
+
+.progress-amber-100 {
+  background-color: #ffd900;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — Warm Dark Palette
+   Deep warm charcoal thay vì đen thuần, giữ Mistral identity
+   System preference fallback via @media (prefers-color-scheme: dark)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #1f1f1f;
+    --color-bg-secondary: #2a2a2a;
+    --color-bg-tertiary: #333333;
+    --color-border: #3d3d3d;
+    --color-border-strong: #555555;
+
+    --color-text: #ffffff;
+    --color-text-secondary: #d4d0c8;
+    --color-text-muted: #7a6a5a;  /* warm-tinted gray, readable at body size */
+
+    --color-ring: #fa520f;
+
+    --color-success: #ffa110;
+    --color-success-light: #ffd900;
+    --color-error: #ff6b6b;
+    --color-error-light: #ff8888;
+    --color-warning: #ffd900;
+    --color-warning-light: #ffe066;
+
+    --shadow-sm: 0 1px 3px rgba(127, 99, 21, 0.25);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.7);
+    --shadow-golden-sm:
+      0 2px 8px rgba(127, 99, 21, 0.25),
+      0 0 16px rgba(127, 99, 21, 0.08);
+    --shadow-golden-md:
+      rgba(127, 99, 21, 0.20) -4px 8px 16px,
+      rgba(127, 99, 21, 0.15) -16px 32px 40px,
+      rgba(127, 99, 21, 0.06) -36px 72px 56px;
+    --shadow-golden-lg:
+      rgba(127, 99, 21, 0.20) -8px 16px 39px,
+      rgba(127, 99, 21, 0.15) -33px 64px 72px,
+      rgba(127, 99, 21, 0.06) -73px 144px 97px,
+      rgba(127, 99, 21, 0.04) -130px 256px 130px;
+
+    color-scheme: dark;
+  }
+}
+
+/* html.dark class overrides — applied when user toggles dark mode */
+html.dark {
+  --color-bg: #1f1f1f;
+  --color-bg-secondary: #2a2a2a;
+  --color-bg-tertiary: #333333;
+  --color-border: #3d3d3d;
+  --color-border-strong: #555555;
+
+  --color-text: #ffffff;
+  --color-text-secondary: #d4d0c8;
+  --color-text-muted: #7a6a5a;  /* warm-tinted gray, readable at body size */
+
+  --color-ring: #fa520f;
+
+  --color-success: #ffa110;
+  --color-success-light: #ffd900;
+  --color-error: #ff6b6b;
+  --color-error-light: #ff8888;
+  --color-warning: #ffd900;
+  --color-warning-light: #ffe066;
+
+  --shadow-sm: 0 1px 3px rgba(127, 99, 21, 0.3);
+  --shadow-md: 0 2px 8px rgba(127, 99, 21, 0.35);
+  --shadow-lg: 0 4px 12px rgba(127, 99, 21, 0.4);
+  --shadow-golden-sm:
+    0 2px 8px rgba(127, 99, 21, 0.25),
+    0 0 16px rgba(127, 99, 21, 0.08);
+  --shadow-golden-md:
+    rgba(127, 99, 21, 0.20) -4px 8px 16px,
+    rgba(127, 99, 21, 0.15) -16px 32px 40px,
+    rgba(127, 99, 21, 0.06) -36px 72px 56px;
+  --shadow-golden-lg:
+    rgba(127, 99, 21, 0.20) -8px 16px 39px,
+    rgba(127, 99, 21, 0.15) -33px 64px 72px,
+    rgba(127, 99, 21, 0.06) -73px 144px 97px,
+    rgba(127, 99, 21, 0.04) -130px 256px 130px;
+
+  color-scheme: dark;
+}
+
+/* Card base — Mistral Black surface (light: var(--color-bg-secondary), dark: #2a2a2a) */
+.card,
+.card-golden,
+.card-float,
+.form-landing-zone {
+  background-color: var(--color-bg-secondary);
+}
+
+html.dark .card,
+html.dark .card-golden,
+html.dark .card-float,
+html.dark .form-landing-zone {
+  background-color: #2a2a2a;
+}
+
+/* Hero gradient overlay — dark mode */
+html.dark .hero-gradient-overlay {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(250, 82, 15, 0.06) 0%, transparent 70%) !important;
+}
+
+/* Scrollbar — dark mode */
+html.dark ::-webkit-scrollbar-thumb {
+  background-color: #555555;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #777777;
+}
+
+/* Footer Sunset Gradient — Dark Mode */
+html.dark .footer-sunset {
+  background: linear-gradient(
+    to bottom,
+    #2a2a2a 0%,
+    #ffa110 25%,
+    #d4400d 50%,
+    #1f1f1f 80%,
+    #0f0f0f 100%
+  );
+}
+
+/* ── Dark Mode Badge Tweaks ──────────────────────────────────────────── */
+
+html.dark .badge-success {
+  background-color: rgba(230, 126, 34, 0.15);
+  color: #e67e22;
+  border: 1px solid rgba(230, 126, 34, 0.4);
+}
+
+html.dark .badge-error {
+  background-color: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+html.dark .badge-warning {
+  background-color: rgba(243, 156, 18, 0.15);
+  color: #f39c12;
+  border: 1px solid rgba(243, 156, 18, 0.4);
+}
+
+html.dark .badge-neutral {
+  background-color: #333333;
+  color: #d4d0c8;
+  border: 1px solid #3d3d3d;
+}
+
+html.dark .badge-opensource {
+  background-color: rgba(243, 156, 18, 0.12);
+  color: #f39c12;
+  border: 1px solid rgba(243, 156, 18, 0.3);
+}
+
+/* ── Dark Mode Input tweaks ─────────────────────────────────────────── */
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #111111 !important;
+  color: #ffffff !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: rgba(255, 250, 235, 0.35) !important;
+}
+
+/* ── Dark Mode Card Interactive Hover ────────────��─────────────────── */
+
+html.dark .card-interactive:hover {
+  box-shadow: var(--shadow-golden-md);
+  border-color: #555555;
+}
+
+/* ── Dark Mode btn-cream hover ────────────────────────────────────── */
+
+html.dark .btn-cream:hover {
+  background-color: #333333;
+  border-color: #555555;
+}
+
+/* ── Dark Mode pre/code blocks ─────────────────────────────────────── */
+
+html.dark .pre-warm,
+html.dark .code-dark {
+  background-color: #111111;
+  color: #ffffff;
+  border: 1px solid #3d3d3d;
+}
+
+/* ── Dark Mode empty state ─────────────────────────────────────────── */
+
+html.dark .empty-warm {
+  background-color: #2a2a2a;
+  border: 1px solid #3d3d3d;
+  color: #ffa110;
+}
+
+/* ── Dark Mode logo inversion (nếu cần) ───────────────────────────── */
+
+html.dark .logo-dark-invert,
+.dark .logo-dark-invert {
+  filter: invert(1) brightness(1.5) contrast(1.1);
+}
+
+/* Header glassmorphism — dark mode */
+html.dark header[style*="backdrop-filter"] {
+  background-color: rgba(31, 31, 31, 0.88) !important;
+}
+
+/* ── Dark Mode Impact Boxes trong file card ────────────────────────── */
+
+.impact-box-errors {
+  background-color: #fdecea;
+  border-left: 3px solid #f5a099;
+  border-radius: var(--radius);
+  color: #c0392b;
+}
+
+.impact-box-warnings,
+.impact-box-notfound {
+  background-color: #fff8e1;
+  border-left: 3px solid #f5d080;
+  border-radius: var(--radius);
+  color: #b8600a;
+}
+
+html.dark .impact-box-errors {
+  background-color: rgba(231, 76, 60, 0.12) !important;
+  border-left-color: rgba(231, 76, 60, 0.6) !important;
+  color: #e74c3c;
+}
+
+html.dark .impact-box-warnings,
+html.dark .impact-box-notfound {
+  background-color: rgba(255, 215, 0, 0.08) !important;
+  border-left-color: rgba(255, 215, 0, 0.5) !important;
+  color: #f39c12;
+}
+
+/* ── Hero Section Dark Mode ────────────────────────────────────────── */
+
+html.dark .hero-section {
+  background-color: #1f1f1f;
 }
