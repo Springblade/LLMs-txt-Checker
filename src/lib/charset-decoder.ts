@@ -1,3 +1,5 @@
+import { isLfiAttempt } from "./generator/security";
+
 const KNOWN_CHARSETS: Record<string, string> = {
   "utf-8": "utf-8",
   utf8: "utf-8",
@@ -21,7 +23,8 @@ export interface CharsetDecodeResult {
 
 export function decodeWithCharset(
   buffer: ArrayBuffer,
-  contentTypeHeader: string | null
+  contentTypeHeader: string | null,
+  _sourceHint?: string // e.g. URL or file path for LFI context
 ): CharsetDecodeResult {
   let charset: string | null = null;
   if (contentTypeHeader) {
@@ -39,6 +42,15 @@ export function decodeWithCharset(
       success: true,
       text: new TextDecoder("utf-8").decode(buffer),
       charset: null,
+    };
+  }
+
+  // LFI guard — if charset hint looks like a local file path, block it
+  if (_sourceHint && isLfiAttempt(_sourceHint)) {
+    return {
+      success: false,
+      charset,
+      message: `LFI_BLOCKED: Source "${_sourceHint}" is a local file path and cannot be used as a content source`,
     };
   }
 

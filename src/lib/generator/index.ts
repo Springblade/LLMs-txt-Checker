@@ -1,8 +1,5 @@
-import { discoverUrls } from "./discovery";
-import { deduplicateUrls } from "./deduplication";
-import { filterUrls } from "./filtering";
-import { scoreUrls } from "./scoring";
-import { applyControls } from "./controls";
+import { discoverUrls, deduplicateUrls, filterUrls } from "./url-discover";
+import { scoreUrls, applyControls } from "./url-prioritize";
 import { crawlPages } from "./crawler";
 import { generateAiDescriptions } from "./ai-generator";
 import { buildLlmsTxt, buildFileName } from "./builder";
@@ -96,12 +93,10 @@ export async function generateLlmsTxt(
 }
 
 export * from "./types";
-export * from "./discovery";
-export * from "./deduplication";
-export * from "./filtering";
-export * from "./scoring";
-export * from "./controls";
+export * from "./url-discover";
+export * from "./url-prioritize";
 export * from "./crawler";
 export * from "./builder";
+export * from "./security";
 export { generateAiDescriptions, generateAiDescription, buildPrompt } from "./ai-generator";
 export { classifyPage, getCategoryLabel } from "./category-classifier";

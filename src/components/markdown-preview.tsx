@@ -169,7 +169,7 @@ export default function MarkdownPreview({ content }: MarkdownPreviewProps) {
   return (
     <div
       style={{
-        backgroundColor: "white",
+        backgroundColor: "var(--color-bg)",
         border: "1px solid var(--color-border)",
         borderRadius: "var(--radius)",
         padding: "1.5rem",

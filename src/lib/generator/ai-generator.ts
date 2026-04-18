@@ -16,19 +16,28 @@ function getApiKeys(): string[] {
   return raw.split(",").map((k) => k.trim()).filter(Boolean);
 }
 
-const apiKeys = getApiKeys();
-let currentKeyIndex = 0;
-let currentModelIndex = 0;
+let _apiKeys: string[] | null = null;
+let _currentKeyIndex = 0;
+
+function getKeys(): string[] {
+  if (!_apiKeys) {
+    _apiKeys = getApiKeys();
+  }
+  return _apiKeys;
+}
+
+let _currentModelIndex = 0;
 
 function getNextKey(): string {
-  const key = apiKeys[currentKeyIndex % apiKeys.length]!;
-  currentKeyIndex++;
+  const keys = getKeys();
+  const key = keys[_currentKeyIndex % keys.length] ?? "";
+  _currentKeyIndex++;
   return key;
 }
 
 function getNextModel(): string {
-  const model = GOOGLE_MODELS[currentModelIndex % GOOGLE_MODELS.length]!;
-  currentModelIndex++;
+  const model = GOOGLE_MODELS[_currentModelIndex % GOOGLE_MODELS.length]!;
+  _currentModelIndex++;
   return model;
 }
 
@@ -75,7 +84,8 @@ Respond with ONLY the description, no quotes or explanation.`;
 }
 
 export async function generateAiDescription(page: CrawledPage): Promise<string> {
-  const maxKeys = apiKeys.length;
+  const keys = getKeys();
+  const maxKeys = keys.length;
   const maxModels = GOOGLE_MODELS.length;
   let lastError: Error | null = null;
 

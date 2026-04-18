@@ -1,5 +1,6 @@
 import type { CrawledPage, ExtractedMetadata, FetchResult, ScoredUrl } from "./types";
 import { mapNetworkError } from "@/lib/network-error-mapper";
+import { assertUrlSafe } from "./security";
 
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_RETRIES = 2;
@@ -191,6 +192,13 @@ async function crawlBatched(urls: ScoredUrl[], concurrency: number): Promise<Fet
 }
 
 async function fetchWithCascade(pageUrl: string): Promise<FetchResult> {
+  // SSRF check — must pass before any network call
+  try {
+    assertUrlSafe(pageUrl);
+  } catch (e) {
+    return { url: pageUrl, error: e instanceof Error ? e.message : String(e), provider: null };
+  }
+
   // Step 1: Jina (primary)
   const jinaResult = await fetchViaJina(pageUrl);
   if (jinaResult.content) {

@@ -52,7 +52,7 @@ export function ResultsErrorPanel({
       <div
         className="w-full max-w-lg"
         style={{
-          backgroundColor: "white",
+          backgroundColor: "var(--color-bg)",
           border: "1px solid var(--color-border)",
           borderRadius: "var(--radius)",
           boxShadow: "var(--shadow-golden-lg)",
@@ -71,8 +71,8 @@ export function ResultsErrorPanel({
               height: "56px",
               borderRadius: "var(--radius)",
               background:
-                "linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)",
-              border: "1px solid #f5d080",
+                "var(--gradient-icon-bg)",
+              border: "1px solid var(--color-border)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
