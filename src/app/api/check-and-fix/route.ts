@@ -31,11 +31,9 @@ async function fetchWithTimeout(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
     return res;
-  } catch (e) {
+  } finally {
     clearTimeout(timer);
-    throw e;
   }
 }
 
@@ -183,8 +181,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const genResult = await generateLlmsTxt({ url: origin });
+    const ok = genResult.success;
 
-    if (!genResult.success) {
+    if (!ok) {
       const errorCodeMap: Record<string, CheckAndFixErrorCode> = {
         INVALID_URL: "INVALID_URL",
         FETCH_ERROR: "SITE_UNREACHABLE",
