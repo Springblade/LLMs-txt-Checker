@@ -2,28 +2,39 @@
 
 export default function AppFooter() {
   return (
-    <footer className="footer-sunset mt-auto">
+    <footer
+      className="footer-dark"
+      style={{ marginTop: "auto" }}
+    >
       <div
-        className="max-w-[1280px] mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+        style={{
+          maxWidth: "1280px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          paddingLeft: "1.5rem",
+          paddingRight: "1.5rem",
+          paddingTop: "1.5rem",
+          paddingBottom: "1.5rem",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "1rem",
+        }}
       >
-        <p
-          className="footer-text text-sm"
-          style={{ color: "rgba(255, 255, 255, 0.85)" }}
-        >
+        <p style={{ fontSize: "0.875rem", margin: 0 }}>
           © 2026 Aivify
         </p>
-        <div className="flex items-center gap-6">
+        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
           <a
             href="/privacy"
-            className="text-sm transition-opacity hover:opacity-70"
-            style={{ color: "rgba(255, 255, 255, 0.78)" }}
+            style={{ fontSize: "0.875rem" }}
           >
             Privacy Policy
           </a>
           <a
             href="/terms"
-            className="text-sm transition-opacity hover:opacity-70"
-            style={{ color: "rgba(255, 255, 255, 0.78)" }}
+            style={{ fontSize: "0.875rem" }}
           >
             Terms
           </a>

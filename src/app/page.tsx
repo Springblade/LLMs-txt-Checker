@@ -1,27 +1,140 @@
 "use client";
 
+import { useState } from "react";
 import { SmartForm } from "@/components/smart-form";
 import SiteHeader from "@/components/site-header";
 import AppFooter from "@/components/app-footer";
+import { ResultSection } from "@/components/result-section";
+import type { DiscoverResult, FileType, FileGenerateResult } from "@/lib/discovery/types";
 
 export default function HomePage() {
+  const [result, setResult] = useState<DiscoverResult | null>(null);
+  const [generatingFiles, setGeneratingFiles] = useState<Map<FileType, FileGenerateResult>>(new Map());
+  const [inProgressFiles, setInProgressFiles] = useState<Set<FileType>>(new Set());
+
+  const handleResult = (r: DiscoverResult) => {
+    setResult(r);
+  };
+
+  const handleGenerate = async (fileType: FileType) => {
+    if (!result) return;
+
+    // Add to in-progress set so spinner shows immediately
+    setInProgressFiles((prev) => new Set([...prev, fileType]));
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: result.origin, fileType }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setGeneratingFiles((prev) => {
+          const next = new Map(prev);
+          if (data.success && data.content) {
+            next.set(fileType, {
+              type: fileType,
+              success: true,
+              content: data.content,
+              errors: data.errors ?? [],
+              warnings: data.warnings ?? [],
+              checklist: data.checklist ?? [],
+            });
+          } else if (data.error) {
+            next.set(fileType, {
+              type: fileType,
+              success: false,
+              content: "",
+              errors: data.errors ?? [{ rule: "generation_failed", message: data.error }],
+              warnings: data.warnings ?? [],
+              checklist: data.checklist ?? [],
+            });
+          }
+          return next;
+        });
+      }
+    } finally {
+      // Remove from in-progress set
+      setInProgressFiles((prev) => {
+        const next = new Set(prev);
+        next.delete(fileType);
+        return next;
+      });
+    }
+  };
+
+  const handleGenerateAll = async () => {
+    if (!result) return;
+
+    const missingFileTypes = result.missingFiles;
+
+    // Add all to in-progress set so spinners show immediately
+    setInProgressFiles(new Set(missingFileTypes));
+
+    try {
+      const nextMap = new Map<FileType, FileGenerateResult>();
+
+      for (const fileType of missingFileTypes) {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: result.origin, fileType }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.content) {
+            nextMap.set(fileType, {
+              type: fileType,
+              success: true,
+              content: data.content,
+              errors: data.errors ?? [],
+              warnings: data.warnings ?? [],
+              checklist: data.checklist ?? [],
+            });
+          } else if (data.error) {
+            nextMap.set(fileType, {
+              type: fileType,
+              success: false,
+              content: "",
+              errors: data.errors ?? [{ rule: "generation_failed", message: data.error }],
+              warnings: data.warnings ?? [],
+              checklist: data.checklist ?? [],
+            });
+          }
+        }
+      }
+      setGeneratingFiles(new Map(nextMap));
+    } finally {
+      setInProgressFiles(new Set());
+    }
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setGeneratingFiles(new Map());
+    setInProgressFiles(new Set());
+  };
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        backgroundColor: "var(--color-bg)",
+        backgroundColor: "#ffffff",
       }}
     >
-      <SiteHeader />
+      <SiteHeader onLogoClick={() => { handleReset(); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
 
-      {/* Hero */}
+      {/* Hero + Form */}
       <section
         style={{
-          backgroundColor: "var(--color-bg)",
-          paddingTop: "4rem",
-          paddingBottom: "3rem",
+          backgroundColor: "#ffffff",
+          paddingTop: "5rem",
+          paddingBottom: "2rem",
         }}
       >
         <div
@@ -33,125 +146,106 @@ export default function HomePage() {
             paddingRight: "1.5rem",
           }}
         >
-          <h1
-            style={{
-              fontSize: "clamp(2.25rem, 5vw, 3.5rem)",
-              fontWeight: 600,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.1,
-              color: "var(--color-text)",
-              marginBottom: "1rem",
-            }}
-          >
-            Generate llms.txt
-          </h1>
-          <p
-            style={{
-              fontSize: "1.125rem",
-              color: "var(--color-text-secondary)",
-              lineHeight: 1.6,
-              maxWidth: "55ch",
-              marginBottom: "1.5rem",
-            }}
-          >
-            AI will check if your website already has an llms.txt file. If not,
-            it generates one and validates the quality — automatically.
-          </p>
-
-          {/* Trust badges */}
+          {/* Hero content — centered */}
           <div
             style={{
               display: "flex",
-              gap: "1rem",
-              flexWrap: "wrap",
-              marginBottom: "0",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
             }}
           >
-            {[
-              {
-                icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-                label: "Free",
-              },
-              {
-                icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
-                label: "No card required",
-              },
-              {
-                icon: "M13 10V3L4 14h7v7l9-11h-7z",
-                label: "Generates in seconds",
-              },
-            ].map(({ icon, label }) => (
-              <span
-                key={label}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.375rem",
-                  fontSize: "0.8125rem",
-                  color: "var(--color-text-muted)",
-                  fontWeight: 500,
-                }}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="var(--color-success)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d={icon} />
-                </svg>
-                {label}
-              </span>
-            ))}
+            {/* Label */}
+            <span
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                color: "#8e8e93",
+                marginBottom: "0.375rem",
+              }}
+            >
+              FOR AI AGENTS
+            </span>
+
+            {/* Headline */}
+            <h1
+              style={{
+                fontFamily: '"Outfit", sans-serif',
+                fontSize: "clamp(2.5rem, 8vw, 5rem)",
+                fontWeight: 500,
+                letterSpacing: "-0.025em",
+                lineHeight: 1.1,
+                color: "#222222",
+                marginBottom: "0.625rem",
+              }}
+            >
+              Free AI Discovery Scanner
+            </h1>
+
+            {/* Subtext */}
+            <p
+              style={{
+                fontSize: "1.125rem",
+                color: "#45515e",
+                lineHeight: 1.6,
+                maxWidth: "44ch",
+                marginBottom: 0,
+              }}
+            >
+              Check any website for AI-ready files. Missing? We generate them for you automatically.
+            </p>
           </div>
 
+          {/* Form Card */}
           <div
             style={{
-              height: "1px",
-              backgroundColor: "var(--color-border)",
-              opacity: 0.5,
-              marginTop: "2rem",
+              marginTop: "1.25rem",
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "16px",
+              padding: "1.25rem",
+              maxWidth: "38rem",
+              marginLeft: "auto",
+              marginRight: "auto",
+              boxShadow: "0 0 15px rgba(44,30,116,0.16)",
             }}
-            aria-hidden="true"
-          />
+          >
+            <SmartForm onResult={handleResult} />
+          </div>
         </div>
       </section>
 
-      {/* Form */}
-      <section
-        style={{
-          backgroundColor: "var(--color-bg)",
-          paddingBottom: "4rem",
-        }}
-      >
-        <div
+      {/* Inline Results */}
+      {result && (
+        <section
           style={{
-            maxWidth: "1280px",
-            marginLeft: "auto",
-            marginRight: "auto",
-            paddingLeft: "1.5rem",
-            paddingRight: "1.5rem",
+            backgroundColor: "#ffffff",
+            paddingBottom: "4rem",
           }}
         >
           <div
             style={{
-              backgroundColor: "var(--color-bg-secondary)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "var(--radius)",
-              padding: "1.5rem",
-              maxWidth: "52rem",
-              boxShadow: "var(--shadow-golden-lg)",
+              maxWidth: "1280px",
+              marginLeft: "auto",
+              marginRight: "auto",
+              paddingLeft: "1.5rem",
+              paddingRight: "1.5rem",
             }}
           >
-            <SmartForm />
+            <ResultSection
+              result={result}
+              generatingFiles={generatingFiles}
+              inProgressFiles={inProgressFiles}
+              onGenerate={handleGenerate}
+              onGenerateAll={handleGenerateAll}
+              onReset={handleReset}
+            />
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <AppFooter />
     </div>

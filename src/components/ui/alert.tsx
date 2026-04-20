@@ -10,24 +10,24 @@ interface AlertProps {
 
 const VARIANT_STYLES = {
   info: {
-    bg: "rgba(250, 82, 15, 0.08)",
-    border: "rgba(250, 82, 15, 0.3)",
-    color: "var(--color-primary)",
+    bg: "var(--mm-info-bg)",
+    border: "var(--mm-info)",
+    color: "var(--mm-info)",
   },
   success: {
-    bg: "rgba(230, 126, 34, 0.12)",
-    border: "rgba(230, 126, 34, 0.4)",
-    color: "#e67e22",
+    bg: "var(--mm-success-bg)",
+    border: "var(--mm-success)",
+    color: "var(--mm-success)",
   },
   warning: {
-    bg: "rgba(243, 156, 18, 0.12)",
-    border: "rgba(243, 156, 18, 0.4)",
-    color: "#f39c12",
+    bg: "var(--mm-warning-bg)",
+    border: "var(--mm-warning)",
+    color: "var(--mm-warning)",
   },
   error: {
-    bg: "rgba(231, 76, 60, 0.12)",
-    border: "rgba(231, 76, 60, 0.4)",
-    color: "#e74c3c",
+    bg: "var(--mm-error-bg)",
+    border: "var(--mm-error)",
+    color: "var(--mm-error)",
   },
 };
 
@@ -40,7 +40,7 @@ export function Alert({ variant = "info", title, children }: AlertProps) {
         backgroundColor: s.bg,
         border: `1px solid ${s.border}`,
         borderLeft: `3px solid ${s.color}`,
-        borderRadius: "var(--radius)",
+        borderRadius: "var(--mm-radius)",
         color: s.color,
       }}
     >

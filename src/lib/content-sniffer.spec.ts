@@ -39,6 +39,116 @@ describe("sniffContentType", () => {
     );
     expect(result.allowed).toBe(false);
   });
+
+  it("blocks HTML content when MIME is text/plain (server misreports type)", () => {
+    const result = sniffContentType(
+      "text/plain",
+      "<!DOCTYPE html><html><head></head><body>Error 404</body></html>",
+      "llm.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+    expect(result.message).toContain("HTML content");
+    expect(result.message).toContain("llm.txt");
+  });
+
+  it("blocks HTML with <html> tag when MIME is text/markdown", () => {
+    const result = sniffContentType(
+      "text/markdown",
+      "<html><body>Not a markdown</body></html>",
+      "llms.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+  });
+
+  it("blocks HTML with <head> tag when MIME is text/plain", () => {
+    const result = sniffContentType(
+      "text/plain",
+      "<head><title>Verification Required</title></head>",
+      "ai.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+  });
+
+  it("blocks HTML with <body> tag when MIME is application/octet-stream", () => {
+    const result = sniffContentType(
+      "application/octet-stream",
+      "<body>Access Denied</body>",
+      "llm.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+  });
+
+  it("blocks partial HTML with <div> tag when MIME is text/plain", () => {
+    const result = sniffContentType(
+      "text/plain",
+      "<div>Error 404 - Page Not Found</div>",
+      "llm.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+  });
+
+  it("blocks partial HTML with <p> tag when MIME is text/markdown", () => {
+    const result = sniffContentType(
+      "text/markdown",
+      "<p>Access Denied</p>",
+      "llms.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+  });
+
+  it("blocks HTML with <script> tag when MIME is text/plain", () => {
+    const result = sniffContentType(
+      "text/plain",
+      "<script>window.location='/login'</script>",
+      "ai.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+  });
+
+  it("blocks HTML with <span> tag when MIME is text/plain", () => {
+    const result = sniffContentType(
+      "text/plain",
+      "<span class='error'>Forbidden</span>",
+      "llm.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.mimeType).toBe("text/html");
+  });
+
+  it("allows HTML inside fenced code blocks", () => {
+    const result = sniffContentType(
+      "text/markdown",
+      "# llms.txt\n\nExample HTML:\n\n```html\n<!DOCTYPE html>\n<html>\n<head></head>\n<body>Content</body>\n</html>\n```\n\nReal content here.",
+      "llms.txt"
+    );
+    expect(result.allowed).toBe(true);
+  });
+
+  it("allows HTML inside inline code", () => {
+    const result = sniffContentType(
+      "text/plain",
+      "# Example\n\nUse `<div>` for block elements.\n\nMore content.",
+      "llm.txt"
+    );
+    expect(result.allowed).toBe(true);
+  });
+
+  it("still blocks HTML outside code blocks", () => {
+    const result = sniffContentType(
+      "text/markdown",
+      "# llms.txt\n\n<div>Error 404</div>\n\n```html\n<!DOCTYPE html>\n</div>\n```",
+      "llms.txt"
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.message).toContain("HTML content");
+  });
 });
 
 describe("detectWafResponse", () => {

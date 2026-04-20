@@ -229,3 +229,76 @@ export function generateWithIssues() {
 export function apiTimeout(page: Page, path: string) {
   return page.route(path, () => new Promise(() => {}));
 }
+
+// ── Check and Fix mocks ────────────────────────────────────────────────────────
+
+interface CheckAndFixResult {
+  success: boolean;
+  origin: string;
+  content: string;
+  fileName: string;
+  llmsUrl: string;
+  mode: "generated_and_validated" | "validated";
+  metadata: { pagesFound?: number; pagesCrawled?: number };
+  validation: {
+    passed: boolean;
+    errors: ValidationError[];
+    warnings: ValidationError[];
+  };
+}
+
+export function makeCheckAndFixResult(overrides?: Partial<CheckAndFixResult>): CheckAndFixResult {
+  return {
+    success: true,
+    origin: "https://example.com",
+    content: "# llms.txt\n\nhttps://example.com\n",
+    fileName: "llms.txt",
+    llmsUrl: "https://example.com/llms.txt",
+    mode: "generated_and_validated",
+    metadata: { pagesFound: 10, pagesCrawled: 8 },
+    validation: { passed: true, errors: [], warnings: [] },
+    ...overrides,
+  };
+}
+
+export function checkAndFixSuccess() {
+  return jsonResponse(makeCheckAndFixResult());
+}
+
+export function checkAndFixWithWarnings() {
+  return jsonResponse(makeCheckAndFixResult({
+    validation: {
+      passed: false,
+      errors: [],
+      warnings: [
+        { rule: "max-lines", message: "File exceeds recommended 500 lines", severity: "warning" },
+      ],
+    },
+  }));
+}
+
+export function checkAndFixWithErrors() {
+  return jsonResponse(makeCheckAndFixResult({
+    validation: {
+      passed: false,
+      errors: [
+        { rule: "no-description", message: "Description line missing after title", severity: "error" },
+      ],
+      warnings: [],
+    },
+  }));
+}
+
+export function checkAndFixValidated() {
+  return jsonResponse(makeCheckAndFixResult({
+    mode: "validated",
+    metadata: {},
+  }));
+}
+
+export async function mockCheckAndFix(
+  page: Page,
+  handler: RouteHandler = checkAndFixSuccess(),
+): Promise<void> {
+  await page.route("/api/check-and-fix", handler);
+}

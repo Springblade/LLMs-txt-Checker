@@ -2,261 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark-only theme — light mode removed. All tokens default to dark values. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MiniMax-inspired Light Design System
+   AI Visibility Scanner — AI Discovery Hub
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* ── Surface — Warm Dark Charcoal ────────────────────────────────── */
-  --color-bg: #1f1f1f;
-  --color-bg-secondary: #2a2a2a;
-  --color-bg-tertiary: #333333;
-  --color-border: #3d3d3d;
-  --color-border-strong: #555555;
+  /* ── Surface ──────────────────────────────────────────────────────────── */
+  --mm-bg: #ffffff;
+  --mm-bg-secondary: #f5f5f5;
+  --mm-bg-tertiary: #f0f0f0;
+  --mm-border: #e5e7eb;
+  --mm-border-strong: #d1d5db;
 
-  /* ── Text — White/Warm ──────────────────────────────────────────── */
-  --color-text: #ffffff;
-  --color-text-secondary: #d4d0c8;
-  --color-text-muted: #a08060;  /* warm-tinted gray, ~6:1 contrast on #1f1f1f (AA compliant) */
-  --color-ring: #fa520f;
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --mm-text: #222222;
+  --mm-text-secondary: #45515e;
+  --mm-text-muted: #8e8e93;
+  --mm-text-link: #18181b;
 
-  /* ── Status Colors — warm-tinted dark ───────────────────────────── */
-  --color-success: #ffa110;
-  --color-success-light: #ffd900;
-  --color-error: #ff6b6b;
-  --color-error-light: #ff8888;
-  --color-warning: #ffd900;
-  --color-warning-light: #ffe066;
+  /* ── Brand Blue ────────────────────────────────────────────────────────── */
+  --mm-brand: #1456f0;
+  --mm-brand-hover: #2563eb;
+  --mm-brand-light: #60a5fa;
+  --mm-ring: #3b82f6;
 
-  /* ── Brand Accent — Mistral Orange (unchanged) ───────────────────── */
-  --color-primary: #fa520f;
-  --color-primary-light: #fb6424;
-  --color-primary-dark: #d4400d;
+  /* ── Brand Pink (accent/logo only) ─────────────────────────────────────── */
+  --mm-pink: #ea5ec1;
 
-  /* ── Border Radius — near-zero, sharp ───────────────────────────── */
-  --radius: 2px;
-  --radius-sm: 0px;
-  --radius-lg: 2px;
-  --radius-full: 9999px;
+  /* ── Status ────────────────────────────────────────────────────────────── */
+  --mm-success: #16a34a;
+  --mm-success-bg: #e8ffea;
+  --mm-success-border: #bbf7d0;
 
-  /* ── Focus Ring — Mistral Orange ───────────────────────────────── */
-  --color-ring: #fa520f;
+  --mm-warning: #ca8a04;
+  --mm-warning-bg: #fefce8;
+  --mm-warning-border: #fde047;
 
-  /* ── Shadow Hover — card lift on hover ───────────────────────────── */
-  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --mm-error: #dc2626;
+  --mm-error-bg: #fef2f2;
+  --mm-error-border: #fecaca;
 
-  /* ── Code Text Color — warm gold ────────────────────────────────── */
-  --color-code: #f5d882;
+  --mm-info: #0284c7;
+  --mm-info-bg: #f0f9ff;
+  --mm-info-border: #bae6fd;
 
-  /* ── Gradient Tokens — dark warm backgrounds ──────────────────────── */
-  --gradient-icon-bg: linear-gradient(135deg, #2a2a2a 0%, #3d3020 100%);
+  /* ── Border Radius Scale ───────────────────────────────────────────────── */
+  --mm-radius-sm: 4px;
+  --mm-radius: 8px;
+  --mm-radius-md: 13px;
+  --mm-radius-lg: 20px;
+  --mm-radius-pill: 9999px;
 
-  /* ── Severity Gradient Tokens — for analyze-file-card ────────────── */
-  --gradient-ok: linear-gradient(90deg, #8a4a00 0%, #b8600a 100%);
-  --gradient-warnings: linear-gradient(90deg, #8a5a0a 0%, #b8800a 100%);
-  --gradient-errors: linear-gradient(90deg, #8a2a2a 0%, #b83a3a 100%);
-  --gradient-notfound: linear-gradient(90deg, #5a4a3a 0%, #7a6a5a 100%);
+  /* ── Shadow Scale ──────────────────────────────────────────────────────── */
+  /* Level 1 — standard card */
+  --mm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  /* Level 2 — soft ambient */
+  --mm-shadow-md: 0 0 22.576px rgba(0, 0, 0, 0.08);
+  /* Level 3 — purple glow (RESULT SECTION / featured card only) */
+  --mm-shadow-lg: 0 0 15px rgba(44, 30, 116, 0.16);
+  /* Level 4 — elevated card */
+  --mm-shadow-xl: 0 12px 16px -4px rgba(36, 36, 36, 0.08);
 
-  /* ── Typography Scale ─────────────────────────────────────────────── */
-  --font-size-hero: clamp(4rem, 8vw, 5.125rem);
-  --font-size-display: clamp(3rem, 6vw, 4rem);
-  --font-size-h1: 2.5rem;
-  --font-size-h2: 1.75rem;
-  --font-size-h3: 1.25rem;
-  --font-size-body: 1rem;
-  --font-size-small: 0.875rem;
-  --font-size-xs: 0.75rem;
-
-  /* ── Font Weights ───────────────────────────────────────────────── */
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-
-  /* ── Spacing Scale ───────────────────────────────────────────────── */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
-
-  /* ── Shadows — dark mode ─────────────────────────────────────────── */
-  --shadow-sm: 0 1px 3px rgba(127, 99, 21, 0.25);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.7);
-
-  /* ── Golden Cascading Shadows — Mistral signature (dark mode) ──── */
-  --shadow-golden-sm:
-    0 2px 8px rgba(127, 99, 21, 0.25),
-    0 0 16px rgba(127, 99, 21, 0.08);
-  --shadow-golden-md:
-    rgba(127, 99, 21, 0.20) -4px 8px 16px,
-    rgba(127, 99, 21, 0.15) -16px 32px 40px,
-    rgba(127, 99, 21, 0.06) -36px 72px 56px;
-  --shadow-golden-lg:
-    rgba(127, 99, 21, 0.20) -8px 16px 39px,
-    rgba(127, 99, 21, 0.15) -33px 64px 72px,
-    rgba(127, 99, 21, 0.06) -73px 144px 97px,
-    rgba(127, 99, 21, 0.04) -130px 256px 130px;
-
-  /* ── Mistral Block Gradient (unchanged — brand) ─────────────────── */
-  --gradient-block:
-    linear-gradient(90deg,
-      #ffd900 0%,
-      #ffe295 16%,
-      #ffa110 33%,
-      #ff8105 50%,
-      #fb6424 66%,
-      #fa520f 100%
-    );
+  /* ── Typography ────────────────────────────────────────────────────────── */
+  --mm-font-hero: clamp(2.5rem, 8vw, 5rem);
+  --mm-font-h1: 2.5rem;
+  --mm-font-h2: 1.75rem;
+  --mm-font-h3: 1.25rem;
+  --mm-font-body: 1rem;
+  --mm-font-small: 0.875rem;
+  --mm-font-xs: 0.75rem;
 }
 
-/* Global near-zero border-radius — áp dụng mọi component, override Tailwind */
-*,
-*::before,
-*::after {
-  border-radius: 2px !important;
-}
-
-/* Loại trừ scrollbar thumb */
-::-webkit-scrollbar {
-  border-radius: 3px !important;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 3px !important;
-}
-
-/* Loại trừ progress bar */
-.progress-amber,
-.progress-amber-100 {
-  border-radius: 0 !important;
-}
-
-/* Loại trừ focus ring */
-*:focus-visible {
-  outline-offset: 2px;
-}
-
-/* ── Base Styles ─────────────────────────────────────────────────────────── */
+/* ── Base Body Styles ──────────────────────────────────────────────────── */
 
 body {
-  font-family: ui-sans-serif, system-ui, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--mm-bg);
+  color: var(--mm-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* Display font for headlines — weight 400, letter-spacing -0.025em (~-2.05px) */
+/* ── Display Font (Outfit) ─────────────────────────────────────────────── */
+
 .font-display {
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-weight: 400;
+  font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
   letter-spacing: -0.025em;
-  line-height: 1.0;
+  line-height: 1.10;
 }
 
-/* Mistral Block Identity bar */
-.mistral-block {
-  height: 4px;
-  background: var(--gradient-block);
-  border-radius: 0;
+/* ── UI Font (DM Sans) ────────────────────────────────────────────────── */
+
+.font-ui {
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Sunset footer gradient — Warm Ivory → Amber → Mistral Black → Black */
-.footer-sunset {
-  background: linear-gradient(
-    to bottom,
-    #fff5d6 0%,
-    #ffa110 22%,
-    #d4400d 48%,
-    #1f1f1f 78%,
-    #0f0f0f 100%
-  );
-  color: #ffffff;
-  position: relative;
-}
+/* ── Animations ────────────────────────────────────────────────────────── */
 
-/* Footer gradient separator strip — Mistral brand */
-.footer-sunset::before {
-  content: '';
-  display: block;
-  height: 3px;
-  background: var(--gradient-block);
-}
-
-.footer-sunset .footer-text {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* ── Custom Scrollbar — warm-tinted ─────────────────────────────────────── */
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: #555555;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: #777777;
-}
-
-/* ── Focus Ring — Mistral Orange ────────────────────────────────────────── */
-
-*:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
-}
-
-/* ── Responsive Breakpoints ──────────────────────────────────────────────── */
-
-@media (max-width: 767px) {
-  .flex-row {
-    flex-direction: column;
-  }
-}
-
-/* ── Card Styles ─────────────────────────────────────────────────────────── */
-
-.card {
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius);
-  border: 1px solid var(--color-border);
-  padding: 1.5rem;
-}
-
-.card-golden {
-  background-color: var(--color-bg-secondary);
-  border-radius: var(--radius);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-golden-md);
-  padding: 1.5rem;
-}
-
-/* ── Golden Floating Card (Mistral style) ──────────────────────────────── */
-
-.card-float {
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-golden-lg);
-}
-
-/* ValidatorForm wrapper card — Mistral golden shadow elevation */
-.form-landing-zone {
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-golden-lg);
-  border-radius: var(--radius);
-}
-
-/* ── Animations ──────────────────────────────────────────────────────────── */
-
-@keyframes golden-fade-in {
+@keyframes mm-fade-in {
   from {
     opacity: 0;
     transform: translateY(16px);
@@ -267,26 +112,41 @@ body {
   }
 }
 
-.animate-golden-fade {
-  animation: golden-fade-in 0.35s ease-out forwards;
+.mm-fade-in {
+  animation: mm-fade-in 0.3s ease-out forwards;
 }
 
-/* Staggered animation delays */
-.stagger-1  { animation-delay: 0.05s; opacity: 0; }
-.stagger-2  { animation-delay: 0.10s; opacity: 0; }
-.stagger-3  { animation-delay: 0.15s; opacity: 0; }
-.stagger-4  { animation-delay: 0.20s; opacity: 0; }
-.stagger-5  { animation-delay: 0.25s; opacity: 0; }
-.stagger-6  { animation-delay: 0.30s; opacity: 0; }
-.stagger-7  { animation-delay: 0.35s; opacity: 0; }
-.stagger-8  { animation-delay: 0.40s; opacity: 0; }
-.stagger-9  { animation-delay: 0.45s; opacity: 0; }
-.stagger-10 { animation-delay: 0.50s; opacity: 0; }
+/* Staggered animation delays — 80ms per item */
+.mm-stagger-1  { animation-delay: 0.08s; opacity: 0; }
+.mm-stagger-2  { animation-delay: 0.16s; opacity: 0; }
+.mm-stagger-3  { animation-delay: 0.24s; opacity: 0; }
+.mm-stagger-4  { animation-delay: 0.32s; opacity: 0; }
+.mm-stagger-5  { animation-delay: 0.40s; opacity: 0; }
+.mm-stagger-6  { animation-delay: 0.48s; opacity: 0; }
+.mm-stagger-7  { animation-delay: 0.56s; opacity: 0; }
+.mm-stagger-8  { animation-delay: 0.64s; opacity: 0; }
+.mm-stagger-9  { animation-delay: 0.72s; opacity: 0; }
+.mm-stagger-10 { animation-delay: 0.80s; opacity: 0; }
 
-/* Card entrance stagger — each card in the grid */
+/* Legacy stagger aliases (backward compat for pages still using stagger-*) */
+.stagger-1  { animation-delay: 0.08s; opacity: 0; }
+.stagger-2  { animation-delay: 0.16s; opacity: 0; }
+.stagger-3  { animation-delay: 0.24s; opacity: 0; }
+.stagger-4  { animation-delay: 0.32s; opacity: 0; }
+.stagger-5  { animation-delay: 0.40s; opacity: 0; }
+.stagger-6  { animation-delay: 0.48s; opacity: 0; }
+.stagger-7  { animation-delay: 0.56s; opacity: 0; }
+.stagger-8  { animation-delay: 0.64s; opacity: 0; }
+.stagger-9  { animation-delay: 0.72s; opacity: 0; }
+.stagger-10 { animation-delay: 0.80s; opacity: 0; }
+
+.animate-golden-fade {
+  animation: mm-fade-in 0.3s ease-out forwards;
+}
+
 .card-stagger {
   opacity: 0;
-  animation: golden-fade-in 0.35s ease-out forwards;
+  animation: mm-fade-in 0.3s ease-out forwards;
 }
 
 .card-stagger:nth-child(1)  { animation-delay: 0.03s; }
@@ -300,120 +160,32 @@ body {
 .card-stagger:nth-child(9)  { animation-delay: 0.27s; }
 .card-stagger:nth-child(10) { animation-delay: 0.30s; }
 
-/* ── Card Interactive Hover — golden lift ──────────────────────────────── */
+/* ── Card Interactive Hover ─────────────────────────────────────────────── */
 
 .card-interactive {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
 }
 
 .card-interactive:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-golden-md);
-  border-color: var(--color-border-strong);
+  box-shadow: var(--mm-shadow-lg);
+  border-color: var(--mm-border-strong);
 }
 
-/* ── Primary Button ─────────────────────────────────────────────────────── */
-
-.btn-primary {
-  transition: all 0.15s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.btn-primary:hover {
-  transform: scale(1.01);
-  background-color: var(--color-primary) !important;
-}
-
-.btn-primary:active {
-  transform: scale(0.99);
-}
-
-/* ── Dark Solid Button (Mistral style) ──────────────────────────────── */
-
-.btn-dark {
-  background-color: #fffaeb;
-  color: #1f1f1f;
-  border: none;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.btn-dark:hover {
-  background-color: #d4d0c8;
-}
-
-.btn-dark:active {
-  transform: scale(0.99);
-}
-
-/* ── Mistral Orange Button ──────────────────────────────────────────────── */
-
-.btn-orange {
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.btn-orange:hover {
-  background-color: var(--color-primary-light);
-  transform: scale(1.01);
-}
-
-.btn-orange:active {
-  transform: scale(0.99);
-}
-
-/* ── Cream Surface Button ───────────────────────────────────────────────── */
-
-.btn-cream {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-  transition: all 0.15s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.btn-cream:hover {
-  background-color: #ffe8a0;
-  border-color: var(--color-border-strong);
-}
-
-/* ── Input Focus Ring — warm ───────────────────────────────────────────── */
+/* ── Focus Ring — Blue ─────────────────────────────────────────────────── */
 
 .input-focus-ring {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .input-focus-ring:focus {
-  border-color: var(--color-ring) !important;
-  box-shadow: 0 0 0 2px rgba(250, 82, 15, 0.15);
+  border-color: var(--mm-ring) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   outline: none;
 }
 
-/* ── Tab Underline Active ───────────────────────────────────────────────── */
-
-.tab-underline {
-  position: relative;
-}
-
-.tab-underline.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: var(--color-primary);
-  border-radius: 0;
-}
-
-/* ── Spin Animation ──────────────────────────────────────────────────────── */
+/* ── Spin Animation ────────────────────────────────────────────────────── */
 
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -423,24 +195,28 @@ body {
   animation: spin 1s linear infinite;
 }
 
-/* ── Pulse Ring ─────────────────────────────────────────────────────────── */
+/* ── Pulse Ring ────────────────────────────────────────────────────────── */
 
 @keyframes pulse-ring {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.8;
-  }
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.05); opacity: 0.8; }
 }
 
 .animate-pulse-ring {
   animation: pulse-ring 1.5s ease-in-out infinite;
 }
 
-/* ── Arrow Slide ───────────────���────────────────────────────────────────── */
+/* ── Hover Scale ───────────────────────────────────────────────────────── */
+
+.hover-scale {
+  transition: transform 0.15s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* ── Arrow Slide ───────────────────────────────────────────────────────── */
 
 @keyframes arrow-slide {
   from { transform: translateX(0); }
@@ -452,43 +228,74 @@ body {
   animation: arrow-slide 0.3s ease-out forwards;
 }
 
-/* ── Hover Scale ────────────────────────────────────────────────────────── */
+/* ── Footer Dark ───────────────────────────────────────────────────────── */
 
-.hover-scale {
-  transition: transform 0.2s ease;
+.footer-dark {
+  background-color: #181e25;
+  border-top: 1px solid var(--mm-brand);
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.hover-scale:hover {
-  transform: scale(1.03);
+.footer-dark a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-/* ── Badge Status ──────────────────────────────────────────────────────── */
+.footer-dark a:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* ── Badge System — Light Variants ────────────────────────────────────── */
 
 .badge-success {
-  background-color: #fff3e0;
-  color: #b85a00;
-  border: 1px solid #f0c060;
+  background-color: var(--mm-success-bg);
+  color: var(--mm-success);
+  border: 1px solid var(--mm-success-border);
 }
 
 .badge-error {
-  background-color: #fdecea;
-  color: #c0392b;
-  border: 1px solid #f5a099;
+  background-color: var(--mm-error-bg);
+  color: var(--mm-error);
+  border: 1px solid var(--mm-error-border);
 }
 
 .badge-warning {
-  background-color: #fff8e1;
-  color: #b8600a;
-  border: 1px solid #f5d080;
+  background-color: var(--mm-warning-bg);
+  color: var(--mm-warning);
+  border: 1px solid var(--mm-warning-border);
+}
+
+.badge-info {
+  background-color: var(--mm-info-bg);
+  color: var(--mm-info);
+  border: 1px solid var(--mm-info-border);
 }
 
 .badge-neutral {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  background-color: #f0f0f0;
+  color: var(--mm-text-secondary);
+  border: 1px solid var(--mm-border);
 }
 
-/* ── Status Dots — replace colored border anti-pattern ─────────────────── */
+/* ── Code / Pre Blocks — Light ────────────────────────────────────────── */
+
+.code-light {
+  background-color: #f5f5f5;
+  color: var(--mm-text);
+  border: 1px solid var(--mm-border);
+  border-left: 3px solid var(--mm-brand);
+}
+
+.pre-light {
+  background-color: #f5f5f5;
+  color: var(--mm-text-secondary);
+  border: 1px solid var(--mm-border);
+  border-left: 3px solid var(--mm-brand);
+  border-radius: var(--mm-radius-md);
+}
+
+/* ── Status Dots ───────────────────────────────────────────────────────── */
 
 .status-dot {
   display: inline-block;
@@ -498,185 +305,66 @@ body {
   flex-shrink: 0;
 }
 
-.status-dot-success { background-color: var(--color-success); }
-.status-dot-error   { background-color: var(--color-error); }
-.status-dot-warning { background-color: var(--color-warning); }
-.status-dot-info    { background-color: var(--color-text-muted); }
+.status-dot-success { background-color: var(--mm-success); }
+.status-dot-error   { background-color: var(--mm-error); }
+.status-dot-warning { background-color: var(--mm-warning); }
+.status-dot-info    { background-color: var(--mm-text-muted); }
 
-/* ── Warm code / pre block ──────────────────────────────────────────────── */
+/* ── Impact Boxes — Light ──────────────────────────────────────────────── */
 
-.code-dark {
-  background-color: #1f1f1f;
-  color: #f5d882;
-}
-
-.pre-warm {
-  background-color: #1f1f1f;
-  color: #f5d882;
-  border: 1px solid rgba(127, 99, 21, 0.3);
-}
-
-/* ── Empty state warm ───────────────────────────────────────────────────── */
-
-.empty-warm {
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-}
-
-/* ── Open Source Badge warm ─────────────────────────────────────────────── */
-
-.badge-opensource {
-  background-color: #fff3e0;
-  color: #b8600a;
-  border: 1px solid #f5d080;
-}
-
-/* ── Progress bar warm ───────────────────���─────────────────────────────── */
-
-.progress-amber {
-  background-color: #ffa110;
-  border-radius: 0;
-}
-
-.progress-amber-100 {
-  background-color: #ffd900;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   DARK MODE — Warm Dark Palette
-   Deep warm charcoal thay vì đen thuần, giữ Mistral identity
-/* ═══════════════════════════════════════════════════════════════════════════
-   DARK-ONLY THEME
-   All tokens are dark-mode values by default.
-   Light mode and @media (prefers-color-scheme: dark) removed.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── Footer Sunset Gradient ─────────────────────────────────── */
-.footer-sunset {
-  background: linear-gradient(
-    to bottom,
-    #3d3020 0%,
-    #ffa110 25%,
-    #d4400d 50%,
-    #1f1f1f 80%,
-    #0f0f0f 100%
-  );
-}
-
-/* ── Hero gradient overlay ─────────────────────────────────── */
-.hero-gradient-overlay {
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(250, 82, 15, 0.06) 0%, transparent 70%) !important;
-}
-
-/* ── Badge dark defaults ─────────────────────────────────── */
-.badge-success {
-  background-color: rgba(230, 126, 34, 0.15);
-  color: #e67e22;
-  border: 1px solid rgba(230, 126, 34, 0.4);
-}
-
-.badge-error {
-  background-color: rgba(231, 76, 60, 0.15);
-  color: #e74c3c;
-  border: 1px solid rgba(231, 76, 60, 0.4);
-}
-
-.badge-warning {
-  background-color: rgba(243, 156, 18, 0.15);
-  color: #f39c12;
-  border: 1px solid rgba(243, 156, 18, 0.4);
-}
-
-.badge-neutral {
-  background-color: #333333;
-  color: #d4d0c8;
-  border: 1px solid #3d3d3d;
-}
-
-.badge-opensource {
-  background-color: rgba(243, 156, 18, 0.12);
-  color: #f39c12;
-  border: 1px solid rgba(243, 156, 18, 0.3);
-}
-
-/* ── Input dark defaults ─────────────────────────────────── */
-input,
-textarea,
-select {
-  background-color: #1f1f1f !important;
-  color: #ffffff !important;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: rgba(255, 250, 235, 0.35) !important;
-}
-
-/* ── pre/code blocks dark defaults ──────────────────────────── */
-.pre-warm,
-.code-dark {
-  background-color: #111111;
-  color: #f5d882;
-  border: 1px solid #3d3d3d;
-}
-
-/* ── empty state dark defaults ───────────────────────────── */
-.empty-warm {
-  background-color: #2a2a2a;
-  border: 1px solid #3d3d3d;
-  color: #ffa110;
-}
-
-/* ── btn-cream hover dark ──────────────────────────────── */
-.btn-cream:hover {
-  background-color: #333333;
-  border-color: #555555;
-}
-
-/* ── Card interactive hover dark ───────────────────────── */
-.card-interactive:hover {
-  box-shadow: var(--shadow-golden-md);
-  border-color: #555555;
-}
-
-/* ── Impact boxes dark defaults ────────────────────────── */
 .impact-box-errors {
-  background-color: rgba(231, 76, 60, 0.12);
-  border-left: 3px solid rgba(231, 76, 60, 0.6);
-  color: #e74c3c;
-  border-radius: var(--radius);
+  background-color: var(--mm-error-bg);
+  border-left: 3px solid var(--mm-error);
+  color: var(--mm-error);
+  border-radius: var(--mm-radius);
 }
 
-.impact-box-warnings,
+.impact-box-warnings {
+  background-color: var(--mm-warning-bg);
+  border-left: 3px solid var(--mm-warning);
+  color: var(--mm-warning);
+  border-radius: var(--mm-radius);
+}
+
 .impact-box-notfound {
-  background-color: rgba(255, 215, 0, 0.08);
-  border-left: 3px solid rgba(255, 215, 0, 0.5);
-  color: #f39c12;
-  border-radius: var(--radius);
+  background-color: var(--mm-bg-secondary);
+  border-left: 3px solid var(--mm-border-strong);
+  color: var(--mm-text-secondary);
+  border-radius: var(--mm-radius);
 }
 
-/* ── Logo dark invert (utility) ──────────────────────── */
-.dark .logo-dark-invert {
-  filter: invert(1) brightness(1.5) contrast(1.1);
+/* ── Empty State — Light ───────────────────────────────────────────────── */
+
+.empty-light {
+  background-color: var(--mm-bg-secondary);
+  border: 1px solid var(--mm-border);
+  color: var(--mm-text-muted);
+  border-radius: var(--mm-radius);
 }
 
-/* ── Header glassmorphism ────────────────────────────── */
-header[style*="backdrop-filter"] {
-  background-color: rgba(31, 31, 31, 0.88) !important;
+/* ── Scrollbar — Light ─────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* ── Form Input Class ─────────────────────────────────────────────────── */
-.form-input {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* ── Card Interactive Hover - golden shadow ──────────────────────────── */
-.card-interactive:hover {
-  box-shadow: var(--shadow-hover);
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* ── Focus visible ─────────────────────────────────────────────────────── */
+
+*:focus-visible {
+  outline: 2px solid var(--mm-ring);
+  outline-offset: 2px;
 }

@@ -15,6 +15,39 @@ function validateUrl(url: string): boolean {
   }
 }
 
+export async function crawlWebsite(url: string): Promise<{
+  origin: string;
+  siteName: string;
+  pages: Array<{ url: string; title: string; description: string; category?: string }>;
+}> {
+  const discovered = await discoverUrls(url);
+  const deduplicated = deduplicateUrls(discovered);
+  const filtered = filterUrls(deduplicated, []);
+
+  // Take top 50 URLs, convert to ScoredUrl format for crawlPages
+  const urlsToCrawl = filtered.slice(0, 50).map((u) => ({
+    url: u.url,
+    normalizedUrl: u.normalizedUrl,
+    depth: u.depth,
+    source: u.source,
+    score: 0,
+  }));
+  const crawled = await crawlPages(urlsToCrawl, 5);
+
+  const siteName = new URL(url).hostname.replace(/^www\./, "");
+
+  const pages = crawled
+    .filter((p) => p.content !== undefined)
+    .map((p) => ({
+      url: p.url,
+      title: p.title ?? "",
+      description: p.description ?? "",
+      category: p.category,
+    }));
+
+  return { origin: url, siteName, pages };
+}
+
 export async function generateLlmsTxt(
   input: GeneratorInput,
   onProgress?: (step: number, message: string) => void
@@ -99,4 +132,3 @@ export * from "./crawler";
 export * from "./builder";
 export * from "./security";
 export { generateAiDescriptions, generateAiDescription, buildPrompt } from "./ai-generator";
-export { classifyPage, getCategoryLabel } from "./category-classifier";

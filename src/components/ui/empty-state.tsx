@@ -18,13 +18,13 @@ export function EmptyState({ title, description, icon }: EmptyStateProps) {
         justifyContent: "center",
         padding: "3rem 1.5rem",
         textAlign: "center",
-        backgroundColor: "var(--color-bg-secondary)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius)",
+        backgroundColor: "var(--mm-bg-secondary)",
+        border: "1px solid var(--mm-border)",
+        borderRadius: "var(--mm-radius)",
       }}
     >
       {icon ? (
-        <div style={{ marginBottom: "0.75rem", color: "var(--color-text-muted)" }}>
+        <div style={{ marginBottom: "0.75rem", color: "var(--mm-text-muted)" }}>
           {icon}
         </div>
       ) : (
@@ -35,7 +35,7 @@ export function EmptyState({ title, description, icon }: EmptyStateProps) {
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          style={{ color: "var(--color-text-muted)", marginBottom: "0.75rem" }}
+          style={{ color: "var(--mm-text-muted)", marginBottom: "0.75rem" }}
         >
           <path
             strokeLinecap="round"
@@ -48,7 +48,7 @@ export function EmptyState({ title, description, icon }: EmptyStateProps) {
         style={{
           fontSize: "0.9375rem",
           fontWeight: 500,
-          color: "var(--color-text)",
+          color: "var(--mm-text)",
           marginBottom: description ? "0.375rem" : 0,
         }}
       >
@@ -58,7 +58,7 @@ export function EmptyState({ title, description, icon }: EmptyStateProps) {
         <p
           style={{
             fontSize: "0.8125rem",
-            color: "var(--color-text-muted)",
+            color: "var(--mm-text-muted)",
             lineHeight: 1.5,
             maxWidth: "40ch",
           }}

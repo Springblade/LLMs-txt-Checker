@@ -1,7 +1,15 @@
 import type { FetchedFile } from "@/lib/consistency-checker";
-import { sniffContentType, detectWafResponse } from "@/lib/content-sniffer";
+import { sniffContentType, detectWafResponse, detectNotFoundPage } from "@/lib/content-sniffer";
 import { decodeWithCharset } from "@/lib/charset-decoder";
 import type { LinkResult, ValidationError, ValidationWarning } from "@/lib/types";
+
+export type SkipReasonType =
+  | "http_error"
+  | "content_type_blocked"
+  | "waf_blocked"
+  | "not_found_page"
+  | "encoding_error"
+  | "network_error";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const LINK_TIMEOUT_MS = 5_000;
@@ -50,48 +58,64 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "has_links",       label: "Links to key pages present",                     severity: "warning", showValue: true },
   ],
   "llm.txt": [
-    { id: "not_empty",        label: "File is not empty",                               severity: "error" },
-    { id: "single_line",     label: "Single URL redirect line",                         severity: "warning" },
-    { id: "valid_url",       label: "URL is valid",                                     severity: "error" },
-    { id: "https_protocol",  label: "URL uses HTTPS protocol",                         severity: "error" },
+    { id: "content_type",   label: "Content type is text/plain",                     severity: "error" },
+    { id: "waf_block",     label: "Not blocked by WAF",                              severity: "error" },
+    { id: "not_empty",     label: "File is not empty",                               severity: "error" },
+    { id: "single_line",   label: "Single URL redirect line",                        severity: "warning" },
+    { id: "valid_url",     label: "URL is valid",                                    severity: "error" },
+    { id: "https_protocol", label: "URL uses HTTPS protocol",                        severity: "error" },
   ],
   "ai.txt": [
-    { id: "has_identity",        label: "Has [identity] section",                       severity: "error" },
-    { id: "has_name_field",     label: "[identity] includes name field",                severity: "error" },
-    { id: "has_url_field",      label: "[identity] includes url field",                severity: "error" },
-    { id: "has_permissions",    label: "Has [permissions] section",                    severity: "error" },
-    { id: "has_restrictions",   label: "Has [restrictions] section (recommended)",     severity: "warning" },
-    { id: "permissions_filled", label: "[permissions] section has items",             severity: "warning" },
+    { id: "content_type",     label: "Content type is text/plain",                   severity: "error" },
+    { id: "waf_block",       label: "Not blocked by WAF",                            severity: "error" },
+    { id: "has_identity",     label: "Has [identity] section",                       severity: "error" },
+    { id: "has_name_field",   label: "[identity] includes name field",               severity: "error" },
+    { id: "has_url_field",    label: "[identity] includes url field",                severity: "error" },
+    { id: "has_permissions",  label: "Has [permissions] section",                    severity: "error" },
+    { id: "has_restrictions", label: "Has [restrictions] section (recommended)",     severity: "warning" },
+    { id: "permissions_filled", label: "[permissions] section has items",           severity: "warning" },
   ],
   "faq-ai.txt": [
-    { id: "has_qa_pairs",     label: "Q:/A: pairs present",                            severity: "error",   showValue: true },
+    { id: "content_type", label: "Content type is text/plain",                       severity: "error" },
+    { id: "waf_block",   label: "Not blocked by WAF",                               severity: "error" },
+    { id: "has_qa_pairs",     label: "Q:/A: pairs present",                         severity: "error",   showValue: true },
     { id: "no_orphan_q",     label: "No orphan questions (all have answers)",          severity: "warning" },
     { id: "no_orphan_a",     label: "No orphan answers (all have questions)",          severity: "warning" },
   ],
   "brand.txt": [
-    { id: "has_brand_name",    label: "Has brand-name: field",                          severity: "error" },
-    { id: "has_do_not_use",   label: "Has do-not-use: field (recommended)",            severity: "warning" },
-    { id: "no_name_conflict", label: "do-not-use does not duplicate brand-name",        severity: "warning" },
+    { id: "content_type",    label: "Content type is text/plain",                     severity: "error" },
+    { id: "waf_block",     label: "Not blocked by WAF",                              severity: "error" },
+    { id: "has_brand_name",  label: "Has brand-name: field",                         severity: "error" },
+    { id: "has_do_not_use", label: "Has do-not-use: field (recommended)",            severity: "warning" },
+    { id: "no_name_conflict", label: "do-not-use does not duplicate brand-name",      severity: "warning" },
   ],
   "developer-ai.txt": [
-    { id: "has_overview",        label: "Has ## Overview section (recommended)",         severity: "warning" },
-    { id: "no_marketing_talk",  label: "No marketing language detected",                severity: "warning" },
+    { id: "content_type",       label: "Content type is text/plain",                 severity: "error" },
+    { id: "waf_block",         label: "Not blocked by WAF",                          severity: "error" },
+    { id: "has_overview",      label: "Has ## Overview section (recommended)",        severity: "warning" },
+    { id: "no_marketing_talk", label: "No marketing language detected",               severity: "warning" },
   ],
   "llms.html": [
     { id: "content_type", label: "Content type is text/html",                         severity: "error" },
-    { id: "waf_block",    label: "Not blocked by WAF",                                 severity: "error" },
+    { id: "waf_block",   label: "Not blocked by WAF",                                 severity: "error" },
     { id: "encoding",     label: "Valid text encoding",                               severity: "error" },
   ],
   "robots-ai.txt": [
-    { id: "has_directive", label: "Contains Allow or Disallow rules",                 severity: "error" },
+    { id: "content_type",  label: "Content type is text/plain",                     severity: "error" },
+    { id: "waf_block",    label: "Not blocked by WAF",                              severity: "error" },
+    { id: "has_directive", label: "Contains Allow or Disallow rules",               severity: "error" },
   ],
   "identity.json": [
-    { id: "valid_json", label: "Valid JSON structure",                                severity: "error" },
-    { id: "has_name",   label: "Has name field",                                       severity: "error" },
-    { id: "has_url",    label: "Has url field",                                        severity: "error" },
+    { id: "content_type", label: "Content type is application/json or text/plain",    severity: "error" },
+    { id: "waf_block",   label: "Not blocked by WAF",                              severity: "error" },
+    { id: "valid_json",  label: "Valid JSON structure",                            severity: "error" },
+    { id: "has_name",    label: "Has name field",                                   severity: "error" },
+    { id: "has_url",     label: "Has url field",                                    severity: "error" },
   ],
   "ai.json": [
-    { id: "valid_json", label: "Valid JSON structure",                                severity: "error" },
+    { id: "content_type", label: "Content type is application/json or text/plain",    severity: "error" },
+    { id: "waf_block",   label: "Not blocked by WAF",                              severity: "error" },
+    { id: "valid_json",  label: "Valid JSON structure",                            severity: "error" },
   ],
 };
 
@@ -104,12 +128,22 @@ export type ChecklistItem = {
   value?: number;
 };
 
-function buildChecklist(
+const SKIP_REASON_MESSAGES: Record<SkipReasonType, (name: string) => string> = {
+  http_error: (_name) => `File not found (HTTP error)`,
+  content_type_blocked: (name) => `Server returned HTML instead of ${name} file`,
+  waf_blocked: (_name) => `Blocked by website firewall or anti-bot system`,
+  not_found_page: (name) => `Server returned 404 page — ${name} does not exist`,
+  encoding_error: (_name) => `Could not decode file content (unsupported encoding)`,
+  network_error: (_name) => `Network error — server unreachable or timed out`,
+};
+
+export function buildChecklist(
   name: FileName,
   found: boolean,
   errors: ValidationError[],
   warnings: ValidationWarning[],
   contentMetrics: ContentMetrics = {},
+  skipReasonType?: SkipReasonType,
 ): ChecklistItem[] {
   const rules = FILE_CHECKLISTS[name];
   if (!rules) return [];
@@ -120,7 +154,17 @@ function buildChecklist(
 
     if (err) return { id: rule.id, label: rule.label, status: "failed" as const, message: err.message };
     if (warn) return { id: rule.id, label: rule.label, status: "warning" as const, message: warn.message };
-    if (!found) return { id: rule.id, label: rule.label, status: "skipped" as const };
+    if (!found) {
+      const message = skipReasonType
+        ? SKIP_REASON_MESSAGES[skipReasonType](name)
+        : "File not found (404 or unreachable)";
+      return {
+        id: rule.id,
+        label: rule.label,
+        status: "failed" as const,
+        message,
+      };
+    }
     return { id: rule.id, label: rule.label, status: "passed" as const, value: metricValue };
   });
 }
@@ -253,25 +297,62 @@ function validateLlmTxt(content: string) {
   return { errors, warnings };
 }
 
+function extractMarkdownSection(content: string, sectionName: string): string {
+  const regex = new RegExp(`(?:###\\s+)?${sectionName}[\\s\\S]*?(?=(?:###|\\n##)|$)`, "i");
+  const match = content.match(regex);
+  return (match && match[0]) ? match[0] : "";
+}
+
 function validateAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  const hasIdentity = /^\[identity\]\s*$/im.test(content);
-  const hasPermissions = /^\[permissions\]\s*$/im.test(content);
-  const hasRestrictions = /^\[restrictions\]\s*$/im.test(content);
+  // Accept both Markdown (### Canonical Identity Block) and INI ([identity]) formats
+  const hasIdentity =
+    /^(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content) ||
+    /^\[identity\]\s*$/im.test(content);
+  const hasPermissions =
+    /^(?:###\s+)?AI\s+Recommendation\s+Intent/im.test(content) ||
+    /^\[permissions\]\s*$/im.test(content);
+  const hasRestrictions =
+    /^(?:###\s+)?(?:Service\s+Scope\s+Clarifications|When\s+NOT\s+Recommend)/im.test(content) ||
+    /^\[restrictions\]\s*$/im.test(content);
 
-  if (!hasIdentity) errors.push({ rule: "has_identity", message: "Missing [identity] section" });
-  if (!hasPermissions) errors.push({ rule: "has_permissions", message: "Missing [permissions] section" });
-  if (!hasRestrictions) warnings.push({ rule: "has_restrictions", message: "Missing [restrictions] section — recommended" });
+  if (!hasIdentity) errors.push({ rule: "has_identity", message: "Missing identity section" });
+  if (!hasPermissions) errors.push({ rule: "has_permissions", message: "Missing AI recommendation intent section" });
+  if (!hasRestrictions) warnings.push({ rule: "has_restrictions", message: "Missing restrictions section — recommended" });
 
-  const identitySection = extractIniSection(content, "identity");
-  if (!/name\s*=/i.test(identitySection)) errors.push({ rule: "has_name_field", message: "[identity] must include name field" });
-  if (!/url\s*=/i.test(identitySection)) errors.push({ rule: "has_url_field", message: "[identity] must include url field" });
+  // Extract identity section - try INI first, then Markdown
+  const iniSection = extractIniSection(content, "identity");
+  const mdSection = extractMarkdownSection(content, "Canonical Identity Block");
+  const identitySection = iniSection || mdSection;
 
-  const permSection = extractIniSection(content, "permissions");
-  const permLines = permSection.split("\n").filter((l) => l.trim() && !l.trim().startsWith("#"));
-  if (permLines.length === 0) warnings.push({ rule: "permissions_filled", message: "[permissions] has no items" });
+  // Check for name field - accept both "name=value" and "Business name: value"
+  const hasNameField =
+    /\n\s*(?:Business\s+name|name)\s*:/im.test(identitySection) ||
+    /^\s*name\s*=/im.test(identitySection);
+  if (!hasNameField && identitySection.length > 0) {
+    errors.push({ rule: "has_name_field", message: "Identity section must include name field" });
+  }
+
+  // Check for URL field - accept both "url=value" and "Website: value"
+  const hasUrlField =
+    /\n\s*(?:Website|url)\s*:/im.test(identitySection) ||
+    /^\s*url\s*=/im.test(identitySection);
+  if (!hasUrlField && identitySection.length > 0) {
+    errors.push({ rule: "has_url_field", message: "Identity section must include url field" });
+  }
+
+  // Check if permissions section has items - try both formats
+  const iniPermSection = extractIniSection(content, "permissions");
+  const mdPermSection = extractMarkdownSection(content, "AI Recommendation Intent");
+  const permSection = iniPermSection || mdPermSection;
+  const permLines = permSection
+    .split("\n")
+    .filter((l) => l.trim() && !l.trim().startsWith("#") && !/^(?:AI\s+systems\s+should|When\s+to\s+)/i.test(l.trim()));
+  if (permLines.length === 0) {
+    warnings.push({ rule: "permissions_filled", message: "Permissions section has no items" });
+  }
 
   return { errors, warnings };
 }
@@ -437,7 +518,7 @@ function extractIniSection(content: string, section: string): string {
   return (match && match[1]) ? match[1] : "";
 }
 
-function validateByType(content: string, fileName: FileName): { errors: ValidationError[]; warnings: ValidationWarning[] } {
+export function validateByType(content: string, fileName: FileName): { errors: ValidationError[]; warnings: ValidationWarning[] } {
   switch (fileName) {
     case "llms.txt": return validateLlmsTxtContent(content);
     case "llm.txt": return validateLlmTxt(content);
@@ -513,7 +594,12 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; AI-Discovery-Checker/1.0)",
+      },
+    });
     clearTimeout(timer);
     return res;
   } catch (e) {
@@ -544,52 +630,95 @@ interface FileResult {
   warnings: ValidationWarning[];
   identity: Record<string, string | null>;
   checklist: ChecklistItem[];
+  skipReason?: string;
+  skipReasonType?: SkipReasonType;
 }
 
-async function scanFile(origin: string, name: FileName): Promise<FileResult> {
+export async function scanFile(origin: string, name: FileName): Promise<FileResult> {
   const url = `${origin}/${name}`;
 
   let res: Response;
   let content: string;
   let ctHeader: string | null = null;
+  let skipReason: string | undefined;
 
   try {
     res = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
-    if (!res.ok) return { name, found: false, url, content: "", errors: [], warnings: [], identity: { name: null, url: null, email: null }, checklist: buildChecklist(name, false, [], []) };
+    if (!res.ok) {
+      console.debug(`[scanFile] ${name}: HTTP ${res.status} (not 2xx)`);
+      return { name, found: false, url, content: "", errors: [], warnings: [], identity: { name: null, url: null, email: null }, checklist: buildChecklist(name, false, [], [], {}, "http_error"), skipReason: `HTTP ${res.status}`, skipReasonType: "http_error" };
+    }
     ctHeader = res.headers.get("content-type");
     const ab = await res.arrayBuffer();
     const decoded = decodeWithCharset(ab, ctHeader);
     if (!decoded.success) {
+      skipReason = `Decoding failed: ${decoded.message ?? "unknown"}`;
+      console.debug(`[scanFile] ${name}: ${skipReason}`);
       return {
-        name, found: true, url, content: "",
+        name, found: false, url, content: "",
         errors: [{ rule: "encoding", message: decoded.message ?? "Unsupported encoding" }],
         warnings: [],
         identity: { name: null, url: null, email: null },
-        checklist: buildChecklist(name, true, [{ rule: "encoding", message: decoded.message ?? "Unsupported encoding" }], []),
+        checklist: buildChecklist(name, false, [{ rule: "encoding", message: decoded.message ?? "Unsupported encoding" }], [], {}, "encoding_error"),
+        skipReason,
+        skipReasonType: "encoding_error",
       };
     }
     content = decoded.text ?? "";
-  } catch (e) {
-    return { name, found: false, url, content: "", errors: [], warnings: [], identity: { name: null, url: null, email: null }, checklist: buildChecklist(name, false, [], []) };
-  }
-
-  // For llms.txt: check content type + WAF
-  if (name === "llms.txt") {
-    const sample = content.trimStart().substring(0, 2048);
-    const sniff = sniffContentType(ctHeader, sample);
-    if (!sniff.allowed) {
+    if (content.trim() === "") {
+      console.debug(`[scanFile] ${name}: decoded text is empty (HTTP ${res.status}, ct=${ctHeader ?? "null"})`);
       return {
-        name, found: true, url, content: "",
-        errors: [{ rule: "invalid_type", message: sniff.message ?? "Unrecognized content type" }],
+        name, found: false, url, content: "",
+        errors: [],
         warnings: [],
         identity: { name: null, url: null, email: null },
-        checklist: buildChecklist(name, true, [{ rule: "invalid_type", message: sniff.message ?? "Unrecognized content type" }], []),
+        checklist: buildChecklist(name, false, [], [], {}, "http_error"),
+        skipReason: `Empty response (HTTP ${res.status})`,
+        skipReasonType: "http_error",
       };
     }
-    const waf = detectWafResponse(content);
-    if (waf.blocked) {
-      return { name, found: true, url, content: "", errors: [{ rule: "waf_block", message: waf.message }], warnings: [], identity: { name: null, url: null, email: null }, checklist: buildChecklist(name, true, [{ rule: "waf_block", message: waf.message }], []) };
-    }
+    console.debug(`[scanFile] ${name}: OK — ${content.length} chars, ct=${ctHeader ?? "null"}`);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    skipReason = `Network error: ${message}`;
+    console.debug(`[scanFile] ${name}: ${skipReason}`);
+    return { name, found: false, url, content: "", errors: [], warnings: [], identity: { name: null, url: null, email: null }, checklist: buildChecklist(name, false, [], [], {}, "network_error"), skipReason, skipReasonType: "network_error" };
+  }
+
+  // Check content type + WAF for all file types
+  const sample = content.trimStart().substring(0, 2048);
+  const sniff = sniffContentType(ctHeader, sample, name);
+  if (!sniff.allowed) {
+    // Check if this HTML response is actually a 404 page
+    const notFound = detectNotFoundPage(content, name);
+    const reasonType: SkipReasonType = notFound.is404Page ? "not_found_page" : "content_type_blocked";
+    skipReason = notFound.is404Page
+      ? `Content-Type blocked: ${notFound.message}`
+      : `Content-Type blocked: ${sniff.message ?? "unrecognized"}`;
+    console.debug(`[scanFile] ${name}: ${skipReason}`);
+    return {
+      name, found: false, url, content: "",
+      errors: [{ rule: "content_type", message: notFound.is404Page ? notFound.message : (sniff.message ?? `Unrecognized content type for ${name}`) }],
+      warnings: [],
+      identity: { name: null, url: null, email: null },
+      checklist: buildChecklist(name, false, [{ rule: "content_type", message: notFound.is404Page ? notFound.message : (sniff.message ?? `Unrecognized content type for ${name}`) }], [], {}, reasonType),
+      skipReason,
+      skipReasonType: reasonType,
+    };
+  }
+  const waf = detectWafResponse(content, name);
+  if (waf.blocked) {
+    skipReason = `WAF detected: ${waf.message}`;
+    console.debug(`[scanFile] ${name}: ${skipReason}`);
+    return {
+      name, found: false, url, content: "",
+      errors: [{ rule: "waf_block", message: waf.message }],
+      warnings: [],
+      identity: { name: null, url: null, email: null },
+      checklist: buildChecklist(name, false, [{ rule: "waf_block", message: waf.message }], [], {}, "waf_blocked"),
+      skipReason,
+      skipReasonType: "waf_blocked",
+    };
   }
 
   // Validate

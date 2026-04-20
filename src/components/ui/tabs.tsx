@@ -19,8 +19,10 @@ export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
       role="tablist"
       style={{
         display: "flex",
-        borderBottom: "1px solid var(--color-border)",
-        paddingLeft: "0.25rem",
+        gap: "0.25rem",
+        padding: "0.25rem",
+        backgroundColor: "var(--mm-bg-secondary)",
+        borderRadius: "var(--mm-radius)",
       }}
     >
       {tabs.map((tab) => {
@@ -32,19 +34,17 @@ export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
             aria-selected={isActive}
             onClick={() => onChange(tab.id)}
             style={{
-              padding: "0.75rem 1rem",
-              fontSize: "0.875rem",
+              padding: "0.375rem 0.75rem",
+              fontSize: "0.8125rem",
               fontWeight: 500,
-              color: isActive ? "var(--color-text)" : "var(--color-text-secondary)",
-              background: "transparent",
+              color: isActive ? "#18181b" : "#45515e",
+              backgroundColor: isActive ? "#ffffff" : "transparent",
               border: "none",
-              borderBottom: isActive
-                ? "2px solid var(--color-primary)"
-                : "2px solid transparent",
+              borderRadius: "var(--mm-radius-pill)",
               cursor: "pointer",
-              transition: "color 0.15s ease, border-color 0.15s ease",
+              transition: "all 0.15s ease",
               fontFamily: "inherit",
-              letterSpacing: "inherit",
+              boxShadow: isActive ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
             }}
           >
             {tab.label}

@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateLlmsTxt, type GeneratorInput } from "@/lib/generator";
+import { generateFile } from "@/lib/discovery/file-generators";
 import { z } from "zod";
+
+const FileTypeEnum = z.enum([
+  "llms.txt",
+  "llm.txt",
+  "ai.txt",
+  "brand.txt",
+  "faq-ai.txt",
+  "developer-ai.txt",
+  "llms.html",
+  "robots-ai.txt",
+  "identity.json",
+  "ai.json",
+]);
 
 const GenerateInput = z.object({
   url: z.string().url("Invalid URL"),
+  fileType: FileTypeEnum.optional(),
   maxUrls: z.number().int().min(1).max(200).optional().default(50),
   includePaths: z.array(z.string()).optional().default([]),
   excludePaths: z.array(z.string()).optional().default([]),
@@ -24,8 +39,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const input: GeneratorInput = parsed.data;
+    const { url, fileType } = parsed.data;
 
+    if (fileType) {
+      const result = await generateFile(fileType, url);
+      return NextResponse.json(result, { status: result.success ? 200 : 500 });
+    }
+
+    const input: GeneratorInput = { url, maxUrls: 50 };
     const result = await generateLlmsTxt(input);
 
     return NextResponse.json(result, { status: result.success ? 200 : 500 });
