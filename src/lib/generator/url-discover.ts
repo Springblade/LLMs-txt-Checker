@@ -103,6 +103,23 @@ async function fetchHomepage(origin: string): Promise<string | null> {
   }
 }
 
+export async function fetchLlmsTxt(origin: string): Promise<string | null> {
+  const url = origin.endsWith("/") ? `${origin}llms.txt` : `${origin}/llms.txt`;
+
+  try {
+    const res = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
+    if (!res.ok) return null;
+
+    const text = await res.text();
+    // Basic validation - must have # heading (markdown)
+    if (!text.includes("#")) return null;
+
+    return text;
+  } catch {
+    return null;
+  }
+}
+
 // ─── HTML parsers ─────────────────────────────────────────────────────────────
 
 function extractInternalLinks(html: string, baseOrigin: string): string[] {
