@@ -73,7 +73,8 @@ function extractMetadata(html: string, _url: string): ExtractedMetadata {
 
 // ─── Jina Reader API (Primary) ─────────────────────────────────────────────────
 async function fetchViaJina(pageUrl: string): Promise<FetchResult> {
-  const jinaUrl = `https://r.jina.ai/api/v1/content/${encodeURIComponent(pageUrl)}`;
+  // Prefix format: https://r.jina.ai/<URL> — not /api/v1/content/
+  const jinaUrl = `https://r.jina.ai/${encodeURIComponent(pageUrl)}`;
   const headers: HeadersInit = { Accept: "text/plain" };
 
   // Add API key if provided (for higher rate limits)
@@ -82,7 +83,15 @@ async function fetchViaJina(pageUrl: string): Promise<FetchResult> {
     headers["Authorization"] = `Bearer ${jinaKey}`;
   }
 
-  const result = await fetchWithRetry(jinaUrl, () => fetchWithTimeout(jinaUrl, FETCH_TIMEOUT_MS), MAX_RETRIES);
+  const result = await fetchWithRetry(
+    jinaUrl,
+    () =>
+      fetch(jinaUrl, {
+        headers,
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      }),
+    MAX_RETRIES
+  );
 
   if (!result.res) {
     return { url: pageUrl, error: result.error ?? "Jina fetch failed", provider: null };
@@ -94,10 +103,12 @@ async function fetchViaJina(pageUrl: string): Promise<FetchResult> {
 
   try {
     const text = await result.res.text();
-    // Jina returns "Title: ...\n\nUrl: ...\n\nContent: ..."
-    const contentMatch = text.match(/^Content:\s*([\s\S]*)$/m);
-    const extractedContent = contentMatch?.[1]?.trim() ?? text;
-    return { url: pageUrl, content: extractedContent, provider: "jina" };
+    // Prefix format returns markdown; use as-is (fallback handles older formats too)
+    const trimmed = text.trim();
+    if (!trimmed) {
+      return { url: pageUrl, error: "Jina returned empty content", provider: null };
+    }
+    return { url: pageUrl, content: trimmed, provider: "jina" };
   } catch {
     return { url: pageUrl, error: "Failed to parse Jina response", provider: null };
   }
