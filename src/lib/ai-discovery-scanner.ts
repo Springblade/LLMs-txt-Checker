@@ -44,78 +44,72 @@ interface ChecklistRule {
 
 const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
   "llms.txt": [
-    // Technical validation
-    { id: "content_type",   label: "Content type is text/plain or text/markdown",     severity: "error" },
-    { id: "waf_block",      label: "Not blocked by WAF / security challenge page",     severity: "error" },
-    { id: "encoding",       label: "Valid text encoding (UTF-8)",                     severity: "error" },
-    // Content quality
-    { id: "markdown_format", label: "Valid Markdown format",                           severity: "error" },
-    { id: "has_h1",         label: "H1 title present",                               severity: "error" },
-    { id: "has_description", label: "Brief project description present",               severity: "warning" },
-    { id: "has_h2",         label: "H2 headings present for structure",                 severity: "warning" },
-    { id: "has_paragraphs", label: "Has detailed paragraphs",                         severity: "warning", showValue: true },
-    { id: "no_broken_links", label: "No broken links",                                 severity: "error",  showValue: true },
-    { id: "has_links",       label: "Links to key pages present",                     severity: "warning", showValue: true },
+    // Per llms.txt standard structure
+    { id: "markdown_format",  label: "Valid Markdown format",                        severity: "error" },
+    { id: "has_h1",         label: "H1 heading (brand/project name)",              severity: "error" },
+    { id: "quote_block",    label: "Blockquote (one-sentence summary)",              severity: "error" },
+    { id: "has_paragraphs", label: "Description paragraphs (more detail)",            severity: "error" },
+    { id: "has_h2",         label: "H2 sections (groups of related links)",          severity: "warning" },
+    { id: "has_links",      label: "Link lists (title + URL)",                     severity: "warning", showValue: true },
   ],
   "llm.txt": [
-    { id: "content_type",   label: "Content type is text/plain",                     severity: "error" },
-    { id: "waf_block",     label: "Not blocked by WAF",                              severity: "error" },
-    { id: "not_empty",     label: "File is not empty",                               severity: "error" },
-    { id: "single_line",   label: "Single URL redirect line",                        severity: "warning" },
-    { id: "valid_url",     label: "URL is valid",                                    severity: "error" },
-    { id: "https_protocol", label: "URL uses HTTPS protocol",                        severity: "error" },
+    // Per llm.txt standard structure (ADF-002)
+    { id: "has_h1",      label: "H1 heading (redirect notice)",         severity: "error" },
+    { id: "has_llms_link", label: "Links to llms.txt present",            severity: "error" },
+    { id: "has_h2",     label: "H2 sections (additional reference files)", severity: "warning" },
+    { id: "has_links",  label: "Links to other AI files present",        severity: "warning" },
   ],
   "ai.txt": [
-    { id: "content_type",     label: "Content type is text/plain",                   severity: "error" },
-    { id: "waf_block",       label: "Not blocked by WAF",                            severity: "error" },
-    { id: "has_identity",     label: "Has [identity] section",                       severity: "error" },
-    { id: "has_name_field",   label: "[identity] includes name field",               severity: "error" },
-    { id: "has_url_field",    label: "[identity] includes url field",                severity: "error" },
-    { id: "has_permissions",  label: "Has [permissions] section",                    severity: "error" },
-    { id: "has_restrictions", label: "Has [restrictions] section (recommended)",     severity: "warning" },
-    { id: "permissions_filled", label: "[permissions] section has items",           severity: "warning" },
+    // Per ai.txt standard structure (ADF-004)
+    { id: "has_identity_block", label: "Canonical Identity Block present",       severity: "error" },
+    { id: "has_h2",            label: "H2 sections (AI intent, services, etc.)", severity: "warning" },
+    { id: "has_links",         label: "Links present",                         severity: "warning" },
   ],
   "faq-ai.txt": [
-    { id: "content_type", label: "Content type is text/plain",                       severity: "error" },
-    { id: "waf_block",   label: "Not blocked by WAF",                               severity: "error" },
-    { id: "has_qa_pairs",     label: "Q:/A: pairs present",                         severity: "error",   showValue: true },
-    { id: "no_orphan_q",     label: "No orphan questions (all have answers)",          severity: "warning" },
-    { id: "no_orphan_a",     label: "No orphan answers (all have questions)",          severity: "warning" },
+    // Per faq-ai.txt standard structure (ADF-008)
+    { id: "has_identity_block", label: "Canonical Identity Block present",  severity: "error" },
+    { id: "has_qa_pairs",      label: "Q:/A: pairs present",               severity: "error",   showValue: true },
+    { id: "no_orphan_q",       label: "No orphan questions",               severity: "warning" },
+    { id: "no_orphan_a",       label: "No orphan answers",                 severity: "warning" },
   ],
   "brand.txt": [
-    { id: "content_type",    label: "Content type is text/plain",                     severity: "error" },
-    { id: "waf_block",     label: "Not blocked by WAF",                              severity: "error" },
-    { id: "has_brand_name",  label: "Has brand-name: field",                         severity: "error" },
-    { id: "has_do_not_use", label: "Has do-not-use: field (recommended)",            severity: "warning" },
-    { id: "no_name_conflict", label: "do-not-use does not duplicate brand-name",      severity: "warning" },
+    // Per brand.txt standard structure (ADF-007)
+    { id: "has_identity_block", label: "Canonical Identity Block present",       severity: "error" },
+    { id: "has_h2",            label: "H2 sections (brand usage, terms to avoid)", severity: "warning" },
+    { id: "has_links",         label: "Links present",                            severity: "warning" },
   ],
   "developer-ai.txt": [
-    { id: "content_type",       label: "Content type is text/plain",                 severity: "error" },
-    { id: "waf_block",         label: "Not blocked by WAF",                          severity: "error" },
-    { id: "has_overview",      label: "Has ## Overview section (recommended)",        severity: "warning" },
-    { id: "no_marketing_talk", label: "No marketing language detected",               severity: "warning" },
+    // Per developer-ai.txt standard structure (ADF-009)
+    { id: "has_identity_block", label: "Canonical Identity Block present",       severity: "error" },
+    { id: "has_h2",            label: "H2 sections (technical overview, resources)", severity: "warning" },
+    { id: "has_links",         label: "Links present",                            severity: "warning" },
   ],
   "llms.html": [
-    { id: "content_type", label: "Content type is text/html",                         severity: "error" },
-    { id: "waf_block",   label: "Not blocked by WAF",                                 severity: "error" },
-    { id: "encoding",     label: "Valid text encoding",                               severity: "error" },
+    // Per llms.html standard structure (ADF-003)
+    { id: "has_html_tag",  label: "<html> tag present",        severity: "error" },
+    { id: "has_h1",       label: "<h1> heading present",        severity: "error" },
+    { id: "has_sections", label: "<section> elements present", severity: "warning" },
+    { id: "has_links",    label: "Links present",               severity: "warning" },
   ],
   "robots-ai.txt": [
-    { id: "content_type",  label: "Content type is text/plain",                     severity: "error" },
-    { id: "waf_block",    label: "Not blocked by WAF",                              severity: "error" },
-    { id: "has_directive", label: "Contains Allow or Disallow rules",               severity: "error" },
+    // Per robots-ai.txt standard structure (ADF-010)
+    { id: "has_identity_block", label: "Canonical Identity Block present",  severity: "error" },
+    { id: "has_h2",            label: "H2 sections present",                severity: "warning" },
+    { id: "has_links",         label: "Links present",                     severity: "warning" },
   ],
   "identity.json": [
-    { id: "content_type", label: "Content type is application/json or text/plain",    severity: "error" },
-    { id: "waf_block",   label: "Not blocked by WAF",                              severity: "error" },
-    { id: "valid_json",  label: "Valid JSON structure",                            severity: "error" },
-    { id: "has_name",    label: "Has name field",                                   severity: "error" },
-    { id: "has_url",     label: "Has url field",                                    severity: "error" },
+    // Per identity.json standard structure (ADF-006)
+    { id: "valid_json",   label: "Valid JSON structure",         severity: "error" },
+    { id: "has_name",    label: "Has name field",               severity: "error" },
+    { id: "has_url",     label: "Has url field",                severity: "error" },
+    { id: "has_schema",  label: "Has $schema reference",       severity: "warning" },
   ],
   "ai.json": [
-    { id: "content_type", label: "Content type is application/json or text/plain",    severity: "error" },
-    { id: "waf_block",   label: "Not blocked by WAF",                              severity: "error" },
-    { id: "valid_json",  label: "Valid JSON structure",                            severity: "error" },
+    // Per ai.json standard structure (ADF-005)
+    { id: "valid_json",        label: "Valid JSON structure",                    severity: "error" },
+    { id: "has_identity_block", label: "Has canonicalIdentityBlock field",      severity: "error" },
+    { id: "has_business_info", label: "Has businessIdentity section",           severity: "warning" },
+    { id: "has_services",      label: "Has services section",                    severity: "warning" },
   ],
 };
 
@@ -220,6 +214,17 @@ function validateLlmsTxtContent(content: string, linkResults: LinkResult[] = [])
   let h2Count = 0;
   let inCodeBlock = false;
 
+  // Check for blockquote after H1 (per ai-visibility spec)
+  // Blockquote must have a space after >: "> text" not ">text"
+  const hasBlockquote = /^>\s+.+/m.test(content);
+  if (!hasBlockquote) {
+    errors.push({
+      rule: "quote_block",
+      message: "Missing blockquote with space after > character",
+    });
+  }
+
+  // Check for ## Contact section (required per ai-visibility.org.uk spec S4)
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line === undefined) continue;
@@ -271,87 +276,41 @@ function validateLlmsTxtContent(content: string, linkResults: LinkResult[] = [])
 function validateLlmTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
-  const lines = content.split("\n").filter((l) => l.trim() !== "");
 
-  if (lines.length === 0) {
-    errors.push({ rule: "not_empty", message: "llm.txt is empty" });
-  } else if (lines.length > 1) {
-    warnings.push({
-      rule: "single_line",
-      message: "llm.txt should contain only a single URL redirect line",
-    });
+  // Per llm.txt template (ADF-002): H1 heading, links to llms.txt, H2 sections
+  if (!/^#\s+\S/im.test(content)) {
+    errors.push({ rule: "has_h1", message: "Missing H1 heading (redirect notice)" });
   }
-
-  if (lines[0]) {
-    const url = lines[0]!.trim();
-    try {
-      const parsed = new URL(url);
-      if (!["http:", "https:"].includes(parsed.protocol)) {
-        errors.push({ rule: "https_protocol", message: `URL must use https, got "${parsed.protocol}"` });
-      }
-    } catch {
-      errors.push({ rule: "valid_url", message: `"${url}" is not a valid URL` });
-    }
+  if (!/\[llms\.txt\]/im.test(content)) {
+    errors.push({ rule: "has_llms_link", message: "Missing link to llms.txt" });
+  }
+  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
+  if (h2Count === 0) {
+    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  }
+  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No links to other AI files found" });
   }
 
   return { errors, warnings };
-}
-
-function extractMarkdownSection(content: string, sectionName: string): string {
-  const regex = new RegExp(`(?:###\\s+)?${sectionName}[\\s\\S]*?(?=(?:###|\\n##)|$)`, "i");
-  const match = content.match(regex);
-  return (match && match[0]) ? match[0] : "";
 }
 
 function validateAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Accept both Markdown (### Canonical Identity Block) and INI ([identity]) formats
-  const hasIdentity =
-    /^(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content) ||
-    /^\[identity\]\s*$/im.test(content);
-  const hasPermissions =
-    /^(?:###\s+)?AI\s+Recommendation\s+Intent/im.test(content) ||
-    /^\[permissions\]\s*$/im.test(content);
-  const hasRestrictions =
-    /^(?:###\s+)?(?:Service\s+Scope\s+Clarifications|When\s+NOT\s+Recommend)/im.test(content) ||
-    /^\[restrictions\]\s*$/im.test(content);
-
-  if (!hasIdentity) errors.push({ rule: "has_identity", message: "Missing identity section" });
-  if (!hasPermissions) errors.push({ rule: "has_permissions", message: "Missing AI recommendation intent section" });
-  if (!hasRestrictions) warnings.push({ rule: "has_restrictions", message: "Missing restrictions section — recommended" });
-
-  // Extract identity section - try INI first, then Markdown
-  const iniSection = extractIniSection(content, "identity");
-  const mdSection = extractMarkdownSection(content, "Canonical Identity Block");
-  const identitySection = iniSection || mdSection;
-
-  // Check for name field - accept both "name=value" and "Business name: value"
-  const hasNameField =
-    /\n\s*(?:Business\s+name|name)\s*:/im.test(identitySection) ||
-    /^\s*name\s*=/im.test(identitySection);
-  if (!hasNameField && identitySection.length > 0) {
-    errors.push({ rule: "has_name_field", message: "Identity section must include name field" });
+  // Per ai.txt template (ADF-004): Canonical Identity Block, H2 sections, links
+  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
+    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
   }
-
-  // Check for URL field - accept both "url=value" and "Website: value"
-  const hasUrlField =
-    /\n\s*(?:Website|url)\s*:/im.test(identitySection) ||
-    /^\s*url\s*=/im.test(identitySection);
-  if (!hasUrlField && identitySection.length > 0) {
-    errors.push({ rule: "has_url_field", message: "Identity section must include url field" });
+  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
+  if (h2Count === 0) {
+    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
   }
-
-  // Check if permissions section has items - try both formats
-  const iniPermSection = extractIniSection(content, "permissions");
-  const mdPermSection = extractMarkdownSection(content, "AI Recommendation Intent");
-  const permSection = iniPermSection || mdPermSection;
-  const permLines = permSection
-    .split("\n")
-    .filter((l) => l.trim() && !l.trim().startsWith("#") && !/^(?:AI\s+systems\s+should|When\s+to\s+)/i.test(l.trim()));
-  if (permLines.length === 0) {
-    warnings.push({ rule: "permissions_filled", message: "Permissions section has no items" });
+  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No links found" });
   }
 
   return { errors, warnings };
@@ -360,6 +319,12 @@ function validateAiTxt(content: string) {
 function validateFaqAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
+
+  // Per faq-ai.txt template (ADF-008): Canonical Identity Block, Q:/A: pairs
+  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
+    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
+  }
+
   const qaPairs: { q: string; a: string }[] = [];
   const lines = content.split("\n");
   let currentQ = "";
@@ -388,17 +353,17 @@ function validateBrandTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  if (!/^brand-name\s*:/im.test(content)) errors.push({ rule: "missing_brand_name", message: "Missing brand-name: field" });
-  if (!/^do-not-use\s*:/im.test(content)) warnings.push({ rule: "missing_do_not_use", message: "Missing do-not-use: field — recommended" });
-
-  const brandMatch = content.match(/^brand-name\s*:\s*(.+)/im);
-  const dnuMatch = content.match(/^do-not-use\s*:\s*(.+)/im);
-  if (brandMatch && dnuMatch) {
-    const bn = (brandMatch[1] ?? "").trim().toLowerCase();
-    const dnu = (dnuMatch[1] ?? "").trim().toLowerCase();
-    if (dnu.includes(bn) || bn.includes(dnu)) {
-      warnings.push({ rule: "name_conflict", message: "do-not-use appears to duplicate brand-name" });
-    }
+  // Per brand.txt template (ADF-007): Canonical Identity Block, H2 sections, links
+  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
+    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
+  }
+  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
+  if (h2Count === 0) {
+    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  }
+  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No links found" });
   }
 
   return { errors, warnings };
@@ -408,16 +373,17 @@ function validateDeveloperAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  if (!/^##\s*Overview/im.test(content)) warnings.push({ rule: "has_overview", message: "Missing ## Overview section — recommended" });
-
-  const marketingPhrases = [/\bworld'?s best\b/i, /\brevolutionary\b/i, /\bgame-?changer\b/i, /\bcutting-?edge\b/i, /\binnovative\b/i, /\bnext-?gen(eration)?\b/i];
-  for (const line of content.split("\n")) {
-    for (const phrase of marketingPhrases) {
-      if (phrase.test(line)) {
-        warnings.push({ rule: "no_marketing_talk", message: `Avoid marketing language ("${line.trim().substring(0, 30)}...")` });
-        break;
-      }
-    }
+  // Per developer-ai.txt template (ADF-009): Canonical Identity Block, H2 sections, links
+  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
+    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
+  }
+  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
+  if (h2Count === 0) {
+    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  }
+  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No links found" });
   }
 
   return { errors, warnings };
@@ -427,14 +393,20 @@ function validateLlmsHtml(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  if (!/<html/i.test(content)) errors.push({ rule: "missing_html_tag", message: "Document should have <html> tag" });
-  if (!/<head/i.test(content)) errors.push({ rule: "missing_head_tag", message: "Document should have <head> tag" });
-  if (!/<body/i.test(content)) errors.push({ rule: "missing_body_tag", message: "Document should have <body> tag" });
-  if (!/<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>/i.test(content)) {
-    warnings.push({ rule: "missing_json_ld", message: "Missing JSON-LD Schema.org structured data — recommended" });
+  // Per llms.html template (ADF-003): <html>, <h1>, <section>, links
+  if (!/<html/i.test(content)) {
+    errors.push({ rule: "has_html_tag", message: "Missing <html> tag" });
   }
-  if (!/<meta[^>]+property\s*=\s*["']og:title["'][^>]*>/i.test(content)) {
-    warnings.push({ rule: "missing_og_tags", message: "Missing Open Graph meta tags — recommended" });
+  if (!/<h1/i.test(content)) {
+    errors.push({ rule: "has_h1", message: "Missing <h1> heading" });
+  }
+  const sectionCount = (content.match(/<section[^>]*>/gi) ?? []).length;
+  if (sectionCount === 0) {
+    warnings.push({ rule: "has_sections", message: "No <section> elements found" });
+  }
+  const linkCount = (content.match(/<a[^>]+href\s*=\s*["'][^"']+["'][^>]*>/gi) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No links found" });
   }
 
   return { errors, warnings };
@@ -443,19 +415,19 @@ function validateLlmsHtml(content: string) {
 function validateRobotsAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
-  let hasUserAgent = false;
-  let hasDirectives = false;
 
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    if (/^user-agent\s*:/i.test(trimmed)) hasUserAgent = true;
-    if (/^(allow|disallow|ai-admin|ai-block)\s*:/i.test(trimmed)) hasDirectives = true;
+  // Per robots-ai.txt template (ADF-010): Canonical Identity Block, H2 sections, links
+  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
+    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
   }
-
-  if (!hasUserAgent) warnings.push({ rule: "missing_user_agent", message: "No User-agent directive found" });
-  if (!hasDirectives) warnings.push({ rule: "missing_directives", message: "No Allow/Disallow directives found" });
-  if (!/^(ai-admin|ai-block)\s*:/im.test(content)) warnings.push({ rule: "missing_ai_directives", message: "No ai-admin or ai-block directives — use these for AI-specific access control" });
+  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
+  if (h2Count === 0) {
+    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  }
+  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No links found" });
+  }
 
   return { errors, warnings };
 }
@@ -464,24 +436,25 @@ function validateIdentityJson(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
+  // Per identity.json template (ADF-006): valid JSON, name, url, $schema
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
   } catch (e) {
-    errors.push({ rule: "invalid_json", message: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}` });
+    errors.push({ rule: "valid_json", message: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}` });
     return { errors, warnings };
   }
 
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    errors.push({ rule: "invalid_structure", message: "Root must be a JSON object" });
+    errors.push({ rule: "valid_json", message: "Root must be a JSON object" });
     return { errors, warnings };
   }
 
   const obj = parsed as Record<string, unknown>;
-  if (!obj.name) errors.push({ rule: "missing_field", message: `Missing required field: "name"` });
-  if (!obj.url) errors.push({ rule: "missing_field", message: `Missing required field: "url"` });
-  if (obj.url && typeof obj.url === "string") {
-    try { new URL(obj.url); } catch { errors.push({ rule: "invalid_url", message: `"url" is not a valid URL` }); }
+  if (!obj.name) errors.push({ rule: "has_name", message: `Missing required field: "name"` });
+  if (!obj.url) errors.push({ rule: "has_url", message: `Missing required field: "url"` });
+  if (!obj.$schema) {
+    warnings.push({ rule: "has_schema", message: "Missing $schema reference — recommended" });
   }
 
   return { errors, warnings };
@@ -491,22 +464,29 @@ function validateAiJson(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
+  // Per ai.json template (ADF-005): valid JSON, canonicalIdentityBlock, businessIdentity, services
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
   } catch (e) {
-    errors.push({ rule: "invalid_json", message: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}` });
+    errors.push({ rule: "valid_json", message: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}` });
     return { errors, warnings };
   }
 
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    errors.push({ rule: "invalid_structure", message: "Root must be a JSON object" });
+    errors.push({ rule: "valid_json", message: "Root must be a JSON object" });
     return { errors, warnings };
   }
 
   const obj = parsed as Record<string, unknown>;
-  if (!obj.interactions && !obj.guidelines) {
-    warnings.push({ rule: "missing_interactions", message: "Missing interactions or guidelines section — file may be incomplete" });
+  if (!obj.canonicalIdentityBlock) {
+    errors.push({ rule: "has_identity_block", message: "Missing canonicalIdentityBlock field" });
+  }
+  if (!obj.businessIdentity) {
+    warnings.push({ rule: "has_business_info", message: "Missing businessIdentity section" });
+  }
+  if (!obj.services) {
+    warnings.push({ rule: "has_services", message: "Missing services section" });
   }
 
   return { errors, warnings };
