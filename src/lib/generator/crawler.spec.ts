@@ -70,8 +70,22 @@ ${longContent}
 `;
 
     const result = extractMetadata(markdown, 'https://example.ai/');
-    
-    expect(result.description?.length).toBeLessThanOrEqual(200);
+
+    expect(result.description).toBeDefined();
+    expect(result.description?.length).toBe(200);
+  });
+
+  it('returns empty description when only headings exist', () => {
+    const markdown = `Title: Test
+
+Markdown Content:
+# Only Heading
+## Another Heading
+`;
+
+    const result = extractMetadata(markdown, 'https://example.ai/');
+
+    expect(result.description).toBe('');
   });
 
   it('limits content to 3000 chars', () => {

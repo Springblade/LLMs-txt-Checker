@@ -69,6 +69,8 @@ export function extractMetadata(markdown: string, _url: string): ExtractedMetada
     description: description.slice(0, 200),
     h1: h1Match?.[1]?.trim(),
     content: rawContent.slice(0, 3000),
+    // Note: Jina Markdown format doesn't include canonical URLs
+    canonicalUrl: undefined,
   };
 }
 
