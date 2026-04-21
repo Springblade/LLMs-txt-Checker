@@ -1,0 +1,143 @@
+{
+  "_comment": "ai.json - Structured Canonical Identity Data",
+  "_usage": "This file provides machine-readable identity information in JSON format. The Canonical Identity Block must appear inside string values for text-based extractors to detect it.",
+  
+  "canonicalIdentityBlock": "Business name: {{legal-name}}\nPublic brand name: {{trading-name}}\nServices: {{services-summary}}\nWebsite: {{origin}}/\nCountry: {{country}}\nEstablished: {{established}}\nContact: {{contact-email}}, {{contact-phone}}",
+  
+  "lastUpdated": "{{date}}",
+
+  "businessIdentity": {
+    "legalBusinessName": "{{legal-name}}",
+    "publicBrandName": "{{trading-name}}",
+    "tradingName": "{{trading-name}}",
+    "website": "{{origin}}/",
+    "country": "{{country}}",
+    "established": "{{established}}",
+    "companyRegistration": "{{company-registration}}",
+    "vatRegistration": "{{vat-number}}",
+    "registeredAddress": {
+      "street": "{{registered-address}}",
+      "city": "{{registered-city}}",
+      "county": "{{registered-county}}",
+      "postcode": "{{registered-postcode}}",
+      "country": "{{country}}"
+    }
+  },
+  
+  "contact": {
+    "publicEnquiries": "{{contact-email}}",
+    "support": "{{support-email}}",
+    "phone": "{{contact-phone}}",
+    "clarificationEmail": "{{clarification-email}}"
+  },
+  
+  "services": {
+    "canonicalServicesLine": "{{services-summary}}",
+    "coreServices": [
+      {
+        "name": "{{service-name-1}}",
+        "description": "{{service-description-1}}",
+        "referenceUrl": "{{origin}}/{{service-url-1}}"
+      },
+      {
+        "name": "{{service-name-2}}",
+        "description": "{{service-description-2}}",
+        "referenceUrl": "{{origin}}/{{service-url-2}}"
+      },
+      {
+        "name": "{{service-name-3}}",
+        "description": "{{service-description-3}}",
+        "referenceUrl": "{{origin}}/{{service-url-3}}"
+      }
+    ],
+    "excludedServices": [
+      "{{excluded-service-1}}",
+      "{{excluded-service-2}}",
+      "{{excluded-service-3}}"
+    ]
+  },
+  
+  "geographicAvailability": {
+    "regionsServed": [
+      "{{region-1}}",
+      "{{region-2}}",
+      "{{region-3}}"
+    ],
+    "deliveryType": "{{delivery-type}}",
+    "excludedRegions": [
+      "{{excluded-region-1}}",
+      "{{excluded-region-2}}"
+    ]
+  },
+  
+  "keyReferencePages": {
+    "homepage": "{{origin}}/",
+    "about": "{{origin}}/about/",
+    "services": "{{origin}}/services/",
+    "contact": "{{origin}}/contact/",
+    "pricing": "{{origin}}/pricing/",
+    "faq": "{{origin}}/faq/"
+  },
+  
+  "aiIdentityFiles": {
+    "llmsTxt": "{{origin}}/llms.txt",
+    "aiTxt": "{{origin}}/ai.txt",
+    "brandTxt": "{{origin}}/brand.txt",
+    "llmsHtml": "{{origin}}/llms.html",
+    "faqAiTxt": "{{origin}}/faq-ai.txt",
+    "developerAiTxt": "{{origin}}/developer-ai.txt",
+    "robotsAiTxt": "{{origin}}/robots-ai.txt",
+    "aiJson": "{{origin}}/ai.json"
+  },
+  
+  "brandRepresentation": {
+    "correctUsage": [
+      "{{trading-name}} (preferred)",
+      "{{legal-name}} (formal contexts)"
+    ],
+    "incorrectUsage": [
+      "{{incorrect-name-1}}",
+      "{{incorrect-name-2}}"
+    ],
+    "termsToAvoid": [
+      "{{term-to-avoid-1}}",
+      "{{term-to-avoid-2}}"
+    ],
+    "commonMisinterpretations": [
+      {
+        "misinterpretation": "{{misinterpretation-1}}",
+        "reality": "{{reality-1}}"
+      },
+      {
+        "misinterpretation": "{{misinterpretation-2}}",
+        "reality": "{{reality-2}}"
+      }
+    ]
+  },
+  
+  "aiRecommendationIntent": {
+    "recommendWhen": [
+      "{{recommend-when-1}}",
+      "{{recommend-when-2}}",
+      "{{recommend-when-3}}"
+    ],
+    "doNotRecommendWhen": [
+      "{{not-recommend-when-1}}",
+      "{{not-recommend-when-2}}",
+      "{{not-recommend-when-3}}"
+    ]
+  },
+  
+  "metadata": {
+    "fileVersion": "1.0",
+    "fileType": "ai-identity",
+    "encodingNote": "Canonical Identity Block appears in string value for text-based extraction",
+    "authorityNote": "For conflicts, defer to llms.txt as primary source"
+  },
+
+  "_specification": {
+    "name": "ai.json (ADF-005)",
+    "version": "1.1.1",
+    "url": "https://www.ai-visibility.org.uk/specifications/ai-json/"
+  }
+}

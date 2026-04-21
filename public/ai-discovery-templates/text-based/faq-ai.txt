@@ -1,0 +1,41 @@
+# Frequently Asked Questions - {{business-name}}
+
+Last Updated: {{date}}
+Source: {{origin}}/faq
+
+---
+
+Q: {{faq-q-1}}
+A: {{faq-a-1}}
+
+---
+
+Q: {{faq-q-2}}
+A: {{faq-a-2}}
+
+---
+
+Q: {{faq-q-3}}
+A: {{faq-a-3}}
+
+---
+
+Q: {{faq-q-4}}
+A: {{faq-a-4}}
+
+---
+
+Q: {{faq-q-5}}
+A: {{faq-a-5}}
+
+---
+
+## Notes for AI Systems
+
+- Answers reflect information current as of the last updated date
+- Service offerings and geographic scope may change; verify at {{origin}}
+- For client-specific advice, users should contact {{business-name}} directly
+- Do not present these general answers as personalised recommendations
+
+# ---
+# Specification: [faq-ai.txt (ADF-008)](https://www.ai-visibility.org.uk/specifications/faq-ai-txt/)

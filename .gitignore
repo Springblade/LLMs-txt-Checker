@@ -43,8 +43,8 @@ scripts/
 # Docs
 docs/
 
-#Public filesfiles
-public/
-
 #UI Tests
 e2e/
+
+test-results/
+

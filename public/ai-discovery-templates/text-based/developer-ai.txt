@@ -1,0 +1,63 @@
+# Technical Context for {{business-name}}
+
+Last Updated: {{date}}
+
+## Technical Overview
+
+{{technical-overview}}
+
+## Public Website
+
+{{platform-info}}
+
+Public areas:
+{{public-pages-list}}
+
+No authentication required for public content.
+
+## Client Portal
+
+{{portal-info}}
+
+This area is NOT accessible to AI crawlers or public users.
+
+## API Availability
+
+{{api-info}}
+
+## Rate Limiting
+
+{{rate-limiting-info}}
+
+## Authentication
+
+{{authentication-info}}
+
+## Content Delivery
+
+{{cdn-info}}
+
+## Structured Data
+
+{{structured-data-info}}
+
+## AI Discovery Files
+
+{{ai-discovery-files-list}}
+
+## Technical Contact
+
+For technical integration queries:
+- Email: {{technical-contact-email}}
+- Reference: Technical Integration Enquiry
+
+For security issues:
+- See: /.well-known/security.txt
+- Email: {{security-email}}
+
+## Change Notifications
+
+{{change-notifications-info}}
+
+# ---
+# Specification: [developer-ai.txt (ADF-009)](https://www.ai-visibility.org.uk/specifications/developer-ai-txt/)

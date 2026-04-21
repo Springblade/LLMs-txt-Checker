@@ -1,0 +1,33 @@
+# {{business-name}}
+
+> {{business-name}} is {{tagline}}.
+
+{{business-description}}
+
+## Services
+
+{{services-list}}
+
+## What We Do Not Do
+
+{{business-name}} explicitly does not provide:
+{{excluded-services-list}}
+
+## Contact
+
+{{contact-info}}
+
+## Key Information
+
+{{key-pages-list}}
+
+## AI Discovery Files
+
+{{ai-discovery-files-list}}
+
+## Optional
+
+{{optional-links-list}}
+
+# ---
+# Specification: [llms.txt (ADF-001)](https://www.ai-visibility.org.uk/specifications/llms-txt/)

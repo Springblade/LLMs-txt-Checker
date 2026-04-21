@@ -1,0 +1,110 @@
+{
+  "$schema": "https://www.365i.co.uk/ai-visibility-definition/specifications/identity-json/identity-json.schema.json",
+
+  "name": "{{business-name}}",
+  "legalName": "{{legal-name}}",
+  "alternateName": [
+    "{{trading-name}}",
+    "{{brand-name}}"
+  ],
+  "url": "{{origin}}/",
+  "type": "{{organization-type}}",
+  "description": "{{business-description}}",
+
+  "foundingDate": "{{founding-date}}",
+  "foundingLocation": {
+    "name": "{{founding-city}}",
+    "addressCountry": "{{country-code}}"
+  },
+
+  "headquarters": {
+    "streetAddress": "{{headquarters-address}}",
+    "addressLocality": "{{headquarters-city}}",
+    "postalCode": "{{headquarters-postcode}}",
+    "addressCountry": "{{country-code}}"
+  },
+
+  "locations": [
+    {
+      "name": "{{office-name}}",
+      "streetAddress": "{{headquarters-address}}",
+      "addressLocality": "{{headquarters-city}}",
+      "postalCode": "{{headquarters-postcode}}",
+      "addressCountry": "{{country-code}}",
+      "isHeadquarters": true
+    }
+  ],
+
+  "areaServed": [
+    {
+      "type": "Country",
+      "name": "{{area-served-name}}",
+      "code": "{{country-code}}"
+    }
+  ],
+
+  "contactPoints": [
+    {
+      "type": "GeneralEnquiries",
+      "email": "{{contact-email}}",
+      "telephone": "{{contact-phone}}"
+    },
+    {
+      "type": "Support",
+      "email": "{{support-email}}"
+    }
+  ],
+
+  "services": [
+    "{{service-1}}",
+    "{{service-2}}",
+    "{{service-3}}"
+  ],
+
+  "servicesNotProvided": [
+    "{{service-not-provided-1}}",
+    "{{service-not-provided-2}}"
+  ],
+
+  "industry": "{{industry}}",
+  "naicsCode": "{{naics-code}}",
+
+  "numberOfEmployees": {
+    "minValue": "{{employees-min}}",
+    "maxValue": "{{employees-max}}"
+  },
+
+  "identifier": [
+    {
+      "type": "CompanyRegistration",
+      "value": "{{company-registration}}",
+      "jurisdiction": "{{country-code}}"
+    },
+    {
+      "type": "VAT",
+      "value": "{{vat-number}}",
+      "jurisdiction": "{{country-code}}"
+    }
+  ],
+
+  "sameAs": [
+    "{{social-linkedin}}",
+    "{{social-twitter}}"
+  ],
+
+  "founder": {
+    "name": "{{founder-name}}",
+    "jobTitle": "{{founder-title}}"
+  },
+
+  "metadata": {
+    "lastUpdated": "{{date}}",
+    "specificationVersion": "1.0.0"
+  },
+
+  "_specification": {
+    "name": "identity.json (ADF-006)",
+    "version": "1.1.1",
+    "url": "https://www.ai-visibility.org.uk/specifications/identity-json/"
+  }
+}

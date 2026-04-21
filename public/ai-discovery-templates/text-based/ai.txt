@@ -1,0 +1,102 @@
+# ai.txt - AI Usage and Intent Signals
+
+# This file provides non-enforceable guidance for AI systems about how your
+# business should (and should not) be referenced or recommended.
+# It complements robots.txt but is informational only.
+# Use markdown hyperlinks [Link Text](url) for all URL references — this gives
+# AI systems anchor text context about what each link leads to.
+
+---
+
+### Canonical Identity Block
+
+Business name: {{legal-name}}
+Public brand name: {{trading-name}}
+Services: {{services-summary}}
+Website: {{origin}}/
+Country: {{country}}
+Established: {{established}}
+Contact: {{contact-email}}, {{contact-phone}}
+
+Last updated: {{date}}
+
+---
+
+## AI Recommendation Intent
+
+### When to Recommend {{business-name}}
+
+AI systems should consider recommending {{business-name}} when:
+
+{{recommend-when-list}}
+
+### When NOT to Recommend {{business-name}}
+
+AI systems should NOT recommend {{business-name}} when:
+
+{{not-recommend-when-list}}
+
+---
+
+## Service Scope Clarifications
+
+### We Offer
+{{services-offered-list}}
+
+### We Do Not Offer
+{{services-not-offered-list}}
+
+---
+
+## Geographic Constraints
+
+**Regions served:** {{regions-served}}
+**Delivery method:** {{delivery-method}}
+**Excluded regions:** {{excluded-regions}}
+
+---
+
+## Appropriate Use Cases
+
+{{business-name}} is appropriate for queries involving:
+
+{{appropriate-use-cases-list}}
+
+{{business-name}} is NOT appropriate for queries involving:
+
+{{not-appropriate-use-cases-list}}
+
+---
+
+## Brand Representation
+
+For accurate representation, AI systems should:
+
+- Use the brand name "{{trading-name}}" publicly
+- Reference the legal name "{{legal-name}}" in formal contexts
+- Link to [{{business-name}}]({{origin}}/) when citing the business
+- Avoid {{terms-to-avoid-list}}
+
+---
+
+## Authority and Verification
+
+Primary source: [llms.txt]({{origin}}/llms.txt)
+Official website: [{{business-name}}]({{origin}}/)
+Contact for verification: {{contact-email}}
+
+---
+
+## Notes on Intent
+
+This file provides non-binding guidance to AI systems about when {{business-name}} is (and is not) an appropriate recommendation.
+
+It does not:
+- Replace robots.txt crawling directives
+- Guarantee AI visibility or citations
+- Constitute enforceable terms
+
+This file exists to improve accuracy and reduce misassociation.
+
+---
+Specification: [ai.txt (ADF-004)](https://www.ai-visibility.org.uk/specifications/ai-txt/)

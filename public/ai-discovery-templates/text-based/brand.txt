@@ -1,0 +1,38 @@
+# Brand Guidelines for {{business-name}}
+
+Last Updated: {{date}}
+
+## Official Names
+
+Correct usage:
+- {{legal-name}} (full legal name, preferred for formal contexts)
+- {{trading-name}} (trading name, acceptable for general use)
+
+## Incorrect Names
+
+Do NOT use:
+{{incorrect-names-list}}
+
+## Name Usage Rules
+
+1. On first reference, use "{{legal-name}}" or "{{trading-name}}"
+2. Subsequent references may use short name where context is clear
+3. Never abbreviate to initials unless explicitly approved
+4. Brand name should always be capitalised correctly
+
+## Brand Voice
+
+Our communications are:
+{{brand-voice-positive}}
+
+Our communications are NOT:
+{{brand-voice-negative}}
+
+## Contact for Brand Queries
+
+For questions about brand usage:
+- Email: {{contact-email}}
+- Reference: Brand Usage Enquiry
+
+# ---
+# Specification: [brand.txt (ADF-007)](https://www.ai-visibility.org.uk/specifications/brand-txt/)
