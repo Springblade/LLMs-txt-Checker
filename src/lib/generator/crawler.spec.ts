@@ -1,5 +1,93 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ScoredUrl } from "./types";
+import { extractMetadata } from "./crawler";
+
+describe("extractMetadata", () => {
+  it('parses Jina Markdown format with Title prefix', () => {
+    const markdown = `Title: Generative Engine Optimization Solutions
+
+URL Source: https://example.ai/
+
+Markdown Content:
+# Example AI
+This is the first paragraph of content.
+Another paragraph here.
+`;
+
+    const result = extractMetadata(markdown, 'https://example.ai/');
+    
+    expect(result.title).toBe('Generative Engine Optimization Solutions');
+    expect(result.description).toContain('first paragraph');
+  });
+
+  it('extracts H1 from markdown content', () => {
+    const markdown = `Title: Page Title
+
+URL Source: https://example.ai/
+
+Markdown Content:
+# Main Heading
+Content here.
+`;
+
+    const result = extractMetadata(markdown, 'https://example.ai/');
+    
+    expect(result.h1).toBe('Main Heading');
+  });
+
+  it('handles content with links and images in first paragraph', () => {
+    const markdown = `Title: Test
+
+Markdown Content:
+# Title
+[Link Text](https://example.com) and ![Image](img.png)
+This is actual content.
+`;
+
+    const result = extractMetadata(markdown, 'https://example.ai/');
+    
+    expect(result.description).toBe('This is actual content.');
+  });
+
+  it('falls back gracefully when Title prefix missing', () => {
+    const markdown = `# Just a heading
+Some content here.
+`;
+    
+    const result = extractMetadata(markdown, 'https://example.ai/');
+    
+    expect(result.title).toBeUndefined();
+    expect(result.description).toContain('Some content');
+  });
+
+  it('limits description to 200 chars', () => {
+    const longContent = 'A'.repeat(300);
+    const markdown = `Title: Test
+
+Markdown Content:
+# Title
+${longContent}
+`;
+
+    const result = extractMetadata(markdown, 'https://example.ai/');
+    
+    expect(result.description?.length).toBeLessThanOrEqual(200);
+  });
+
+  it('limits content to 3000 chars', () => {
+    const longContent = 'x'.repeat(4000);
+    const markdown = `Title: Test
+
+Markdown Content:
+# Title
+${longContent}
+`;
+
+    const result = extractMetadata(markdown, 'https://example.ai/');
+    
+    expect(result.content?.length).toBeLessThanOrEqual(3000);
+  });
+});
 
 describe("crawlPages cascade", () => {
   beforeEach(() => {

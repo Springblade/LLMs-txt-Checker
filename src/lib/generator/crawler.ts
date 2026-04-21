@@ -41,33 +41,34 @@ async function fetchWithRetry(
   return { res: null, error: lastError };
 }
 
-function extractMetadata(html: string, _url: string): ExtractedMetadata {
-  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  const descMatch = html.match(/<meta\s+(?:name="description"\s+)?content="([^"]+)"/i);
-  const canonicalMatch = html.match(/<link\s+[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/i);
-  const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-
-  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-  let content: string | undefined;
-  if (bodyMatch) {
-    const text = bodyMatch[1]!
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
-      .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
-      .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    content = text.slice(0, 500);
+export function extractMetadata(markdown: string, _url: string): ExtractedMetadata {
+  // Jina format: "Title: xxx\n\nURL Source: xxx\n\nMarkdown Content:\n# H1\n..."
+  
+  const titleMatch = markdown.match(/^Title:\s*(.+)$/m);
+  const h1Match = markdown.match(/^#\s+(.+)$/m);
+  
+  // Get content after "Markdown Content:\n" or use entire body
+  const contentMatch = markdown.match(/^Markdown Content:\n([\s\S]+)/m);
+  const rawContent = contentMatch?.[1] ?? markdown;
+  
+  // Extract first paragraph as description (skip headings, links, images)
+  const lines = rawContent.split('\n');
+  let description = '';
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('[') || trimmed.startsWith('!')) {
+      continue;
+    }
+    // Clean markdown formatting: [text](url) -> text, remove bold/italic markers
+    description = trimmed.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[*_`]/g, '');
+    if (description.length > 20) break;
   }
-
+  
   return {
     title: titleMatch?.[1]?.trim(),
-    description: descMatch?.[1]?.trim(),
-    canonicalUrl: canonicalMatch?.[1]?.trim(),
+    description: description.slice(0, 200),
     h1: h1Match?.[1]?.trim(),
-    content,
+    content: rawContent.slice(0, 3000),
   };
 }
 
