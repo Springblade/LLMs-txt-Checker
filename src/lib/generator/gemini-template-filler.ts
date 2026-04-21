@@ -1,10 +1,24 @@
-import { GoogleGenerativeAI, GoogleGenerativeAIError } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { CrawledData } from "@/lib/discovery/types";
 
+// 4 models synced with ai-generator.ts
 const GOOGLE_MODELS = [
-  "gemini-2.0-flash",
+  "gemini-3-flash-preview",
   "gemini-2.5-flash",
+  "gemini-3.1-pro-preview",
+  "gemini-2.5-pro",
 ] as const;
+
+export type GeminiErrorType = "quota" | "auth" | "timeout" | "rate_limit" | "unknown";
+
+export interface GeminiErrorDetails {
+  type: GeminiErrorType;
+  errorCode: "QUOTA_EXHAUSTED" | "AUTH_FAILED" | "TIMEOUT" | "RATE_LIMITED" | "UNKNOWN";
+  message: string;
+  suggestions: string[];
+  keysAttempted: number;
+  modelsAttempted: number;
+}
 
 function getApiKeys(): string[] {
   const raw = process.env.GOOGLE_API_KEY ?? "";
@@ -39,28 +53,61 @@ function getNextModel(): string {
   return model;
 }
 
-function isQuotaError(e: unknown): boolean {
-  if (e instanceof GoogleGenerativeAIError) {
-    const msg = e.message.toLowerCase();
-    return (
-      msg.includes("429") ||
-      msg.includes("resource has been exhausted") ||
-      msg.includes("quota") ||
-      msg.includes("rate limit") ||
-      msg.includes("too many requests")
-    );
+function categorizeError(e: unknown): { type: GeminiErrorType; message: string } {
+  const msg = e instanceof Error ? e.message.toLowerCase() : String(e).toLowerCase();
+
+  if (msg.includes("429") || msg.includes("quota") || msg.includes("resource has been exhausted")) {
+    return { type: "quota", message: "API quota exhausted for all available keys and models" };
   }
-  if (e instanceof Error) {
-    const msg = e.message.toLowerCase();
-    return (
-      msg.includes("429") ||
-      msg.includes("resource has been exhausted") ||
-      msg.includes("quota") ||
-      msg.includes("rate limit") ||
-      msg.includes("too many requests")
-    );
+  if (msg.includes("rate limit") || msg.includes("too many requests")) {
+    return { type: "rate_limit", message: "Rate limit exceeded - too many requests in short period" };
   }
-  return false;
+  if (msg.includes("401") || msg.includes("403") || msg.includes("invalid") || msg.includes("api key")) {
+    return { type: "auth", message: "Invalid or unauthorized API key" };
+  }
+  if (msg.includes("timeout") || msg.includes("deadline")) {
+    return { type: "timeout", message: "Request timed out - model took too long to respond" };
+  }
+  return { type: "unknown", message: e instanceof Error ? e.message : "Unknown error occurred" };
+}
+
+function getQuotaSuggestions(keysCount: number): string[] {
+  const suggestions: string[] = [
+    "Wait a few minutes and try again",
+    "Reduce the number of pages to crawl (lower maxUrls)",
+  ];
+  if (keysCount < 2) {
+    suggestions.push("Add more API keys in .env.local (comma-separated)");
+  }
+  if (keysCount < 4) {
+    suggestions.push("Consider adding 2-4 API keys for better quota distribution");
+  }
+  suggestions.push("Consider upgrading to a paid Gemini plan for higher quotas");
+  return suggestions;
+}
+
+function buildGeminiError(
+  type: GeminiErrorType,
+  message: string,
+  keysAttempted: number,
+  modelsAttempted: number
+): GeminiErrorDetails {
+  const errorCodeMap: Record<GeminiErrorType, GeminiErrorDetails["errorCode"]> = {
+    quota: "QUOTA_EXHAUSTED",
+    auth: "AUTH_FAILED",
+    timeout: "TIMEOUT",
+    rate_limit: "RATE_LIMITED",
+    unknown: "UNKNOWN",
+  };
+
+  return {
+    type,
+    errorCode: errorCodeMap[type],
+    message,
+    suggestions: type === "quota" || type === "rate_limit" ? getQuotaSuggestions(keysAttempted) : [],
+    keysAttempted,
+    modelsAttempted,
+  };
 }
 
 function buildCrawlContext(data: CrawledData): string {
@@ -96,7 +143,7 @@ function buildPrompt(fileType: string, template: string, data: CrawledData): str
 
   const instructions: Record<string, string> = {
     "faq-ai.txt": `This FAQ template requires:
-- Generate 5 common questions about this business based on the crawled content
+- Generate at least 5 common questions about this business based on the crawled content
 - Questions should cover: what they do, where they're located, services, contact info, and key differentiators
 - Answers must be based ONLY on information from the crawled data
 - Use professional, factual language
@@ -266,6 +313,7 @@ export async function generateTemplateContent(
   const maxKeys = keys.length;
   const maxModels = GOOGLE_MODELS.length;
   let lastError: Error | null = null;
+  let lastErrorType: ReturnType<typeof categorizeError> | null = null;
 
   for (let modelIdx = 0; modelIdx < maxModels; modelIdx++) {
     for (let keyIdx = 0; keyIdx < maxKeys; keyIdx++) {
@@ -289,9 +337,10 @@ export async function generateTemplateContent(
         return text;
       } catch (e) {
         lastError = e instanceof Error ? e : new Error(String(e));
+        lastErrorType = categorizeError(e);
 
-        if (isQuotaError(e)) {
-          console.warn(`[gemini-template-filler] Quota error with key ${keyIdx + 1}/${maxKeys}, model ${modelIdx + 1}/${maxModels}. Retrying...`);
+        if (lastErrorType.type === "quota" || lastErrorType.type === "rate_limit") {
+          console.warn(`[gemini-template-filler] ${lastErrorType.type} error with key ${keyIdx + 1}/${maxKeys}, model ${modelIdx + 1}/${maxModels}. Retrying...`);
           continue;
         }
         throw lastError;
@@ -305,5 +354,12 @@ export async function generateTemplateContent(
     return fillTemplateFallback(template, data);
   }
 
-  throw new Error(`Template generation failed after ${maxKeys * maxModels} attempts: ${lastError?.message ?? "unknown error"}`);
+  // Throw structured error with suggestions
+  const errorType = lastErrorType?.type ?? "unknown";
+  const errorMsg = lastErrorType?.message ?? lastError?.message ?? "unknown error";
+  const structuredError = buildGeminiError(errorType, errorMsg, maxKeys, maxModels);
+  
+  const error = new Error(structuredError.message) as Error & { geminiError?: GeminiErrorDetails };
+  error.geminiError = structuredError;
+  throw error;
 }

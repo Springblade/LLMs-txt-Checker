@@ -86,3 +86,9 @@ export interface FileGenerationStatus {
   status: GenerationStatus;
   message?: string;
 }
+
+export interface QuotaError {
+  errorCode: string;
+  message: string;
+  suggestions: string[];
+}

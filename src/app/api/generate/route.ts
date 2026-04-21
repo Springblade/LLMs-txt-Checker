@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateLlmsTxt, type GeneratorInput } from "@/lib/generator";
 import { generateFile } from "@/lib/discovery/file-generators";
+import type { GeminiErrorDetails } from "@/lib/generator/gemini-template-filler";
 import { z } from "zod";
 
 const FileTypeEnum = z.enum([
@@ -53,6 +54,21 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[/api/generate]", message);
+
+    // Check for structured Gemini error with suggestions
+    if (e instanceof Error && "geminiError" in e) {
+      const geminiError = (e as Error & { geminiError: GeminiErrorDetails }).geminiError;
+      return NextResponse.json(
+        {
+          success: false,
+          error: geminiError.message,
+          errorCode: geminiError.errorCode,
+          suggestions: geminiError.suggestions,
+        },
+        { status: geminiError.errorCode === "QUOTA_EXHAUSTED" || geminiError.errorCode === "RATE_LIMITED" ? 429 : 500 }
+      );
+    }
+
     return NextResponse.json(
       { success: false, error: "Internal server error", details: message },
       { status: 500 }

@@ -5,12 +5,13 @@ import { SmartForm } from "@/components/smart-form";
 import SiteHeader from "@/components/site-header";
 import AppFooter from "@/components/app-footer";
 import { ResultSection } from "@/components/result-section";
-import type { DiscoverResult, FileType, FileGenerateResult } from "@/lib/discovery/types";
+import type { DiscoverResult, FileType, FileGenerateResult, QuotaError } from "@/lib/discovery/types";
 
 export default function HomePage() {
   const [result, setResult] = useState<DiscoverResult | null>(null);
   const [generatingFiles, setGeneratingFiles] = useState<Map<FileType, FileGenerateResult>>(new Map());
   const [inProgressFiles, setInProgressFiles] = useState<Set<FileType>>(new Set());
+  const [quotaError, setQuotaError] = useState<QuotaError | null>(null);
 
   const handleResult = (r: DiscoverResult) => {
     setResult(r);
@@ -51,10 +52,71 @@ export default function HomePage() {
               warnings: data.warnings ?? [],
               checklist: data.checklist ?? [],
             });
+            // Capture quota/rate limit errors
+            if (data.errorCode === "QUOTA_EXHAUSTED" || data.errorCode === "RATE_LIMITED") {
+              setQuotaError({
+                errorCode: data.errorCode,
+                message: data.error,
+                suggestions: data.suggestions ?? [],
+              });
+            }
           }
           return next;
         });
+      } else if (res.status === 429) {
+        // HTTP 429 = rate limit exceeded
+        const data = await res.json();
+        setQuotaError({
+          errorCode: data.errorCode ?? "RATE_LIMITED",
+          message: data.error ?? "Rate limit exceeded",
+          suggestions: data.suggestions ?? ["Wait a few minutes and try again"],
+        });
+      } else {
+        // Other errors (500, etc.)
+        try {
+          const data = await res.json();
+          setGeneratingFiles((prev) => {
+            const next = new Map(prev);
+            next.set(fileType, {
+              type: fileType,
+              success: false,
+              content: "",
+              errors: data.errors ?? [{ rule: "generation_failed", message: data.error ?? `HTTP ${res.status}` }],
+              warnings: [],
+              checklist: [],
+            });
+            return next;
+          });
+        } catch {
+          // JSON parse failed
+          setGeneratingFiles((prev) => {
+            const next = new Map(prev);
+            next.set(fileType, {
+              type: fileType,
+              success: false,
+              content: "",
+              errors: [{ rule: "generation_failed", message: `Server error (HTTP ${res.status})` }],
+              warnings: [],
+              checklist: [],
+            });
+            return next;
+          });
+        }
       }
+    } catch (e) {
+      // Network error
+      setGeneratingFiles((prev) => {
+        const next = new Map(prev);
+        next.set(fileType, {
+          type: fileType,
+          success: false,
+          content: "",
+          errors: [{ rule: "generation_failed", message: "Network error. Please check your connection." }],
+          warnings: [],
+          checklist: [],
+        });
+        return next;
+      });
     } finally {
       // Remove from in-progress set
       setInProgressFiles((prev) => {
@@ -103,10 +165,61 @@ export default function HomePage() {
               warnings: data.warnings ?? [],
               checklist: data.checklist ?? [],
             });
+            // Capture quota/rate limit errors
+            if (data.errorCode === "QUOTA_EXHAUSTED" || data.errorCode === "RATE_LIMITED") {
+              setQuotaError({
+                errorCode: data.errorCode,
+                message: data.error,
+                suggestions: data.suggestions ?? [],
+              });
+            }
+          }
+        } else if (res.status === 429) {
+          const data = await res.json();
+          setQuotaError({
+            errorCode: data.errorCode ?? "RATE_LIMITED",
+            message: data.error ?? "Rate limit exceeded",
+            suggestions: data.suggestions ?? ["Wait a few minutes and try again"],
+          });
+        } else {
+          // Other errors
+          try {
+            const data = await res.json();
+            nextMap.set(fileType, {
+              type: fileType,
+              success: false,
+              content: "",
+              errors: data.errors ?? [{ rule: "generation_failed", message: data.error ?? `HTTP ${res.status}` }],
+              warnings: [],
+              checklist: [],
+            });
+          } catch {
+            nextMap.set(fileType, {
+              type: fileType,
+              success: false,
+              content: "",
+              errors: [{ rule: "generation_failed", message: `Server error (HTTP ${res.status})` }],
+              warnings: [],
+              checklist: [],
+            });
           }
         }
       }
       setGeneratingFiles(new Map(nextMap));
+    } catch (e) {
+      // Network error - mark all as failed
+      const errorMap = new Map<FileType, FileGenerateResult>();
+      for (const ft of missingFileTypes) {
+        errorMap.set(ft, {
+          type: ft,
+          success: false,
+          content: "",
+          errors: [{ rule: "generation_failed", message: "Network error. Please check your connection." }],
+          warnings: [],
+          checklist: [],
+        });
+      }
+      setGeneratingFiles(errorMap);
     } finally {
       setInProgressFiles(new Set());
     }
@@ -116,6 +229,7 @@ export default function HomePage() {
     setResult(null);
     setGeneratingFiles(new Map());
     setInProgressFiles(new Set());
+    setQuotaError(null);
   };
 
   return (
@@ -239,9 +353,11 @@ export default function HomePage() {
               result={result}
               generatingFiles={generatingFiles}
               inProgressFiles={inProgressFiles}
+              quotaError={quotaError}
               onGenerate={handleGenerate}
               onGenerateAll={handleGenerateAll}
               onReset={handleReset}
+              onDismissQuotaError={() => setQuotaError(null)}
             />
           </div>
         </section>
