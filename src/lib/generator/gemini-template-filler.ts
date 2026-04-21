@@ -122,12 +122,25 @@ Category: ${p.category ?? "general"}
 `)
     .join("\n");
 
+  const llmsSection = data.llmsTxtContent
+    ? `
+
+================================================================================
+IMPORTANT: This is how the business describes itself in their official llms.txt.
+Use this as the PRIMARY source for business identity and services.
+DO NOT infer or guess from domain names.
+================================================================================
+${data.llmsTxtContent}
+================================================================================
+
+`
+    : "";
+
   return `Website: ${data.origin}
 Site Name: ${data.siteName}
 Brand Name: ${data.brandName ?? data.siteName}
 Description: ${data.description ?? "N/A"}
-Today's Date: ${today}
-
+Today's Date: ${today}${llmsSection}
 Crawled Pages:
 ${pagesContext}
 

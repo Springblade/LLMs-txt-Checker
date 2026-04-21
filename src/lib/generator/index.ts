@@ -1,4 +1,4 @@
-import { discoverUrls, deduplicateUrls, filterUrls } from "./url-discover";
+import { discoverUrls, deduplicateUrls, filterUrls, fetchLlmsTxt } from "./url-discover";
 import { scoreUrls, applyControls } from "./url-prioritize";
 import { crawlPages } from "./crawler";
 import { generateAiDescriptions } from "./ai-generator";
@@ -19,10 +19,15 @@ export async function crawlWebsite(url: string): Promise<{
   origin: string;
   siteName: string;
   pages: Array<{ url: string; title: string; description: string; category?: string }>;
+  llmsTxtContent?: string;
 }> {
   const discovered = await discoverUrls(url);
   const deduplicated = deduplicateUrls(discovered);
   const filtered = filterUrls(deduplicated, []);
+
+  // Fetch llms.txt from the origin (if it exists)
+  let origin = new URL(url).origin;
+  const llmsTxtContent = await fetchLlmsTxt(origin);
 
   // Take top 50 URLs, convert to ScoredUrl format for crawlPages
   const urlsToCrawl = filtered.slice(0, 50).map((u) => ({
@@ -45,7 +50,7 @@ export async function crawlWebsite(url: string): Promise<{
       category: p.category,
     }));
 
-  return { origin: url, siteName, pages };
+  return { origin, siteName, pages, llmsTxtContent: llmsTxtContent ?? undefined };
 }
 
 export async function generateLlmsTxt(
