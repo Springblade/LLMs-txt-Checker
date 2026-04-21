@@ -34,6 +34,7 @@ export interface CrawledData {
   email?: string;
   techStack?: string[];
   faqs?: Array<{ q: string; a: string }>;
+  llmsTxtContent?: string; // Authoritative content from website's llms.txt
 }
 
 export type ChecklistItem = {
