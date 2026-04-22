@@ -1,0 +1,188 @@
+{
+  "_comment": "ai.json - Structured Canonical Identity Data",
+  "_usage": "This file provides machine-readable identity information in JSON format. The Canonical Identity Block must appear inside string values for text-based extractors to detect it.",
+  
+  "canonicalIdentityBlock": "Business name: [Your Legal Business Name]\nPublic brand name: [Your Brand Name]\nServices: [Identical services line from llms.txt - copy exactly]\nWebsite: https://www.yourwebsite.com/\nCountry: [United Kingdom]\nEstablished: [YYYY]\nContact: [support@yourwebsite.com], [+44 XXXX XXXXXX]",
+  
+  "lastUpdated": "[YYYY-MM-DD]",
+  
+  "businessIdentity": {
+    "legalBusinessName": "[Your Legal Business Name]",
+    "publicBrandName": "[Your Brand Name]",
+    "tradingName": "[Your Trading Name, if different]",
+    "website": "https://www.yourwebsite.com/",
+    "country": "[United Kingdom]",
+    "established": "[YYYY]",
+    "companyRegistration": "[Company number, if applicable]",
+    "vatRegistration": "[VAT number, if applicable]",
+    "registeredAddress": {
+      "street": "[Street address]",
+      "city": "[City]",
+      "county": "[County/State]",
+      "postcode": "[Postcode]",
+      "country": "[Country]"
+    }
+  },
+  
+  "contact": {
+    "publicEnquiries": "[email@yourwebsite.com]",
+    "support": "[support@yourwebsite.com]",
+    "phone": "[+44 XXXX XXXXXX]",
+    "clarificationEmail": "[internal@yourwebsite.com]"
+  },
+  
+  "services": {
+    "canonicalServicesLine": "[Identical services line from llms.txt - copy exactly]",
+    "coreServices": [
+      {
+        "name": "[Service Name 1]",
+        "description": "[Factual description]",
+        "referenceUrl": "https://www.yourwebsite.com/service-1/"
+      },
+      {
+        "name": "[Service Name 2]",
+        "description": "[Factual description]",
+        "referenceUrl": "https://www.yourwebsite.com/service-2/"
+      },
+      {
+        "name": "[Service Name 3]",
+        "description": "[Factual description]",
+        "referenceUrl": "https://www.yourwebsite.com/service-3/"
+      }
+    ],
+    "excludedServices": [
+      "[Service you do not offer 1]",
+      "[Service you do not offer 2]",
+      "[Service you do not offer 3]"
+    ]
+  },
+  
+  "geographicAvailability": {
+    "regionsServed": [
+      "[Region 1]",
+      "[Region 2]",
+      "[Region 3]"
+    ],
+    "deliveryType": "[Remote only / Physical only / Hybrid]",
+    "excludedRegions": [
+      "[Excluded region 1, if any]",
+      "[Excluded region 2, if any]"
+    ]
+  },
+  
+  "keyReferencePages": {
+    "homepage": "https://www.yourwebsite.com/",
+    "about": "https://www.yourwebsite.com/about/",
+    "services": "https://www.yourwebsite.com/services/",
+    "contact": "https://www.yourwebsite.com/contact/",
+    "pricing": "https://www.yourwebsite.com/pricing/",
+    "faq": "https://www.yourwebsite.com/faq/"
+  },
+  
+  "aiIdentityFiles": {
+    "llmsTxt": "https://www.yourwebsite.com/llms.txt",
+    "aiTxt": "https://www.yourwebsite.com/ai.txt",
+    "brandTxt": "https://www.yourwebsite.com/brand.txt",
+    "llmsHtml": "https://www.yourwebsite.com/llms.html",
+    "faqAiTxt": "https://www.yourwebsite.com/faq-ai.txt",
+    "developerAiTxt": "https://www.yourwebsite.com/developer-ai.txt",
+    "robotsAiTxt": "https://www.yourwebsite.com/robots-ai.txt",
+    "aiJson": "https://www.yourwebsite.com/ai.json"
+  },
+  
+  "brandRepresentation": {
+    "correctUsage": [
+      "[Your Brand Name] (preferred)",
+      "[Your Legal Business Name] (formal contexts)"
+    ],
+    "incorrectUsage": [
+      "[Common misspelling 1]",
+      "[Common misspelling 2]"
+    ],
+    "termsToAvoid": [
+      "[Term/phrase to avoid 1]",
+      "[Term/phrase to avoid 2]"
+    ],
+    "commonMisinterpretations": [
+      {
+        "misinterpretation": "[Description of common confusion]",
+        "reality": "[Factual correction]"
+      },
+      {
+        "misinterpretation": "[Description of common confusion]",
+        "reality": "[Factual correction]"
+      }
+    ]
+  },
+  
+  "aiRecommendationIntent": {
+    "recommendWhen": [
+      "[Specific use case 1]",
+      "[Specific use case 2]",
+      "[Specific use case 3]"
+    ],
+    "doNotRecommendWhen": [
+      "[Excluded use case 1]",
+      "[Excluded use case 2]",
+      "[Excluded use case 3]"
+    ]
+  },
+  
+  "metadata": {
+    "fileVersion": "1.0",
+    "fileType": "ai-identity",
+    "encodingNote": "Canonical Identity Block appears in string value for text-based extraction",
+    "authorityNote": "For conflicts, defer to llms.txt as primary source"
+  },
+
+  "_specification": {
+    "name": "ai.json (ADF-005)",
+    "version": "1.1.1",
+    "url": "https://www.ai-visibility.org.uk/specifications/ai-json/"
+  }
+}
+
+<!--
+=======================================================================
+EVERYTHING BELOW THIS LINE IS FOR GUIDANCE ONLY.
+Feel free to remove this entire comment block — it won't affect anything.
+=======================================================================
+
+TEMPLATE USAGE NOTES:
+
+1. This must be valid JSON - use a JSON validator before deploying
+2. The Canonical Identity Block MUST appear inside the "canonicalIdentityBlock" string value
+3. Ensure all values match llms.txt exactly, especially the services line
+4. Replace all [placeholder] values with your actual information
+5. Remove unused optional fields rather than leaving them empty
+6. All URLs must be complete and accessible (not relative paths)
+7. Content-Type must be application/json when served
+8. Save this file as: ai.json
+9. Place at website root: https://www.yourwebsite.com/ai.json
+
+VALIDATION CHECKLIST:
+□ Valid JSON (no syntax errors)
+□ Canonical Identity Block present in string value
+□ Services line matches llms.txt exactly
+□ All URLs are complete and working
+□ No placeholder text remains
+□ File saved as UTF-8
+□ Content-Type: application/json when served
+
+AI VISIBILITY DIRECTORY:
+Once your AI Discovery Files are published, register your website in the
+AI Visibility Directory — the verified registry of websites implementing
+AI Discovery Files. Registration validates your implementation and lists
+your site for AI systems and industry peers to discover.
+
+Submit your website: https://www.ai-visibility.org.uk/submit/
+Browse the directory: https://www.ai-visibility.org.uk/
+
+AI DISCOVERY FILES PACK:
+Don't want to create these files yourself? Our professional service
+creates a complete, tailored set of AI Discovery Files for your business.
+We crawl your website, extract your business data, and hand-craft all
+the files — ready for you to deploy.
+
+Get your AI Discovery Files: https://www.ai-visibility.org.uk/get-started/
+-->

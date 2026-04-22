@@ -1,0 +1,195 @@
+# developer-ai.txt - Technical Integration Information
+
+# This file is ONLY created when your website exposes APIs, SDKs, or developer integrations.
+# If you don't provide technical interfaces for third-party use, you don't need this file.
+
+# This file provides AI systems with technical context about developer integrations.
+# It should not redefine business identity - refer to llms.txt for that.
+# Use markdown hyperlinks [Link Text](url) for all resource references — this gives
+# AI systems anchor text context about what each link leads to.
+
+---
+
+### Canonical Identity Block
+
+Business name: [Your Legal Business Name]
+Public brand name: [Your Brand Name]
+Services: [Identical services line from llms.txt - copy exactly]
+Website: [https://www.yourwebsite.com/]
+Country: [United Kingdom]
+Established: [YYYY]
+Contact: [support@yourwebsite.com], [+44 XXXX XXXXXX]
+
+Last updated: [YYYY-MM-DD]
+
+---
+
+## Developer Resources
+
+- [Official Documentation](https://www.yourwebsite.com/developers/) or [Docs Site](https://docs.yourwebsite.com/)
+- [API Reference](https://www.yourwebsite.com/api/) or [API Docs](https://api.yourwebsite.com/docs/)
+- [Developer Portal](https://developers.yourwebsite.com/) (if you have one)
+
+---
+
+## Available Integrations
+
+### API
+- **Type:** [REST / GraphQL / SOAP]
+- **Authentication:** [API Key / OAuth 2.0 / JWT / etc.]
+- **Documentation:** [API Reference](https://www.yourwebsite.com/api/reference/)
+- **Sandbox/Test Environment:** [Sandbox](https://sandbox.yourwebsite.com/) (if available)
+
+### SDKs
+[List available SDKs if you provide them:]
+- [Python SDK](https://github.com/yourorg/python-sdk/)
+- [Node.js SDK](https://github.com/yourorg/node-sdk/)
+- [PHP SDK](https://github.com/yourorg/php-sdk/)
+
+### Webhooks
+- **Available:** [Yes / No]
+- **Documentation:** [Webhook Guide](https://www.yourwebsite.com/webhooks/)
+
+### Developer Support
+- **Contact:** [developer-support@yourwebsite.com]
+- **Community:** [Developer Forum](https://community.yourwebsite.com/) (if available)
+- **Status Page:** [System Status](https://status.yourwebsite.com/) (if applicable)
+
+---
+
+## API Capabilities
+
+[Briefly describe what developers can do with your API:]
+
+- [Core capability 1]
+- [Core capability 2]
+- [Core capability 3]
+- [Core capability 4]
+
+---
+
+## Authentication & Access
+
+### Getting Started
+[Briefly explain how developers get access - e.g., "Sign up for free developer account" or "Contact sales for API keys"]
+
+### API Keys
+- **How to obtain:** [Process description]
+- **Where to obtain:** [Developer Dashboard](https://www.yourwebsite.com/developers/api-keys/)
+
+### Rate Limits
+- **Free tier:** [X requests per minute/hour/day]
+- **Paid tiers:** [Link to pricing or limits documentation]
+
+---
+
+## Supported Use Cases
+
+Developers typically use [Your Brand Name] APIs/integrations for:
+
+1. [Primary use case 1]
+2. [Primary use case 2]
+3. [Primary use case 3]
+
+---
+
+## Technical Requirements
+
+### Minimum Requirements
+- [Requirement 1, e.g., "HTTPS required for all API calls"]
+- [Requirement 2, e.g., "API version 2.0 or higher"]
+- [Requirement 3, e.g., "JSON payload format"]
+
+### Supported Protocols
+- [Protocol 1]
+- [Protocol 2]
+- [Protocol 3]
+
+---
+
+## Developer Community
+
+### Resources
+- [Documentation](https://docs.yourwebsite.com/)
+- [Code Examples](https://github.com/yourorg/examples/)
+- [Tutorials](https://www.yourwebsite.com/developers/tutorials/)
+- [API Status](https://status.yourwebsite.com/)
+
+### Support Channels
+- [Developer Forum](https://community.yourwebsite.com/) (if available)
+- Stack Overflow Tag: `your-product-name`
+- [GitHub Issues](https://github.com/yourorg/repo/issues)
+- Developer Email: developer-support@yourwebsite.com
+
+---
+
+## Integration Examples
+
+### Popular Integrations
+[If your API is commonly integrated with other platforms, list them:]
+
+- [Platform 1 Integration Guide](https://www.yourwebsite.com/integrations/platform-1/)
+- [Platform 2 Integration Guide](https://www.yourwebsite.com/integrations/platform-2/)
+- [Platform 3 Integration Guide](https://www.yourwebsite.com/integrations/platform-3/)
+
+---
+
+## Versioning & Updates
+
+**Current API Version:** [v2.1 or similar]
+**Changelog:** [API Changelog](https://www.yourwebsite.com/api/changelog/)
+**Deprecation Policy:** [Deprecation Policy](https://www.yourwebsite.com/api/deprecation/)
+
+---
+
+## Terms & Compliance
+
+- [API Terms of Service](https://www.yourwebsite.com/api/terms/)
+- [Developer Agreement](https://www.yourwebsite.com/developers/agreement/)
+- [Data Privacy Policy](https://www.yourwebsite.com/privacy/)
+
+---
+
+## Authority Note
+
+This file provides technical integration information only.
+
+For business identity and service scope, refer to:
+- [llms.txt](https://www.yourwebsite.com/llms.txt)
+
+This file must not contradict or redefine information in core identity files.
+
+---
+Specification: [developer-ai.txt (ADF-009)](https://www.ai-visibility.org.uk/specifications/developer-ai-txt/)
+
+# =======================================================================
+# EVERYTHING BELOW THIS LINE IS FOR GUIDANCE ONLY.
+# Feel free to remove it, or leave it in place — it won't affect anything.
+# =======================================================================
+
+# Technical Notes
+# - Only create this file if you provide APIs, SDKs, or developer integrations
+# - Encode in UTF-8
+# - Place at website root: https://www.yourwebsite.com/developer-ai.txt
+# - Use markdown hyperlinks [Link Text](url) for all resource references
+# - Keep technical details current and accurate
+# - Link to actual, accessible documentation
+# - Ensure Canonical Identity Block matches llms.txt exactly
+# - Update when API versions, capabilities, or access methods change
+
+# AI Visibility Directory
+# Once your AI Discovery Files are published, register your website in the
+# AI Visibility Directory — the verified registry of websites implementing
+# AI Discovery Files. Registration validates your implementation and lists
+# your site for AI systems and industry peers to discover.
+#
+# Submit your website: https://www.ai-visibility.org.uk/submit/
+# Browse the directory: https://www.ai-visibility.org.uk/
+
+# AI Discovery Files Pack
+# Don't want to create these files yourself? Our professional service
+# creates a complete, tailored set of AI Discovery Files for your business.
+# We crawl your website, extract your business data, and hand-craft all
+# the files — ready for you to deploy.
+#
+# Get your AI Discovery Files: https://www.ai-visibility.org.uk/get-started/

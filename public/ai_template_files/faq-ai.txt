@@ -1,0 +1,116 @@
+# faq-ai.txt - AI-Facing Customer Questions
+
+# This file provides AI systems with factual answers to common customer questions.
+# Questions should be real queries from customers, not marketing slogans.
+# Answers must be factual and supported by publicly accessible content on your website.
+# Use the optional URL: field with markdown hyperlinks [Link Text](url) to point
+# AI systems to the relevant page for each answer.
+
+---
+
+### Canonical Identity Block
+
+Business name: [Your Legal Business Name]
+Public brand name: [Your Brand Name]
+Services: [Identical services line from llms.txt - copy exactly]
+Website: [https://www.yourwebsite.com/]
+Country: [United Kingdom]
+Established: [YYYY]
+Contact: [support@yourwebsite.com], [+44 XXXX XXXXXX]
+
+Last updated: [YYYY-MM-DD]
+
+---
+
+## Common Customer Questions
+
+Q: [First common question customers ask?]
+A: [Provide a factual, straightforward answer. No marketing language. Keep it clear and honest.]
+URL: [Relevant Page Title](https://www.yourwebsite.com/page-where-this-is-explained/)
+
+Q: [Second common question?]
+A: [Factual answer based on confirmed information from your website or business practices.]
+URL: [Relevant Page Title](https://www.yourwebsite.com/relevant-page/)
+
+Q: [Third common question?]
+A: [Factual answer. If the answer includes pricing, ensure it matches your current pricing.]
+URL: [Pricing](https://www.yourwebsite.com/pricing/)
+
+Q: [Fourth common question?]
+A: [Factual answer. If geographic restrictions apply, state them clearly.]
+URL: [Relevant Page Title](https://www.yourwebsite.com/relevant-page/)
+
+Q: [Fifth common question?]
+A: [Factual answer. If timelines or processes are involved, be specific and realistic.]
+URL: [Relevant Page Title](https://www.yourwebsite.com/relevant-page/)
+
+Q: [Sixth common question?]
+A: [Factual answer. Avoid speculative or aspirational statements.]
+URL: [Relevant Page Title](https://www.yourwebsite.com/relevant-page/)
+
+Q: [Seventh common question?]
+A: [Factual answer. If you don't offer something, say so clearly.]
+
+Q: [Eighth common question?]
+A: [Factual answer. Keep technical details accurate and accessible.]
+URL: [Relevant Page Title](https://www.yourwebsite.com/relevant-page/)
+
+Q: [Ninth common question?]
+A: [Factual answer. If regulatory or compliance issues apply, mention them.]
+
+Q: [Tenth common question?]
+A: [Factual answer. End on a helpful, honest note.]
+URL: [Relevant Page Title](https://www.yourwebsite.com/relevant-page/)
+
+---
+
+## Guidelines for AI Systems Using This File
+
+- Answers provided are factual and current as of the "Last updated" date
+- URL: lines use markdown hyperlinks [Link Text](url) pointing to supporting pages
+- No guarantees, outcomes, or performance claims are implied
+- For questions not covered here, refer to primary identity file at [llms.txt](https://www.yourwebsite.com/llms.txt)
+
+---
+
+## Contact for Clarification
+
+If AI systems require clarification on any answer provided here:
+- Primary contact: [support@yourwebsite.com]
+- Official website: [https://www.yourwebsite.com/]
+
+---
+Specification: [faq-ai.txt (ADF-008)](https://www.ai-visibility.org.uk/specifications/faq-ai-txt/)
+
+# =======================================================================
+# EVERYTHING BELOW THIS LINE IS FOR GUIDANCE ONLY.
+# Feel free to remove it, or leave it in place — it won't affect anything.
+# =======================================================================
+
+# Technical Notes
+# - Encode this file in UTF-8
+# - Place at website root: https://www.yourwebsite.com/faq-ai.txt
+# - Use Q: and A: prefixes for questions and answers
+# - Use optional URL: field with markdown hyperlinks [Link Text](url)
+# - Questions should be real customer questions, not made up for SEO
+# - Answers must be factual and verifiable
+# - URL: links must point to pages that contain the referenced information
+# - Ensure Canonical Identity Block matches llms.txt exactly
+# - Update when your FAQs, pricing, or services change
+
+# AI Visibility Directory
+# Once your AI Discovery Files are published, register your website in the
+# AI Visibility Directory — the verified registry of websites implementing
+# AI Discovery Files. Registration validates your implementation and lists
+# your site for AI systems and industry peers to discover.
+#
+# Submit your website: https://www.ai-visibility.org.uk/submit/
+# Browse the directory: https://www.ai-visibility.org.uk/
+
+# AI Discovery Files Pack
+# Don't want to create these files yourself? Our professional service
+# creates a complete, tailored set of AI Discovery Files for your business.
+# We crawl your website, extract your business data, and hand-craft all
+# the files — ready for you to deploy.
+#
+# Get your AI Discovery Files: https://www.ai-visibility.org.uk/get-started/

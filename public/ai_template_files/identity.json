@@ -1,0 +1,178 @@
+{
+  "$schema": "https://www.365i.co.uk/ai-visibility-definition/specifications/identity-json/identity-json.schema.json",
+
+  "name": "[Your Official Registered Business Name]",
+  "legalName": "[Your Legal Business Name Ltd]",
+  "alternateName": [
+    "[Your Trading Name]",
+    "[Your Brand Name]"
+  ],
+  "url": "https://www.yourwebsite.com/",
+  "type": "[Organization type: Corporation, LocalBusiness, ProfessionalService, etc.]",
+  "description": "[Factual 1-3 sentence description of your business. What you do, who you serve.]",
+
+  "foundingDate": "[YYYY-MM-DD]",
+  "foundingLocation": {
+    "name": "[City]",
+    "addressCountry": "[GB]"
+  },
+
+  "headquarters": {
+    "streetAddress": "[Street Address]",
+    "addressLocality": "[City]",
+    "postalCode": "[Postcode]",
+    "addressCountry": "[GB]"
+  },
+
+  "locations": [
+    {
+      "name": "[Office Name (Headquarters)]",
+      "streetAddress": "[Street Address]",
+      "addressLocality": "[City]",
+      "postalCode": "[Postcode]",
+      "addressCountry": "[GB]",
+      "isHeadquarters": true
+    }
+  ],
+
+  "areaServed": [
+    {
+      "type": "Country",
+      "name": "[United Kingdom]",
+      "code": "[GB]"
+    }
+  ],
+
+  "contactPoints": [
+    {
+      "type": "GeneralEnquiries",
+      "email": "[hello@yourwebsite.com]",
+      "telephone": "[+44 XXXX XXXXXX]"
+    },
+    {
+      "type": "Support",
+      "email": "[support@yourwebsite.com]"
+    }
+  ],
+
+  "services": [
+    "[Service 1 description]",
+    "[Service 2 description]",
+    "[Service 3 description]"
+  ],
+
+  "servicesNotProvided": [
+    "[Service you do not offer 1]",
+    "[Service you do not offer 2]"
+  ],
+
+  "industry": "[Your Primary Industry/Sector]",
+  "naicsCode": "[NAICS code if applicable]",
+
+  "numberOfEmployees": {
+    "minValue": "[minimum]",
+    "maxValue": "[maximum]"
+  },
+
+  "identifier": [
+    {
+      "type": "CompanyRegistration",
+      "value": "[Company number]",
+      "jurisdiction": "[GB]"
+    },
+    {
+      "type": "VAT",
+      "value": "[VAT number]",
+      "jurisdiction": "[GB]"
+    }
+  ],
+
+  "sameAs": [
+    "[https://www.linkedin.com/company/your-company]",
+    "[https://twitter.com/yourcompany]"
+  ],
+
+  "founder": {
+    "name": "[Founder Name]",
+    "jobTitle": "[Founder Title]"
+  },
+
+  "metadata": {
+    "lastUpdated": "[YYYY-MM-DD]",
+    "specificationVersion": "1.0.0"
+  },
+
+  "_specification": {
+    "name": "identity.json (ADF-006)",
+    "version": "1.1.1",
+    "url": "https://www.ai-visibility.org.uk/specifications/identity-json/"
+  }
+}
+
+<!--
+=======================================================================
+EVERYTHING BELOW THIS LINE IS FOR GUIDANCE ONLY.
+Feel free to remove this entire comment block — it won't affect anything.
+=======================================================================
+
+ABOUT THIS FILE:
+identity.json provides canonical, factual identity data about your business
+aligned with Schema.org Organization vocabulary. This is the authoritative
+source for structured identity information that AI systems can parse.
+
+REQUIRED FIELDS (must complete):
+- name: Your official registered business name
+- type: Organization type (Corporation, LocalBusiness, ProfessionalService, etc.)
+- url: Your canonical website URL
+- description: Factual 1-3 sentence business description
+
+RECOMMENDED FIELDS (strongly encouraged):
+- legalName: Full legal entity name
+- alternateName: Trading names, brand names, abbreviations
+- foundingDate: ISO 8601 date format (YYYY-MM-DD)
+- locations: Physical office addresses
+- contactPoints: Email and phone contacts by type
+- areaServed: Geographic regions with ISO 3166-1 codes
+
+OPTIONAL FIELDS (remove if not applicable):
+- sameAs: Social profiles and directory listings
+- identifier: Company registration, VAT numbers
+- industry: Primary sector
+- numberOfEmployees: Employee count range
+- founder: Founder information
+- servicesNotProvided: Services to explicitly exclude
+
+VALIDATION CHECKLIST:
+[ ] Valid JSON (no syntax errors - use a JSON validator)
+[ ] All [placeholder] values replaced with actual information
+[ ] All URLs are complete and accessible
+[ ] Dates in ISO 8601 format (YYYY-MM-DD)
+[ ] Country codes in ISO 3166-1 alpha-2 format (GB, US, etc.)
+[ ] File saved as UTF-8
+[ ] Content-Type: application/json when served
+[ ] Placed at website root: https://www.yourwebsite.com/identity.json
+
+SCHEMA.ORG ALIGNMENT:
+This file aligns with Schema.org Organization vocabulary for maximum
+compatibility with AI systems and structured data processors.
+
+For the full specification, see:
+https://www.ai-visibility.org.uk/specifications/identity-json/
+
+AI VISIBILITY DIRECTORY:
+Once your AI Discovery Files are published, register your website in the
+AI Visibility Directory — the verified registry of websites implementing
+AI Discovery Files. Registration validates your implementation and lists
+your site for AI systems and industry peers to discover.
+
+Submit your website: https://www.ai-visibility.org.uk/submit/
+Browse the directory: https://www.ai-visibility.org.uk/
+
+AI DISCOVERY FILES PACK:
+Don't want to create these files yourself? Our professional service
+creates a complete, tailored set of AI Discovery Files for your business.
+We crawl your website, extract your business data, and hand-craft all
+the files — ready for you to deploy.
+
+Get your AI Discovery Files: https://www.ai-visibility.org.uk/get-started/
+-->

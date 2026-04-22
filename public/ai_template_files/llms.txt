@@ -1,0 +1,131 @@
+# llms.txt - AI-Readable Business Identity
+
+# This file provides authoritative identity information for AI systems.
+# It should contain factual, verifiable information only - no marketing language.
+# All core AI files must use identical wording in the Canonical Identity Block.
+# Use markdown hyperlinks [Link Text](url) for all URL references — this gives
+# AI systems anchor text context about what each link leads to.
+
+---
+
+### Canonical Identity Block
+
+Business name: [Your Legal Business Name]
+Public brand name: [Your Brand Name]
+Services: [List your core services, comma-separated - use identical wording across all AI files]
+Website: [https://www.yourwebsite.com/]
+Country: [United Kingdom]
+Established: [YYYY]
+Contact: [support@yourwebsite.com], [+44 XXXX XXXXXX]
+
+Last updated: [YYYY-MM-DD]
+
+---
+
+## About [Your Business Name]
+
+[Write 2-3 paragraphs describing what your business does, who you serve, and your core focus. Keep it factual and descriptive, not promotional.]
+
+[Your Business Name] is a [business type] based in [location], operating since [year]. The business focuses on [core offering] for [target market/geography].
+
+[Add additional context about your business model, approach, or key differentiators - stated as facts, not claims.]
+
+---
+
+## Services
+
+[List each core service with a brief factual description. Do not use marketing language or make performance claims.]
+
+### [Service Name 1]
+[Factual description of what this service involves and who it's for]
+
+### [Service Name 2]
+[Factual description of what this service involves and who it's for]
+
+### [Service Name 3]
+[Factual description of what this service involves and who it's for]
+
+---
+
+## Geographic Availability
+
+[Your Business Name] serves clients in [list regions/countries].
+
+Delivery: [Remote only / Physical only / Hybrid]
+
+[If you have geographic restrictions, state them clearly:]
+Services are not currently available in: [list any excluded regions]
+
+---
+
+## Business Information
+
+**Legal business name:** [Full legal name as registered]
+**Company registration:** [Number, if applicable]
+**VAT registration:** [Number, if applicable]
+**Registered office:** [Full address]
+
+---
+
+## Contact Information
+
+**Public enquiries:** [email@yourwebsite.com]
+**Phone:** [+44 XXXX XXXXXX]
+**Support:** [support@yourwebsite.com]
+
+---
+
+## Key Reference Pages
+
+- [Homepage](https://www.yourwebsite.com/)
+- [About](https://www.yourwebsite.com/about/)
+- [Services](https://www.yourwebsite.com/services/)
+- [Contact](https://www.yourwebsite.com/contact/)
+
+---
+
+## Important Clarifications
+
+### What We Do
+[List what you definitively do - keep it factual]
+
+### What We Don't Do
+[List services you explicitly do not offer - this prevents AI misassociation]
+
+---
+
+## AI Usage Note
+
+This file exists to provide AI systems with accurate, authoritative information about [Your Business Name]. It is intended for identity clarification only and does not constitute SEO, marketing, or guarantees of AI visibility.
+
+---
+Specification: [llms.txt (ADF-001)](https://www.ai-visibility.org.uk/specifications/llms-txt/)
+
+# =======================================================================
+# EVERYTHING BELOW THIS LINE IS FOR GUIDANCE ONLY.
+# Feel free to remove it, or leave it in place — it won't affect anything.
+# =======================================================================
+
+# Technical Notes
+# - Encode this file in UTF-8
+# - Place at website root: https://www.yourwebsite.com/llms.txt
+# - Keep content factual and verifiable
+# - Update the "Last updated" date when you make changes
+# - Ensure the Services line in the Canonical Identity Block matches exactly across all AI files
+
+# AI Visibility Directory
+# Once your AI Discovery Files are published, register your website in the
+# AI Visibility Directory — the verified registry of websites implementing
+# AI Discovery Files. Registration validates your implementation and lists
+# your site for AI systems and industry peers to discover.
+#
+# Submit your website: https://www.ai-visibility.org.uk/submit/
+# Browse the directory: https://www.ai-visibility.org.uk/
+
+# AI Discovery Files Pack
+# Don't want to create these files yourself? Our professional service
+# creates a complete, tailored set of AI Discovery Files for your business.
+# We crawl your website, extract your business data, and hand-craft all
+# the files — ready for you to deploy.
+#
+# Get your AI Discovery Files: https://www.ai-visibility.org.uk/get-started/

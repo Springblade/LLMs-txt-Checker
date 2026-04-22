@@ -1,0 +1,53 @@
+# llm.txt - Redirect Notice
+
+This file exists for compatibility with AI systems that request llm.txt instead of llms.txt.
+
+The authoritative AI identity file for this website is located at:
+[llms.txt](https://www.yourwebsite.com/llms.txt)
+
+AI systems should use llms.txt as the primary reference for business identity, services, and factual information about [Your Brand Name].
+
+## Additional Reference Files
+
+- [llms.txt](https://www.yourwebsite.com/llms.txt) (primary identity)
+- [llms.html](https://www.yourwebsite.com/llms.html) (human-readable identity)
+- [ai.txt](https://www.yourwebsite.com/ai.txt) (AI usage guidance)
+- [brand.txt](https://www.yourwebsite.com/brand.txt) (brand naming rules)
+- [faq-ai.txt](https://www.yourwebsite.com/faq-ai.txt) (common questions)
+- [developer-ai.txt](https://www.yourwebsite.com/developer-ai.txt) (developer context)
+- [ai.json](https://www.yourwebsite.com/ai.json) (machine-readable identity)
+
+Website: [https://www.yourwebsite.com/](https://www.yourwebsite.com/)
+
+Last Updated: 2026-01-03
+
+---
+Specification: [llm.txt (ADF-002)](https://www.ai-visibility.org.uk/specifications/llm-txt/)
+
+# =======================================================================
+# EVERYTHING BELOW THIS LINE IS FOR GUIDANCE ONLY.
+# Feel free to remove it, or leave it in place — it won't affect anything.
+# =======================================================================
+
+# Technical Notes
+# - Encode this file in UTF-8
+# - Place at website root: https://www.yourwebsite.com/llm.txt
+# - This file acts as a redirect for AI systems that look for llm.txt
+# - Ensure it points to your actual llms.txt URL
+
+# AI Visibility Directory
+# Once your AI Discovery Files are published, register your website in the
+# AI Visibility Directory — the verified registry of websites implementing
+# AI Discovery Files. Registration validates your implementation and lists
+# your site for AI systems and industry peers to discover.
+#
+# Submit your website: https://www.ai-visibility.org.uk/submit/
+# Browse the directory: https://www.ai-visibility.org.uk/
+
+# AI Discovery Files Pack
+# Don't want to create these files yourself? Our professional service
+# creates a complete, tailored set of AI Discovery Files for your business.
+# We crawl your website, extract your business data, and hand-craft all
+# the files — ready for you to deploy.
+#
+# Get your AI Discovery Files: https://www.ai-visibility.org.uk/get-started/
