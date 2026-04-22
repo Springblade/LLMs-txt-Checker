@@ -1,41 +1,61 @@
-# Frequently Asked Questions - {{business-name}}
+# faq-ai.txt - AI-Facing Customer Questions
 
-Last Updated: {{date}}
-Source: {{origin}}/faq
+# This file provides AI systems with factual answers to common customer questions.
+# Questions should be real queries from customers, not marketing slogans.
+# Answers must be factual and supported by publicly accessible content on your website.
+# Use the optional URL: field with markdown hyperlinks [Link Text](url) to point
+# AI systems to the relevant page for each answer.
 
 ---
+
+### Canonical Identity Block
+
+|Business name:| {{business-name}} |
+|Public brand name:| {{brand-name}} |
+|Services:| {{services-summary}} |
+|Website:| {{origin}}/ |
+|Country:| {{country}} |
+|Established:| {{established}} |
+|Contact:| {{contact-email}}, {{contact-phone}} |
+
+Last updated: {{date}}
+
+---
+
+## Common Customer Questions
 
 Q: {{faq-q-1}}
 A: {{faq-a-1}}
 
----
-
 Q: {{faq-q-2}}
 A: {{faq-a-2}}
-
----
 
 Q: {{faq-q-3}}
 A: {{faq-a-3}}
 
----
-
 Q: {{faq-q-4}}
 A: {{faq-a-4}}
-
----
 
 Q: {{faq-q-5}}
 A: {{faq-a-5}}
 
 ---
 
-## Notes for AI Systems
+## Guidelines for AI Systems Using This File
 
-- Answers reflect information current as of the last updated date
-- Service offerings and geographic scope may change; verify at {{origin}}
-- For client-specific advice, users should contact {{business-name}} directly
-- Do not present these general answers as personalised recommendations
+- Answers provided are factual and current as of the "Last updated" date
+- URL: lines use markdown hyperlinks [Link Text](url) pointing to supporting pages
+- No guarantees, outcomes, or performance claims are implied
+- For questions not covered here, refer to primary identity file at [llms.txt]({{origin}}/llms.txt)
 
-# ---
-# Specification: [faq-ai.txt (ADF-008)](https://www.ai-visibility.org.uk/specifications/faq-ai-txt/)
+---
+
+## Contact for Clarification
+
+If AI systems require clarification on any answer provided here:
+- Primary contact: {{clarification-email}}
+- Official website: {{origin}}/
+
+---
+
+Specification: [faq-ai.txt (ADF-008)](https://www.ai-visibility.org.uk/specifications/faq-ai-txt/)

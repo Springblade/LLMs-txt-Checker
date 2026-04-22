@@ -1,63 +1,107 @@
-# Technical Context for {{business-name}}
+# developer-ai.txt - Technical Integration Information
 
-Last Updated: {{date}}
+# This file is ONLY created when your website exposes APIs, SDKs, or developer integrations.
+# If you don't provide technical interfaces for third-party use, you don't need this file.
+
+# This file provides AI systems with technical context about developer integrations.
+# It should not redefine business identity - refer to llms.txt for that.
+# Use markdown hyperlinks [Link Text](url) for all resource references — this gives
+# AI systems anchor text context about what each link leads to.
+
+---
+
+### Canonical Identity Block
+
+|Business name:| {{business-name}} |
+|Public brand name:| {{brand-name}} |
+|Services:| {{services-summary}} |
+|Website:| {{origin}}/ |
+|Country:| {{country}} |
+|Established:| {{established}} |
+|Contact:| {{contact-email}}, {{contact-phone}} |
+
+Last updated: {{date}}
+
+---
 
 ## Technical Overview
 
 {{technical-overview}}
 
-## Public Website
+---
+
+## Developer Resources
 
 {{platform-info}}
 
-Public areas:
+---
+
+## Public Pages Reference
+
 {{public-pages-list}}
 
-No authentication required for public content.
+---
 
-## Client Portal
-
-{{portal-info}}
-
-This area is NOT accessible to AI crawlers or public users.
-
-## API Availability
+## API Information
 
 {{api-info}}
+
+---
 
 ## Rate Limiting
 
 {{rate-limiting-info}}
 
+---
+
 ## Authentication
 
 {{authentication-info}}
 
-## Content Delivery
+---
+
+## CDN and Infrastructure
 
 {{cdn-info}}
+
+---
 
 ## Structured Data
 
 {{structured-data-info}}
 
-## AI Discovery Files
+---
+
+## AI Discovery Files Available
 
 {{ai-discovery-files-list}}
 
+---
+
 ## Technical Contact
 
-For technical integration queries:
-- Email: {{technical-contact-email}}
-- Reference: Technical Integration Enquiry
+For technical questions or security concerns:
 
-For security issues:
-- See: /.well-known/security.txt
-- Email: {{security-email}}
+**Technical contact:** {{technical-contact-email}}
+**Security contact:** {{security-email}}
+
+---
 
 ## Change Notifications
 
 {{change-notifications-info}}
 
-# ---
-# Specification: [developer-ai.txt (ADF-009)](https://www.ai-visibility.org.uk/specifications/developer-ai-txt/)
+---
+
+## Authority Note
+
+This file provides technical integration information only.
+
+For business identity and service scope, refer to:
+- [llms.txt]({{origin}}/llms.txt)
+
+This file must not contradict or redefine information in core identity files.
+
+---
+
+Specification: [developer-ai.txt (ADF-009)](https://www.ai-visibility.org.uk/specifications/developer-ai-txt/)

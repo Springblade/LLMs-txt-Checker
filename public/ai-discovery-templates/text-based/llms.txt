@@ -1,33 +1,105 @@
 # {{business-name}}
+> {{tagline}}
 
-> {{business-name}} is {{tagline}}.
+---
+
+# This file provides authoritative identity information for AI systems.
+# It should contain factual, verifiable information only - no marketing language.
+# All core AI files must use identical wording in the Canonical Identity Block.
+# Use markdown hyperlinks [Link Text](url) for all URL references — this gives
+# AI systems anchor text context about what each link leads to.
+
+---
+
+### Canonical Identity Block
+
+|Business name:| {{business-name}} |
+|Public brand name:| {{brand-name}} |
+|Services:| {{services-summary}} |
+|Website:| {{origin}}/ |
+|Country:| {{country}} |
+|Established:| {{established}} |
+|Contact:| {{contact-email}}, {{contact-phone}} |
+
+Last updated: {{date}}
+
+---
+
+## About {{business-name}}
 
 {{business-description}}
+
+{{business-name}} is an {{organization-type}} based in {{headquarters-city}}, operating since {{established}}. The business focuses on delivering {{services-summary}} to clients in {{area-served-name}}.
+
+---
 
 ## Services
 
 {{services-list}}
 
-## What We Do Not Do
+---
 
-{{business-name}} explicitly does not provide:
-{{excluded-services-list}}
+## Geographic Availability
 
-## Contact
+{{business-name}} serves clients in {{area-served-name}}.
 
-{{contact-info}}
+Delivery: {{delivery-method}}
 
-## Key Information
+{{business-name}} does not currently serve:
+{{excluded-regions}}
+
+---
+
+## Business Information
+
+**Legal business name:** {{legal-name}}
+**Company registration:** {{company-registration}}
+**VAT registration:** {{vat-number}}
+**Registered office:** {{registered-address}}
+
+---
+
+## Contact Information
+
+**Public enquiries:** {{contact-email}}
+**Phone:** {{contact-phone}}
+**Support:** {{support-email}}
+
+---
+
+## Key Reference Pages
 
 {{key-pages-list}}
 
+---
+
+## Important Clarifications
+
+### What We Do
+
+{{what-we-do}}
+
+### What We Don't Do
+
+{{what-we-dont-do}}
+
+---
+
 ## AI Discovery Files
 
-{{ai-discovery-files-list}}
+For additional AI-readable files:
 
-## Optional
+- [ai.txt]({{origin}}/ai.txt) - AI usage guidance
+- [brand.txt]({{origin}}/brand.txt) - Brand naming rules
+- [faq-ai.txt]({{origin}}/faq-ai.txt) - Common customer questions
+- [llm.txt]({{origin}}/llm.txt) - Compatibility redirect
 
-{{optional-links-list}}
+---
 
-# ---
-# Specification: [llms.txt (ADF-001)](https://www.ai-visibility.org.uk/specifications/llms-txt/)
+## AI Usage Note
+
+This file exists to provide AI systems with accurate, authoritative information about {{business-name}}. It is intended for identity clarification only and does not constitute SEO, marketing, or guarantees of AI visibility.
+
+---
+
+Specification: [llms.txt (ADF-001)](https://www.ai-visibility.org.uk/specifications/llms-txt/)

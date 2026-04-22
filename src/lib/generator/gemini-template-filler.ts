@@ -136,18 +136,25 @@ ${data.llmsTxtContent}
 `
     : "";
 
+  const faqsContext = data.faqs && data.faqs.length > 0
+    ? `
+
+Crawled FAQs:
+${data.faqs.map((f, i) => `Q${i + 1}: ${f.q}\nA${i + 1}: ${f.a}`).join("\n")}
+`
+    : "";
+
   return `Website: ${data.origin}
 Site Name: ${data.siteName}
 Brand Name: ${data.brandName ?? data.siteName}
 Description: ${data.description ?? "N/A"}
-Today's Date: ${today}${llmsSection}
-Crawled Pages:
+Today's Date: ${today}${llmsSection}${faqsContext}
+Crawled Pages (${data.pages.length} pages):
 ${pagesContext}
 
 Additional Info:
 ${data.email ? `Contact Email: ${data.email}` : ""}
 ${data.techStack?.length ? `Tech Stack: ${data.techStack.join(", ")}` : ""}
-${data.faqs?.length ? `FAQs Found:\n${data.faqs.map((f) => `Q: ${f.q}\nA: ${f.a}`).join("\n")}` : ""}
 `.trim();
 }
 
@@ -156,33 +163,42 @@ function buildPrompt(fileType: string, template: string, data: CrawledData): str
 
   const instructions: Record<string, string> = {
     "faq-ai.txt": `This FAQ template requires:
-- Generate at least 5 common questions about this business based on the crawled content
-- Questions should cover: what they do, where they're located, services, contact info, and key differentiators
+- Generate 5 common customer questions based on crawled content
+- Cover: what they do, services offered, contact info, pricing, and key differentiators
 - Answers must be based ONLY on information from the crawled data
 - Use professional, factual language
+- If crawled data contains FAQs, use those as primary source
 - Return ONLY the filled template, no explanation`,
 
     "brand.txt": `This brand guidelines template requires:
 - Identify correct legal name, trading name, and brand name from crawled data
-- Generate brand voice descriptions (positive and negative) based on website tone
-- Generate contact email (use crawled email if available)
+- Generate brand voice descriptions based on website tone and content
+- Generate incorrect name variations (common misspellings to avoid)
+- Generate misinterpretations (what people often get wrong about the brand)
+- Generate terms to avoid
 - Return ONLY the filled template, no explanation`,
 
     "llms.txt": `This business overview template requires:
+- FIRST: Add a blockquote (>) line immediately after H1 with 1-3 sentence business summary describing who the business is and what it does. The blockquote MUST have a space after the > character: "> Your summary here"
 - Extract business name, description, and services from crawled data
-- Generate contact information section
-- List key reference pages from crawled URLs
+- Generate About section (2-3 paragraphs) based on crawled content
+- List services with descriptions
+- Generate key reference pages from crawled URLs
+- Include geographic availability if inferable from content
 - Return ONLY the filled template, no explanation`,
 
     "ai.txt": `This AI usage guidance template requires:
 - Extract canonical identity info (legal name, brand, services, country)
-- Generate appropriate "when to recommend" and "when not to recommend" criteria
+- Generate "when to recommend" criteria based on business type and services
+- Generate "when not to recommend" criteria based on exclusions or limitations
 - Generate service scope clarifications
+- Generate appropriate use cases
 - Return ONLY the filled template, no explanation`,
 
     "developer-ai.txt": `This technical documentation template requires:
-- Extract any technical information from crawled data
+- Extract technical information from crawled data
 - Use crawled page info to infer platform/API details
+- Generate public pages reference list
 - Generate crawler directives based on common website patterns
 - Return ONLY the filled template, no explanation`,
 
@@ -231,6 +247,43 @@ ${specificInstruction}`;
 
 function fillTemplateFallback(template: string, data: CrawledData): string {
   const today = new Date().toISOString().split("T")[0] ?? "";
+
+  // Extract public paths from crawled pages for robots-ai.txt
+  const publicPaths = data.pages
+    .map((p) => {
+      try {
+        const u = new URL(p.url);
+        return u.pathname;
+      } catch {
+        return p.url;
+      }
+    })
+    .filter((p) => p !== "/")
+    .filter((v, i, a) => a.indexOf(v) === i) // unique
+    .slice(0, 10);
+
+  const robotsDirectives = publicPaths.length > 0
+    ? `User-agent: *\nAllow: /${publicPaths.join("\nAllow: /")}\nDisallow: /admin/\nDisallow: /api/\nDisallow: /*.json$\nDisallow: /*.xml$\nDisallow: /private/\n\nUser-agent: GPTBot\nAllow: /\nDisallow: /admin/\nDisallow: /api/\n\nUser-agent: Claude-Web\nAllow: /\nDisallow: /admin/\nDisallow: /api/`
+    : "User-agent: *\nAllow: /";
+
+  const publicPagesList = data.pages
+    .slice(0, 5)
+    .map((p) => {
+      const path = (() => {
+        try {
+          return new URL(p.url).pathname;
+        } catch {
+          return p.url;
+        }
+      })();
+      const title = p.title || "Untitled";
+      return `- [${title}](${data.origin}${path})`;
+    })
+    .join("\n");
+
+  const platformInfo = data.techStack && data.techStack.length > 0
+    ? `This website uses: ${data.techStack.join(", ")}.`
+    : "Information about the technical platform is not publicly available.";
 
   const placeholders: Record<string, string> = {
     "{{business-name}}": data.siteName,
@@ -307,6 +360,72 @@ function fillTemplateFallback(template: string, data: CrawledData): string {
     "{{not-recommend-when-1}}": "N/A",
     "{{not-recommend-when-2}}": "N/A",
     "{{not-recommend-when-3}}": "N/A",
+
+    // faq-ai.txt placeholders
+    "{{faq-q-1}}": "N/A",
+    "{{faq-q-2}}": "N/A",
+    "{{faq-q-3}}": "N/A",
+    "{{faq-q-4}}": "N/A",
+    "{{faq-q-5}}": "N/A",
+    "{{faq-a-1}}": "N/A",
+    "{{faq-a-2}}": "N/A",
+    "{{faq-a-3}}": "N/A",
+    "{{faq-a-4}}": "N/A",
+    "{{faq-a-5}}": "N/A",
+
+    // brand.txt placeholders
+    "{{incorrect-names-list}}": "N/A",
+    "{{brand-voice-positive}}": "N/A",
+    "{{brand-voice-negative}}": "N/A",
+
+    // developer-ai.txt placeholders
+    "{{technical-overview}}": data.description ?? `${data.siteName} is a web-based service.`,
+    "{{platform-info}}": platformInfo,
+    "{{public-pages-list}}": publicPagesList || "Public pages information not available.",
+    "{{portal-info}}": "No client portal detected.",
+    "{{api-info}}": "API documentation not publicly available.",
+    "{{rate-limiting-info}}": "Rate limiting policies not specified.",
+    "{{authentication-info}}": "Authentication details not publicly documented.",
+    "{{cdn-info}}": "CDN information not available.",
+    "{{structured-data-info}}": data.pages.some((p) => p.description) ? "Schema.org structured data may be present on some pages." : "Structured data presence unknown.",
+    "{{ai-discovery-files-list}}": `${data.origin}/llms.txt\n${data.origin}/ai.txt\n${data.origin}/faq-ai.txt\n${data.origin}/brand.txt`,
+    "{{technical-contact-email}}": data.email ?? "N/A",
+    "{{security-email}}": data.email ?? "N/A",
+    "{{change-notifications-info}}": "No change notification system detected.",
+
+    // llms.txt placeholders
+    "{{tagline}}": data.description
+      ? " " + data.description.split(".")[0] + "."
+      : " N/A",
+    "{{services-list}}": data.description ? `- ${data.description}` : "Services information not available.",
+    "{{excluded-services-list}}": "N/A",
+    "{{contact-info}}": data.email ? `Email: ${data.email}` : "Contact information not available.",
+    "{{key-pages-list}}": publicPagesList || "Key pages information not available.",
+    "{{optional-links-list}}": "N/A",
+
+    // ai.txt placeholders
+    "{{recommend-when-list}}": "N/A",
+    "{{not-recommend-when-list}}": "N/A",
+    "{{services-offered-list}}": data.description ?? "N/A",
+    "{{services-not-offered-list}}": "N/A",
+    "{{regions-served}}": "N/A",
+    "{{delivery-method}}": "N/A",
+    "{{excluded-regions}}": "N/A",
+    "{{appropriate-use-cases-list}}": "N/A",
+    "{{not-appropriate-use-cases-list}}": "N/A",
+    "{{terms-to-avoid-list}}": "N/A",
+
+    // llms.html placeholders
+    "{{what-we-do}}": data.description ?? "N/A",
+    "{{what-we-dont-do}}": "Specific exclusions not documented.",
+
+    // robots-ai.txt placeholders
+    "{{crawler-directives}}": robotsDirectives,
+
+    // brand.txt placeholders
+    "{{logo-url}}": "N/A",
+    "{{reason-1}}": "N/A",
+    "{{reason-2}}": "N/A",
   };
 
   let content = template;

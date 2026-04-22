@@ -27,7 +27,7 @@ export function Logo({ onClick }: LogoProps) {
       }}
       aria-label="Aivify home"
     >
-      <img src="/Aivify.svg" alt="Aivify" style={{ height: "2.5rem", width: "auto" }} />
+      <img src="images/Aivify.svg" alt="Aivify" style={{ height: "2.5rem", width: "auto" }} />
     </button>
   );
 }
@@ -62,7 +62,7 @@ export default function SiteHeader({ onLogoClick }: { onLogoClick?: () => void }
 
         {/* Right — GitHub link */}
         <a
-          href="https://github.com/wayadv/llms-txt"
+          href="https://github.com/Springblade/Aivify"
           target="_blank"
           rel="noopener noreferrer"
           style={{

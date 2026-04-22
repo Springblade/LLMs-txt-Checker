@@ -1,15 +1,11 @@
 import type { FileGenerateResult, FileType } from "./types";
-import type { GeneratorResult, GeneratorError } from "@/lib/generator";
 import { crawlWebsite } from "@/lib/generator";
 import { generateByType } from "@/lib/generator/ai-generators";
 import { validateByType } from "@/lib/ai-discovery-scanner";
 import { buildChecklist } from "@/lib/ai-discovery-scanner";
 import type { ChecklistItem } from "@/lib/ai-discovery-scanner";
-import { generateLlmsTxt } from "@/lib/generator";
-
-function isGeneratorError(result: GeneratorResult | GeneratorError): result is GeneratorError {
-  return !result.success;
-}
+import { fetchTemplate } from "@/lib/discovery/template-fetcher";
+import { generateTemplateContent } from "@/lib/generator/gemini-template-filler";
 
 export async function generateFile(
   fileType: FileType,
@@ -18,15 +14,17 @@ export async function generateFile(
   let content: string;
 
   try {
+    // Crawl website once, then use AI to generate content
+    const crawlData = await crawlWebsite(origin);
+
     if (fileType === "llms.txt") {
-      const result = await generateLlmsTxt({ url: origin });
-      if (isGeneratorError(result)) {
-        throw new Error(result.error ?? "Generation failed");
+      // Use template-based generation for llms.txt too
+      const template = fetchTemplate("llms.txt");
+      if (!template.success || !template.content) {
+        throw new Error(template.error ?? "Template not found: llms.txt");
       }
-      content = result.content ?? "";
+      content = await generateTemplateContent("llms.txt", template.content, crawlData);
     } else {
-      // Crawl website once, then use AI to generate content
-      const crawlData = await crawlWebsite(origin);
       content = await generateByType(fileType, crawlData);
     }
 
@@ -74,43 +72,31 @@ export async function generateAllMissing(
   const results: FileGenerateResult[] = [];
   for (const fileType of fileTypes) {
     try {
+      let content: string;
       if (fileType === "llms.txt") {
-        const result = await generateLlmsTxt({ url: origin });
-        if (isGeneratorError(result)) {
-          throw new Error(result.error ?? "Generation failed");
+        // Use template-based generation for llms.txt
+        const template = fetchTemplate("llms.txt");
+        if (!template.success || !template.content) {
+          throw new Error(template.error ?? "Template not found: llms.txt");
         }
-        const content = result.content ?? "";
-        const validation = validateByType(content, fileType);
-        results.push({
-          type: fileType,
-          success: true,
-          content,
-          errors: validation.errors,
-          warnings: validation.warnings,
-          checklist: buildChecklist(
-            fileType,
-            true,
-            validation.errors,
-            validation.warnings
-          ) as ChecklistItem[],
-        });
+        content = await generateTemplateContent("llms.txt", template.content, crawlData);
       } else {
-        const content = await generateByType(fileType, crawlData);
-        const validation = validateByType(content, fileType);
-        results.push({
-          type: fileType,
-          success: true,
-          content,
-          errors: validation.errors,
-          warnings: validation.warnings,
-          checklist: buildChecklist(
-            fileType,
-            true,
-            validation.errors,
-            validation.warnings
-          ) as ChecklistItem[],
-        });
+        content = await generateByType(fileType, crawlData);
       }
+      const validation = validateByType(content, fileType);
+      results.push({
+        type: fileType,
+        success: true,
+        content,
+        errors: validation.errors,
+        warnings: validation.warnings,
+        checklist: buildChecklist(
+          fileType,
+          true,
+          validation.errors,
+          validation.warnings
+        ) as ChecklistItem[],
+      });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Unknown error";
       results.push({

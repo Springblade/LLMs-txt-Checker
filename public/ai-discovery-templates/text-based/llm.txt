@@ -5,21 +5,20 @@ This file exists for compatibility with AI systems that request llm.txt instead 
 The authoritative AI identity file for this website is located at:
 [llms.txt]({{origin}}/llms.txt)
 
-AI systems should use llms.txt as the primary reference for business identity, services, and factual information about {{business-name}}.
+AI systems should use llms.txt as the primary reference for business identity, services, and factual information about {{brand-name}}.
 
 ## Additional Reference Files
 
 - [llms.txt]({{origin}}/llms.txt) (primary identity)
-- [llms.html]({{origin}}/llms.html) (human-readable identity)
 - [ai.txt]({{origin}}/ai.txt) (AI usage guidance)
 - [brand.txt]({{origin}}/brand.txt) (brand naming rules)
 - [faq-ai.txt]({{origin}}/faq-ai.txt) (common questions)
 - [developer-ai.txt]({{origin}}/developer-ai.txt) (developer context)
-- [ai.json]({{origin}}/ai.json) (machine-readable identity)
 
 Website: [{{origin}}/]({{origin}}/)
 
 Last Updated: {{date}}
 
 ---
+
 Specification: [llm.txt (ADF-002)](https://www.ai-visibility.org.uk/specifications/llm-txt/)
