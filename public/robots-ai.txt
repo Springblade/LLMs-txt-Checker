@@ -1,0 +1,61 @@
+# robots-ai.txt - AI Crawler Usage Directives
+
+# This file declares how AI systems may use your publicly accessible content.
+# Syntax follows the robots-ai.txt specification from ai-visibility.org.uk.
+# Format: User-Agent: <pattern> followed by directive: value pairs.
+
+---
+
+[official-names]
+Geolify
+Geolify
+
+[incorrect-names]
+Geolify AI
+GeolifyAI
+
+[allow-training]
+https://geolify.ai/llms-full.txt
+https://geolify.ai/blog/
+https://geolify.ai/research
+https://geolify.ai/geolify-academy
+https://geolify.ai/geo-ai-visibility-audit
+https://geolify.ai/pricing
+
+[disallow-training]
+https://geolify.ai/checkout/
+https://geolify.ai/legal/
+https://geolify.ai/private/
+https://geolify.ai/internal/
+https://geolify.ai/staging/
+https://geolify.ai/admin/
+https://geolify.ai/wp-admin/
+https://geolify.ai/wp-login.php
+https://geolify.ai/*.json
+https://geolify.ai/*.xml
+https://geolify.ai/api/*
+
+[allow-retrieval]
+/
+
+[disallow-retrieval]
+https://geolify.ai/checkout/
+https://geolify.ai/private/
+https://geolify.ai/internal/
+https://geolify.ai/admin/
+
+[allow-citation]
+/
+
+[disallow-citation]
+https://geolify.ai/checkout/
+https://geolify.ai/legal/
+https://geolify.ai/private/
+https://geolify.ai/internal/
+
+[contact]
+contact@geolify.ai
+
+---
+
+Specification: [robots-ai.txt (ADF-010)](https://www.ai-visibility.org.uk/specifications/robots-ai-txt/)

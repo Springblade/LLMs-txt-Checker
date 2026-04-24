@@ -164,68 +164,27 @@ function validateAiTxt(content: string) {
   const errors: { rule: string; message: string }[] = [];
   const warnings: { rule: string; message: string }[] = [];
 
-  const identityMatch = content.match(/^\[identity\]\s*$/im);
-  const permissionsMatch = content.match(/^\[permissions\]\s*$/im);
-  const restrictionsMatch = content.match(/^\[restrictions\]\s*$/im);
-
-  if (!identityMatch) {
-    errors.push({
-      rule: "missing_identity_section",
-      message: "Missing [identity] section",
-    });
+  // Per ai.txt ADF-004: INI [section] syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-  if (!permissionsMatch) {
-    errors.push({
-      rule: "missing_permissions_section",
-      message: "Missing [permissions] section",
-    });
+  if (!/^\[incorrect-names\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_incorrect_names", message: "Missing [incorrect-names] section" });
   }
-  if (!restrictionsMatch) {
-    warnings.push({
-      rule: "missing_restrictions_section",
-      message: "Missing [restrictions] section — recommended for completeness",
-    });
+  if (!/^\[overview\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_overview", message: "Missing [overview] section" });
   }
-
-  // Extract identity section content
-  const identitySection = extractIniSection(content, "identity");
-  const hasName = /name\s*=/i.test(identitySection);
-  const hasUrl = /url\s*=/i.test(identitySection);
-  if (!hasName) {
-    errors.push({
-      rule: "identity_name",
-      message: "[identity] section must include a name field (e.g., name=My Company)",
-    });
+  if (!/^\[permissions\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_permissions", message: "Missing [permissions] section" });
   }
-  if (!hasUrl) {
-    errors.push({
-      rule: "identity_url",
-      message: "[identity] section must include a url field",
-    });
+  if (!/^\[restrictions\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_restrictions", message: "Missing [restrictions] section" });
   }
-
-  // Check permissions items
-  const permissionsSection = extractIniSection(content, "permissions");
-  const permLines = permissionsSection
-    .split("\n")
-    .filter((l) => l.trim() && !l.trim().startsWith("#"));
-  if (permLines.length === 0) {
-    warnings.push({
-      rule: "empty_permissions",
-      message: "[permissions] section has no items — add at least one permission",
-    });
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { found: true, errors, warnings, content };
-}
-
-function extractIniSection(content: string, section: string): string {
-  const regex = new RegExp(
-    `^\\[${section}\\]\\s*$\\n([\\s\\S]*?)(?=^\\[|\\z)`,
-    "im"
-  );
-  const match = content.match(regex);
-  return match && match[1] ? match[1] : "";
 }
 
 function validateFaqAiTxt(content: string) {
@@ -275,6 +234,15 @@ function validateFaqAiTxt(content: string) {
     });
   }
 
+  // Check for URL: attribution (per ADF-008 v2.0 spec)
+  const urlAttribCount = (content.match(/^URL:\s*\[/im) ?? []).length;
+  if (urlAttribCount === 0 && qaPairs.length > 0) {
+    errors.push({
+      rule: "has_url_attrib",
+      message: "Missing URL: attribution after Q:/A: pairs",
+    });
+  }
+
   return { found: true, errors, warnings, content };
 }
 
@@ -282,34 +250,18 @@ function validateBrandTxt(content: string) {
   const errors: { rule: string; message: string }[] = [];
   const warnings: { rule: string; message: string }[] = [];
 
-  const hasBrandName = /^brand-name\s*:/im.test(content);
-  const hasDoNotUse = /^do-not-use\s*:/im.test(content);
-
-  if (!hasBrandName) {
-    errors.push({
-      rule: "missing_brand_name",
-      message: "Missing brand-name: field",
-    });
+  // Per brand.txt ADF-007: INI [section] syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-  if (!hasDoNotUse) {
-    warnings.push({
-      rule: "missing_do_not_use",
-      message: "Missing do-not-use: field — recommended to specify incorrect name variations",
-    });
+  if (!/^\[incorrect-names\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_incorrect_names", message: "Missing [incorrect-names] section" });
   }
-
-  // Check for conflicting names (brand-name and do-not-use overlap)
-  const brandNameMatch = content.match(/^brand-name\s*:\s*(.+)/im);
-  const doNotUseMatch = content.match(/^do-not-use\s*:\s*(.+)/im);
-  if (brandNameMatch && doNotUseMatch) {
-    const bn = (brandNameMatch[1] ?? "").trim().toLowerCase();
-    const dnu = (doNotUseMatch[1] ?? "").trim().toLowerCase();
-    if (dnu.includes(bn) || bn.includes(dnu)) {
-      warnings.push({
-        rule: "name_conflict",
-        message: "do-not-use appears to duplicate brand-name — they should be distinct",
-      });
-    }
+  if (!/^\[naming-rules\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_naming_rules", message: "Missing [naming-rules] section" });
+  }
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { found: true, errors, warnings, content };
@@ -319,34 +271,21 @@ function validateDeveloperAiTxt(content: string) {
   const errors: { rule: string; message: string }[] = [];
   const warnings: { rule: string; message: string }[] = [];
 
-  const hasOverview = /^##\s*Overview/im.test(content);
-  if (!hasOverview) {
-    warnings.push({
-      rule: "missing_overview",
-      message: "Missing ## Overview section — recommended for AI to understand the project",
-    });
+  // Per developer-ai.txt ADF-009: INI [section] syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-
-  // Check for excessive marketing language
-  const marketingPhrases = [
-    /\bworld'?s best\b/i,
-    /\brevolutionary\b/i,
-    /\bgame-?changer\b/i,
-    /\bcutting-?edge\b/i,
-    /\binnovative\b/i,
-    /\bnext-?gen(eration)?\b/i,
-  ];
-  const lines = content.split("\n");
-  for (const line of lines) {
-    for (const phrase of marketingPhrases) {
-      if (phrase.test(line)) {
-        warnings.push({
-          rule: "marketing_language",
-          message: `Avoid marketing language ("${line.trim().substring(0, 30)}...") — use factual, neutral descriptions`,
-        });
-        break;
-      }
-    }
+  if (!/^\[overview\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_overview", message: "Missing [overview] section" });
+  }
+  if (!/^\[public-api\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_public_api", message: "Missing [public-api] section" });
+  }
+  if (!/^\[public-areas\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_public_areas", message: "Missing [public-areas] section" });
+  }
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { found: true, errors, warnings, content };
@@ -356,47 +295,18 @@ function validateLlmsHtml(content: string) {
   const errors: { rule: string; message: string }[] = [];
   const warnings: { rule: string; message: string }[] = [];
 
-  const hasHtmlTag = /<html/i.test(content);
-  const hasHeadTag = /<head/i.test(content);
-  const hasBodyTag = /<body/i.test(content);
-  const hasJsonLd = /<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>/i.test(
-    content
-  );
-
-  if (!hasHtmlTag) {
-    errors.push({
-      rule: "missing_html_tag",
-      message: "Document should have <html> tag",
-    });
+  // Per llms.html ADF-003: noindex + canonical link
+  if (!/<html/i.test(content)) {
+    errors.push({ rule: "has_html_tag", message: "Missing <html> tag" });
   }
-  if (!hasHeadTag) {
-    errors.push({
-      rule: "missing_head_tag",
-      message: "Document should have <head> tag",
-    });
+  if (!/<h1/i.test(content)) {
+    errors.push({ rule: "has_h1", message: "Missing <h1> heading" });
   }
-  if (!hasBodyTag) {
-    errors.push({
-      rule: "missing_body_tag",
-      message: "Document should have <body> tag",
-    });
+  if (!/<meta[^>]+name\s*=\s*["']robots["'][^>]+content\s*=\s*["'][^"]*noindex/im.test(content)) {
+    errors.push({ rule: "has_noindex", message: 'Robots meta must use "noindex"' });
   }
-  if (!hasJsonLd) {
-    warnings.push({
-      rule: "missing_json_ld",
-      message: "Missing JSON-LD Schema.org structured data — recommended for AI readability",
-    });
-  }
-
-  // Check for Open Graph meta tags
-  const hasOgTitle = /<meta[^>]+property\s*=\s*["']og:title["'][^>]*>/i.test(
-    content
-  );
-  if (!hasOgTitle) {
-    warnings.push({
-      rule: "missing_og_tags",
-      message: "Missing Open Graph meta tags — recommended for social sharing",
-    });
+  if (!/<link[^>]+rel\s*=\s*["']canonical["'][^>]*>/i.test(content)) {
+    errors.push({ rule: "has_canonical", message: 'Missing <link rel="canonical">' });
   }
 
   return { found: true, errors, warnings, content };
@@ -406,42 +316,30 @@ function validateRobotsAiTxt(content: string) {
   const errors: { rule: string; message: string }[] = [];
   const warnings: { rule: string; message: string }[] = [];
 
-  const lines = content.split("\n");
-  let hasUserAgent = false;
-  let hasDirectives = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-
-    if (/^user-agent\s*:/i.test(trimmed)) {
-      hasUserAgent = true;
-    }
-    if (/^(allow|disallow|ai-admin|ai-block)\s*:/i.test(trimmed)) {
-      hasDirectives = true;
-    }
+  // Per robots-ai.txt ADF-010: INI directive syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-
-  if (!hasUserAgent) {
-    warnings.push({
-      rule: "missing_user_agent",
-      message: "No User-agent directive found — add at least one User-agent line",
-    });
+  if (!/^\[allow-training\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_allow_training", message: "Missing [allow-training] section" });
   }
-  if (!hasDirectives) {
-    warnings.push({
-      rule: "missing_directives",
-      message: "No Allow/Disallow directives found — this file has no effect without them",
-    });
+  if (!/^\[disallow-training\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_disallow_training", message: "Missing [disallow-training] section" });
   }
-
-  // Warn about AI-specific directives
-  const hasAiDirectives = /^(ai-admin|ai-block)\s*:/im.test(content);
-  if (!hasAiDirectives) {
-    warnings.push({
-      rule: "missing_ai_directives",
-      message: "No ai-admin or ai-block directives — use these for AI-specific access control",
-    });
+  if (!/^\[allow-retrieval\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_allow_retrieval", message: "Missing [allow-retrieval] section" });
+  }
+  if (!/^\[disallow-retrieval\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_disallow_retrieval", message: "Missing [disallow-retrieval] section" });
+  }
+  if (!/^\[allow-citation\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_allow_citation", message: "Missing [allow-citation] section" });
+  }
+  if (!/^\[disallow-citation\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_disallow_citation", message: "Missing [disallow-citation] section" });
+  }
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { found: true, errors, warnings, content };
@@ -486,6 +384,15 @@ function validateIdentityJson(content: string) {
     }
   }
 
+  // Check $schema points to correct domain (ai-visibility.org.uk, not 365i.co.uk)
+  const schema = obj["$schema"];
+  if (typeof schema === "string" && !schema.includes("ai-visibility.org.uk")) {
+    errors.push({
+      rule: "has_schema_ai_visibility",
+      message: '$schema must point to ai-visibility.org.uk, not 365i.co.uk or other domain',
+    });
+  }
+
   return { found: true, errors, warnings, content };
 }
 
@@ -510,11 +417,20 @@ function validateAiJson(content: string) {
   }
 
   const obj = parsed as Record<string, unknown>;
-  if (!obj.interactions && !obj.guidelines) {
-    warnings.push({
-      rule: "missing_interactions",
-      message: "Missing interactions or guidelines section — file may be incomplete",
-    });
+  if (typeof obj.name !== "string" || obj.name.trim() === "") {
+    errors.push({ rule: "has_name", message: 'Missing required top-level field: "name"' });
+  }
+  if (typeof obj.url !== "string" || obj.url.trim() === "") {
+    errors.push({ rule: "has_url", message: 'Missing required top-level field: "url"' });
+  }
+  if (!Array.isArray(obj.permissions)) {
+    errors.push({ rule: "has_permissions", message: 'Missing required top-level array: "permissions"' });
+  }
+  if (!Array.isArray(obj.restrictions)) {
+    errors.push({ rule: "has_restrictions", message: 'Missing required top-level array: "restrictions"' });
+  }
+  if (typeof obj.version !== "string") {
+    warnings.push({ rule: "has_version", message: 'Missing recommended field: "version"' });
   }
 
   return { found: true, errors, warnings, content };
