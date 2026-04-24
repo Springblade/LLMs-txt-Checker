@@ -435,7 +435,7 @@ function validateRobotsAiTxt(content: string) {
   return { errors, warnings };
 }
 
-function validateIdentityJson(content: string) {
+export function validateIdentityJson(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -471,7 +471,7 @@ function validateIdentityJson(content: string) {
   return { errors, warnings };
 }
 
-function validateAiJson(content: string) {
+export function validateAiJson(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
