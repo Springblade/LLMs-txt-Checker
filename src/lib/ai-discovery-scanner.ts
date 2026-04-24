@@ -60,42 +60,51 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "has_links",  label: "Links to other AI files present",        severity: "warning" },
   ],
   "ai.txt": [
-    // Per ai.txt standard structure (ADF-004)
-    { id: "has_identity_block", label: "Canonical Identity Block present",       severity: "error" },
-    { id: "has_h2",            label: "H2 sections (AI intent, services, etc.)", severity: "warning" },
-    { id: "has_links",         label: "Links present",                         severity: "warning" },
+    // Per ai.txt standard structure (ADF-004) — INI syntax
+    { id: "has_official_names",   label: "Has [official-names] section",    severity: "error" },
+    { id: "has_incorrect_names", label: "Has [incorrect-names] section",  severity: "warning" },
+    { id: "has_overview",       label: "Has [overview] section",         severity: "warning" },
+    { id: "has_permissions",    label: "Has [permissions] section",       severity: "error" },
+    { id: "has_restrictions",   label: "Has [restrictions] section",     severity: "warning" },
+    { id: "has_contact",       label: "Has [contact] section",          severity: "warning" },
   ],
   "faq-ai.txt": [
-    // Per faq-ai.txt standard structure (ADF-008)
-    { id: "has_identity_block", label: "Canonical Identity Block present",  severity: "error" },
-    { id: "has_qa_pairs",      label: "Q:/A: pairs present",               severity: "error",   showValue: true },
-    { id: "no_orphan_q",       label: "No orphan questions",               severity: "warning" },
-    { id: "no_orphan_a",       label: "No orphan answers",                 severity: "warning" },
+    // Per faq-ai.txt standard structure (ADF-008): Q:/A: pairs + URL: attribution
+    { id: "has_qa_pairs",    label: "Q:/A: pairs present",       severity: "error",   showValue: true },
+    { id: "no_orphan_q",    label: "No orphan questions",        severity: "warning" },
+    { id: "no_orphan_a",    label: "No orphan answers",          severity: "warning" },
+    { id: "has_url_attrib",  label: "URL: attribution present",  severity: "error" },
   ],
   "brand.txt": [
-    // Per brand.txt standard structure (ADF-007)
-    { id: "has_identity_block", label: "Canonical Identity Block present",       severity: "error" },
-    { id: "has_h2",            label: "H2 sections (brand usage, terms to avoid)", severity: "warning" },
-    { id: "has_links",         label: "Links present",                            severity: "warning" },
+    // Per brand.txt standard structure (ADF-007) — INI syntax
+    { id: "has_official_names",   label: "Has [official-names] section",    severity: "error" },
+    { id: "has_incorrect_names", label: "Has [incorrect-names] section",  severity: "warning" },
+    { id: "has_naming_rules",    label: "Has [naming-rules] section",     severity: "error" },
+    { id: "has_contact",        label: "Has [contact] section",          severity: "warning" },
   ],
   "developer-ai.txt": [
-    // Per developer-ai.txt standard structure (ADF-009)
-    { id: "has_identity_block", label: "Canonical Identity Block present",       severity: "error" },
-    { id: "has_h2",            label: "H2 sections (technical overview, resources)", severity: "warning" },
-    { id: "has_links",         label: "Links present",                            severity: "warning" },
+    // Per developer-ai.txt standard structure (ADF-009) — INI syntax
+    { id: "has_official_names", label: "Has [official-names] section",  severity: "error" },
+    { id: "has_overview",     label: "Has [overview] section",       severity: "error" },
+    { id: "has_public_api",   label: "Has [public-api] section",     severity: "error" },
+    { id: "has_public_areas", label: "Has [public-areas] section",   severity: "warning" },
+    { id: "has_contact",      label: "Has [contact] section",        severity: "warning" },
   ],
   "llms.html": [
-    // Per llms.html standard structure (ADF-003)
-    { id: "has_html_tag",  label: "<html> tag present",        severity: "error" },
-    { id: "has_h1",       label: "<h1> heading present",        severity: "error" },
-    { id: "has_sections", label: "<section> elements present", severity: "warning" },
-    { id: "has_links",    label: "Links present",               severity: "warning" },
+    // Per llms.html standard structure (ADF-003): noindex + canonical link
+    { id: "has_html_tag",   label: "<html> tag present",         severity: "error" },
+    { id: "has_h1",        label: "<h1> heading present",       severity: "error" },
+    { id: "has_noindex",   label: "Robots meta uses noindex",  severity: "error" },
+    { id: "has_canonical", label: "Canonical link tag present",  severity: "error" },
+    { id: "has_sections",  label: "<section> elements present", severity: "warning" },
+    { id: "has_links",     label: "Links present",               severity: "warning" },
   ],
   "robots-ai.txt": [
-    // Per robots-ai.txt standard structure (ADF-010)
-    { id: "has_identity_block", label: "Canonical Identity Block present",  severity: "error" },
-    { id: "has_h2",            label: "H2 sections present",                severity: "warning" },
-    { id: "has_links",         label: "Links present",                     severity: "warning" },
+    // Per robots-ai.txt standard structure (ADF-010) — INI directive syntax
+    { id: "has_official_names",     label: "Has [official-names] section",      severity: "error" },
+    { id: "has_allow_training",    label: "Has [allow-training] section",    severity: "error" },
+    { id: "has_disallow_training", label: "Has [disallow-training] section",  severity: "error" },
+    { id: "has_contact",            label: "Has [contact] section",           severity: "warning" },
   ],
   "identity.json": [
     // Per identity.json spec from ai-visibility.org.uk
@@ -303,17 +312,24 @@ function validateAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per ai.txt template (ADF-004): Canonical Identity Block, H2 sections, links
-  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
-    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
+  // Per ai.txt ADF-004 spec: INI [section] syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
-  if (h2Count === 0) {
-    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  if (!/^\[incorrect-names\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_incorrect_names", message: "Missing [incorrect-names] section" });
   }
-  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
-  if (linkCount === 0) {
-    warnings.push({ rule: "has_links", message: "No links found" });
+  if (!/^\[overview\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_overview", message: "Missing [overview] section" });
+  }
+  if (!/^\[permissions\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_permissions", message: "Missing [permissions] section" });
+  }
+  if (!/^\[restrictions\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_restrictions", message: "Missing [restrictions] section" });
+  }
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { errors, warnings };
@@ -349,6 +365,12 @@ function validateFaqAiTxt(content: string) {
   if (currentQ) warnings.push({ rule: "no_orphan_q", message: `Question "${currentQ}" has no answer` });
   if (qaPairs.length === 0) errors.push({ rule: "has_qa_pairs", message: "faq-ai.txt must contain at least one Q:/A: pair" });
 
+  // Check for URL: attribution (per ADF-008 v2.0 spec)
+  const urlAttribCount = (content.match(/^URL:\s*\[/im) ?? []).length;
+  if (urlAttribCount === 0 && qaPairs.length > 0) {
+    errors.push({ rule: "has_url_attrib", message: "Missing URL: attribution after Q:/A: pairs — add source page URLs per v2.0 spec" });
+  }
+
   return { errors, warnings };
 }
 
@@ -356,17 +378,18 @@ function validateBrandTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per brand.txt template (ADF-007): Canonical Identity Block, H2 sections, links
-  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
-    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
+  // Per brand.txt ADF-007 spec: INI [section] syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
-  if (h2Count === 0) {
-    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  if (!/^\[incorrect-names\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_incorrect_names", message: "Missing [incorrect-names] section" });
   }
-  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
-  if (linkCount === 0) {
-    warnings.push({ rule: "has_links", message: "No links found" });
+  if (!/^\[naming-rules\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_naming_rules", message: "Missing [naming-rules] section" });
+  }
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { errors, warnings };
@@ -376,17 +399,21 @@ function validateDeveloperAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per developer-ai.txt template (ADF-009): Canonical Identity Block, H2 sections, links
-  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
-    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
+  // Per developer-ai.txt ADF-009 spec: INI [section] syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
-  if (h2Count === 0) {
-    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  if (!/^\[overview\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_overview", message: "Missing [overview] section" });
   }
-  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
-  if (linkCount === 0) {
-    warnings.push({ rule: "has_links", message: "No links found" });
+  if (!/^\[public-api\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_public_api", message: "Missing [public-api] section" });
+  }
+  if (!/^\[public-areas\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_public_areas", message: "Missing [public-areas] section" });
+  }
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { errors, warnings };
@@ -396,12 +423,18 @@ function validateLlmsHtml(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per llms.html template (ADF-003): <html>, <h1>, <section>, links
+  // Per llms.html ADF-003 spec: noindex + canonical link
   if (!/<html/i.test(content)) {
     errors.push({ rule: "has_html_tag", message: "Missing <html> tag" });
   }
   if (!/<h1/i.test(content)) {
     errors.push({ rule: "has_h1", message: "Missing <h1> heading" });
+  }
+  if (!/<meta[^>]+name\s*=\s*["']robots["'][^>]+content\s*=\s*["'][^"]*noindex/im.test(content)) {
+    errors.push({ rule: "has_noindex", message: 'Robots meta must use "noindex" — AI-only file should not be indexed' });
+  }
+  if (!/<link[^>]+rel\s*=\s*["']canonical["'][^>]*>/i.test(content)) {
+    errors.push({ rule: "has_canonical", message: 'Missing <link rel="canonical"> tag pointing to llms.txt source' });
   }
   const sectionCount = (content.match(/<section[^>]*>/gi) ?? []).length;
   if (sectionCount === 0) {
@@ -419,17 +452,18 @@ function validateRobotsAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per robots-ai.txt template (ADF-010): Canonical Identity Block, H2 sections, links
-  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
-    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
+  // Per robots-ai.txt ADF-010 spec: INI directive syntax
+  if (!/^\[official-names\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
   }
-  const h2Count = (content.match(/^##\s+\S/im) ?? []).length;
-  if (h2Count === 0) {
-    warnings.push({ rule: "has_h2", message: "No H2 sections found" });
+  if (!/^\[allow-training\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_allow_training", message: "Missing [allow-training] section" });
   }
-  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
-  if (linkCount === 0) {
-    warnings.push({ rule: "has_links", message: "No links found" });
+  if (!/^\[disallow-training\]\s*$/im.test(content)) {
+    errors.push({ rule: "has_disallow_training", message: "Missing [disallow-training] section" });
+  }
+  if (!/^\[contact\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
 
   return { errors, warnings };
