@@ -8,36 +8,29 @@
 
 ---
 
-### Canonical Identity Block
-
-|Business name:| {{business-name}} |
-|Public brand name:| {{brand-name}} |
-|Services:| {{services-summary}} |
-|Website:| {{origin}}/ |
-|Country:| {{country}} |
-|Established:| {{established}} |
-|Contact:| {{contact-email}}, {{contact-phone}} |
-
-Last updated: {{date}}
-
 ---
 
 ## Common Customer Questions
 
 Q: {{faq-q-1}}
 A: {{faq-a-1}}
+URL: [{{faq-source-page-1-title}}]({{origin}}{{faq-source-page-1-url}})
 
 Q: {{faq-q-2}}
 A: {{faq-a-2}}
+URL: [{{faq-source-page-2-title}}]({{origin}}{{faq-source-page-2-url}})
 
 Q: {{faq-q-3}}
 A: {{faq-a-3}}
+URL: [{{faq-source-page-3-title}}]({{origin}}{{faq-source-page-3-url}})
 
 Q: {{faq-q-4}}
 A: {{faq-a-4}}
+URL: [{{faq-source-page-4-title}}]({{origin}}{{faq-source-page-4-url}})
 
 Q: {{faq-q-5}}
 A: {{faq-a-5}}
+URL: [{{faq-source-page-5-title}}]({{origin}}{{faq-source-page-5-url}})
 
 ---
 
