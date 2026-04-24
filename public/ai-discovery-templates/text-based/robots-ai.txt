@@ -1,0 +1,53 @@
+# robots-ai.txt - AI Crawler Usage Directives
+
+# This file declares how AI systems may use your publicly accessible content.
+# Syntax follows the robots-ai.txt specification from ai-visibility.org.uk.
+# Format: User-Agent: <pattern> followed by directive: value pairs.
+
+---
+
+[official-names]
+{{trading-name}}
+{{legal-name}}
+
+[incorrect-names]
+{{incorrect-name-1}}
+{{incorrect-name-2}}
+
+[allow-training]
+{{origin}}/llms.txt
+{{origin}}/about/
+{{origin}}/services/
+{{origin}}/faq/
+{{origin}}/guides/
+{{origin}}/blog/
+
+[disallow-training]
+{{origin}}/private/
+{{origin}}/internal/
+{{origin}}/staging/
+{{origin}}/admin/
+{{origin}}/wp-admin/
+{{origin}}/wp-login.php
+{{origin}}/*.json
+{{origin}}/*.xml
+{{origin}}/api/*
+
+[allow-retrieval]
+/
+
+[disallow-retrieval]
+
+[allow-citation]
+/
+
+[disallow-citation]
+{{origin}}/private/
+{{origin}}/internal/
+
+[contact]
+{{contact-email}}
+
+---
+
+Specification: [robots-ai.txt (ADF-010)](https://www.ai-visibility.org.uk/specifications/robots-ai-txt/)
