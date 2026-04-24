@@ -312,7 +312,7 @@ function validateLlmTxt(content: string) {
   return { errors, warnings };
 }
 
-function validateAiTxt(content: string) {
+export function validateAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -339,7 +339,7 @@ function validateAiTxt(content: string) {
   return { errors, warnings };
 }
 
-function validateFaqAiTxt(content: string) {
+export function validateFaqAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -374,7 +374,7 @@ function validateFaqAiTxt(content: string) {
   return { errors, warnings };
 }
 
-function validateBrandTxt(content: string) {
+export function validateBrandTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -395,7 +395,7 @@ function validateBrandTxt(content: string) {
   return { errors, warnings };
 }
 
-function validateDeveloperAiTxt(content: string) {
+export function validateDeveloperAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -419,7 +419,7 @@ function validateDeveloperAiTxt(content: string) {
   return { errors, warnings };
 }
 
-function validateLlmsHtml(content: string) {
+export function validateLlmsHtml(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -448,7 +448,7 @@ function validateLlmsHtml(content: string) {
   return { errors, warnings };
 }
 
-function validateRobotsAiTxt(content: string) {
+export function validateRobotsAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
