@@ -103,8 +103,12 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     // Per robots-ai.txt standard structure (ADF-010) — INI directive syntax
     { id: "has_official_names",     label: "Has [official-names] section",      severity: "error" },
     { id: "has_allow_training",    label: "Has [allow-training] section",    severity: "error" },
-    { id: "has_disallow_training", label: "Has [disallow-training] section",  severity: "error" },
-    { id: "has_contact",            label: "Has [contact] section",           severity: "warning" },
+    { id: "has_disallow_training", label: "Has [disallow-training] section", severity: "error" },
+    { id: "has_allow_retrieval",   label: "Has [allow-retrieval] section",   severity: "warning" },
+    { id: "has_disallow_retrieval",label: "Has [disallow-retrieval] section", severity: "warning" },
+    { id: "has_allow_citation",    label: "Has [allow-citation] section",    severity: "warning" },
+    { id: "has_disallow_citation", label: "Has [disallow-citation] section",  severity: "warning" },
+    { id: "has_contact",           label: "Has [contact] section",           severity: "warning" },
   ],
   "identity.json": [
     // Per identity.json spec from ai-visibility.org.uk
@@ -339,11 +343,7 @@ function validateFaqAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per faq-ai.txt template (ADF-008): Canonical Identity Block, Q:/A: pairs
-  if (!/(?:###\s+)?Canonical\s+Identity\s+Block/im.test(content)) {
-    errors.push({ rule: "has_identity_block", message: "Missing Canonical Identity Block" });
-  }
-
+  // Per faq-ai.txt template (ADF-008): Q:/A: pairs + URL: attribution
   const qaPairs: { q: string; a: string }[] = [];
   const lines = content.split("\n");
   let currentQ = "";
@@ -461,6 +461,18 @@ function validateRobotsAiTxt(content: string) {
   }
   if (!/^\[disallow-training\]\s*$/im.test(content)) {
     errors.push({ rule: "has_disallow_training", message: "Missing [disallow-training] section" });
+  }
+  if (!/^\[allow-retrieval\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_allow_retrieval", message: "Missing [allow-retrieval] section" });
+  }
+  if (!/^\[disallow-retrieval\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_disallow_retrieval", message: "Missing [disallow-retrieval] section" });
+  }
+  if (!/^\[allow-citation\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_allow_citation", message: "Missing [allow-citation] section" });
+  }
+  if (!/^\[disallow-citation\]\s*$/im.test(content)) {
+    warnings.push({ rule: "has_disallow_citation", message: "Missing [disallow-citation] section" });
   }
   if (!/^\[contact\]\s*$/im.test(content)) {
     warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
