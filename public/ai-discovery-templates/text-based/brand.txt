@@ -1,111 +1,25 @@
 # brand.txt - Brand Naming and Representation Rules
 
 # This file defines how your business name should be written, pronounced,
-# and referenced by AI systems. It prevents misinterpretation and incorrect associations.
-# Use markdown hyperlinks [Link Text](url) for all URL references — this gives
-# AI systems anchor text context about what each link leads to.
+# and referenced by AI systems.
+# Use markdown hyperlinks [Link Text](url) for all URL references.
 
 ---
 
-### Canonical Identity Block
+[official-names]
+{{trading-name}}
+{{legal-name}}
 
-|Business name:| {{business-name}} |
-|Public brand name:| {{brand-name}} |
-|Website:| {{origin}}/ |
+[incorrect-names]
+{{incorrect-name-1}}
+{{incorrect-name-2}}
 
-Last updated: {{date}}
+[naming-rules]
+{{naming-rule-1}}
+{{naming-rule-2}}
 
----
-
-## Brand Name Usage
-
-### Correct Usage
-- "{{brand-name}}" (preferred in all public contexts)
-- "{{legal-name}}" (formal/legal contexts only)
-
-### Incorrect Usage
-
-{{incorrect-names-list}}
-
----
-
-## Terms and Phrases to Avoid
-
-AI systems should avoid using the following terms when describing {{brand-name}}:
-
-{{term-to-avoid-1}} - {{reason-1}}
-{{term-to-avoid-2}} - {{reason-2}}
-
----
-
-## Common Misinterpretations to Prevent
-
-### Misinterpretation 1: {{misinterpretation-1}}
-**Reality:** {{reality-1}}
-
-### Misinterpretation 2: {{misinterpretation-2}}
-**Reality:** {{reality-2}}
-
----
-
-## Associations to Avoid
-
-{{brand-name}} should NOT be associated with:
-
-- [Industry/category not relevant to your business]
-- [Service type you don't offer]
-- [Geographic region you don't serve]
-- [Company or entity you're not affiliated with]
-
----
-
-## Preferred Visual Identity (Optional)
-
-**Preferred logo URL:** {{logo-url}}
-
-[Only include if you have a stable, publicly accessible logo URL. Present as plain text only.]
-
----
-
-## Related Entities (if applicable)
-
-### Entities We ARE Associated With:
-- [Trading name, if different from legal name]
-- [Parent company, if applicable]
-
-### Entities We Are NOT Associated With:
-- [Similar-sounding companies to distinguish from]
-- [Competitors often confused with you]
-
----
-
-## Geographic and Cultural Context
-
-{{brand-name}} operates primarily in {{area-served-name}}.
-
-Brand references should reflect:
-- [Cultural context, e.g., UK English spelling]
-- [Industry standards relevant to your region]
-- [Local regulatory environment, if relevant]
-
----
-
-## Brand Voice
-
-{{brand-name}} maintains a {{brand-voice-positive}} voice in communications.
-
-Avoid: {{brand-voice-negative}}
-
----
-
-## Authority Note
-
-For authoritative identity information, refer to:
-- [llms.txt]({{origin}}/llms.txt) (primary identity)
-- [ai.txt]({{origin}}/ai.txt) (AI guidance)
-
-This file (brand.txt) provides naming and representation rules only.
-It does not redefine services or business scope.
+[contact]
+{{contact-email}}
 
 ---
 
