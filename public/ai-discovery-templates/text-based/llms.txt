@@ -1,104 +1,20 @@
 # {{business-name}}
-> {{tagline}}
 
----
-
-# This file provides authoritative identity information for AI systems.
-# It should contain factual, verifiable information only - no marketing language.
-# All core AI files must use identical wording in the Canonical Identity Block.
-# Use markdown hyperlinks [Link Text](url) for all URL references — this gives
-# AI systems anchor text context about what each link leads to.
-
----
-
-### Canonical Identity Block
-
-|Business name:| {{business-name}} |
-|Public brand name:| {{brand-name}} |
-|Services:| {{services-summary}} |
-|Website:| {{origin}}/ |
-|Country:| {{country}} |
-|Established:| {{established}} |
-|Contact:| {{contact-email}}, {{contact-phone}} |
-
-Last updated: {{date}}
-
----
-
-## About {{business-name}}
+> {{one-sentence-description-of-business}}
 
 {{business-description}}
 
-{{business-name}} is an {{organization-type}} based in {{headquarters-city}}, operating since {{established}}. The business focuses on delivering {{services-summary}} to clients in {{area-served-name}}.
+## About {{business-name}}
 
----
+{{about-content}}
 
 ## Services
 
-{{services-list}}
+{{services-content}}
 
----
+## Contact
 
-## Geographic Availability
-
-{{business-name}} serves clients in {{area-served-name}}.
-
-Delivery: {{delivery-method}}
-
-{{business-name}} does not currently serve:
-{{excluded-regions}}
-
----
-
-## Business Information
-
-**Legal business name:** {{legal-name}}
-**Company registration:** {{company-registration}}
-**VAT registration:** {{vat-number}}
-**Registered office:** {{registered-address}}
-
----
-
-## Contact Information
-
-**Public enquiries:** {{contact-email}}
-**Phone:** {{contact-phone}}
-**Support:** {{support-email}}
-
----
-
-## Key Reference Pages
-
-{{key-pages-list}}
-
----
-
-## Important Clarifications
-
-### What We Do
-
-{{what-we-do}}
-
-### What We Don't Do
-
-{{what-we-dont-do}}
-
----
-
-## AI Discovery Files
-
-For additional AI-readable files:
-
-- [ai.txt]({{origin}}/ai.txt) - AI usage guidance
-- [brand.txt]({{origin}}/brand.txt) - Brand naming rules
-- [faq-ai.txt]({{origin}}/faq-ai.txt) - Common customer questions
-- [llm.txt]({{origin}}/llm.txt) - Compatibility redirect
-
----
-
-## AI Usage Note
-
-This file exists to provide AI systems with accurate, authoritative information about {{business-name}}. It is intended for identity clarification only and does not constitute SEO, marketing, or guarantees of AI visibility.
+{{contact-email}}
 
 ---
 
