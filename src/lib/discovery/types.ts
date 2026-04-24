@@ -7,17 +7,28 @@ export const ALL_FILE_TYPES: FileType[] = [
   "developer-ai.txt", "llms.html", "robots-ai.txt", "identity.json", "ai.json",
 ];
 
-export const FILE_TIER: Record<FileType, "essential" | "recommended" | "optional"> = {
+export type FileTier = "essential" | "recommended" | "complete";
+
+export const FILE_TIER: Record<FileType, FileTier> = {
+  // Essential tier (2 files) - Start here
   "llms.txt": "essential",
-  "llm.txt": "essential",
-  "ai.txt": "recommended",
+  "ai.txt": "essential",
+  // Recommended tier (4 files) - Build on Essential
+  "identity.json": "recommended",
   "faq-ai.txt": "recommended",
   "brand.txt": "recommended",
-  "developer-ai.txt": "optional",
-  "llms.html": "optional",
-  "robots-ai.txt": "optional",
-  "identity.json": "optional",
-  "ai.json": "optional",
+  "ai.json": "recommended",
+  // Complete tier (4 files) - Full implementation
+  "llm.txt": "complete",
+  "llms.html": "complete",
+  "developer-ai.txt": "complete",
+  "robots-ai.txt": "complete",
+};
+
+export const TIER_COLORS: Record<FileTier, { color: string; bg: string }> = {
+  essential: { color: "#10b981", bg: "rgba(16, 185, 129, 0.1)" },
+  recommended: { color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+  complete: { color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.1)" },
 };
 
 export interface CrawledData {

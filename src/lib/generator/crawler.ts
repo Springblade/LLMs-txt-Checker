@@ -76,7 +76,6 @@ export function extractMetadata(markdown: string, _url: string): ExtractedMetada
 
 // ─── Jina Reader API (Primary) ─────────────────────────────────────────────────
 async function fetchViaJina(pageUrl: string): Promise<FetchResult> {
-  // Prefix format: https://r.jina.ai/<URL> — not /api/v1/content/
   const jinaUrl = `https://r.jina.ai/${encodeURIComponent(pageUrl)}`;
   const headers: HeadersInit = { Accept: "text/plain" };
 

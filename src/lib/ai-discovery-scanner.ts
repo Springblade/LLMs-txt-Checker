@@ -98,18 +98,21 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "has_links",         label: "Links present",                     severity: "warning" },
   ],
   "identity.json": [
-    // Per identity.json standard structure (ADF-006)
-    { id: "valid_json",   label: "Valid JSON structure",         severity: "error" },
-    { id: "has_name",    label: "Has name field",               severity: "error" },
-    { id: "has_url",     label: "Has url field",                severity: "error" },
-    { id: "has_schema",  label: "Has $schema reference",       severity: "warning" },
+    // Per identity.json spec from ai-visibility.org.uk
+    { id: "valid_json",               label: "Valid JSON structure",                        severity: "error" },
+    { id: "has_name",                label: "Has name field",                            severity: "error" },
+    { id: "has_url",                 label: "Has url field",                             severity: "error" },
+    { id: "has_schema",              label: "Has $schema reference",                     severity: "warning" },
+    { id: "has_schema_ai_visibility", label: "$schema points to ai-visibility.org.uk",   severity: "error" },
   ],
   "ai.json": [
-    // Per ai.json standard structure (ADF-005)
+    // Per ai.json spec from ai-visibility.org.uk
     { id: "valid_json",        label: "Valid JSON structure",                    severity: "error" },
-    { id: "has_identity_block", label: "Has canonicalIdentityBlock field",      severity: "error" },
-    { id: "has_business_info", label: "Has businessIdentity section",           severity: "warning" },
-    { id: "has_services",      label: "Has services section",                    severity: "warning" },
+    { id: "has_name",         label: "Has top-level name field",               severity: "error" },
+    { id: "has_url",          label: "Has top-level url field",                severity: "error" },
+    { id: "has_permissions",   label: "Has permissions array",                   severity: "error" },
+    { id: "has_restrictions", label: "Has restrictions array",                  severity: "error" },
+    { id: "has_version",      label: "Has version field",                      severity: "warning" },
   ],
 };
 
@@ -455,6 +458,14 @@ function validateIdentityJson(content: string) {
   if (!obj.url) errors.push({ rule: "has_url", message: `Missing required field: "url"` });
   if (!obj.$schema) {
     warnings.push({ rule: "has_schema", message: "Missing $schema reference — recommended" });
+  } else {
+    const schema = obj.$schema;
+    if (typeof schema === "string" && !schema.includes("ai-visibility.org.uk")) {
+      errors.push({
+        rule: "has_schema_ai_visibility",
+        message: "$schema must point to ai-visibility.org.uk, not 365i.co.uk or other domain",
+      });
+    }
   }
 
   return { errors, warnings };
@@ -464,7 +475,6 @@ function validateAiJson(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per ai.json template (ADF-005): valid JSON, canonicalIdentityBlock, businessIdentity, services
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
@@ -479,14 +489,20 @@ function validateAiJson(content: string) {
   }
 
   const obj = parsed as Record<string, unknown>;
-  if (!obj.canonicalIdentityBlock) {
-    errors.push({ rule: "has_identity_block", message: "Missing canonicalIdentityBlock field" });
+  if (typeof obj.name !== "string" || obj.name.trim() === "") {
+    errors.push({ rule: "has_name", message: 'Missing required top-level field: "name"' });
   }
-  if (!obj.businessIdentity) {
-    warnings.push({ rule: "has_business_info", message: "Missing businessIdentity section" });
+  if (typeof obj.url !== "string" || obj.url.trim() === "") {
+    errors.push({ rule: "has_url", message: 'Missing required top-level field: "url"' });
   }
-  if (!obj.services) {
-    warnings.push({ rule: "has_services", message: "Missing services section" });
+  if (!Array.isArray(obj.permissions)) {
+    errors.push({ rule: "has_permissions", message: 'Missing required top-level array: "permissions"' });
+  }
+  if (!Array.isArray(obj.restrictions)) {
+    errors.push({ rule: "has_restrictions", message: 'Missing required top-level array: "restrictions"' });
+  }
+  if (typeof obj.version !== "string") {
+    warnings.push({ rule: "has_version", message: 'Missing recommended field: "version"' });
   }
 
   return { errors, warnings };

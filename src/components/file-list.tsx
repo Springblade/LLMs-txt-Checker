@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { FileScanResult, FileGenerateResult, FileType } from "@/lib/discovery/types";
-import { FILE_TIER } from "@/lib/discovery/types";
+import type { FileScanResult, FileGenerateResult, FileType, FileTier } from "@/lib/discovery/types";
+import { FILE_TIER, TIER_COLORS } from "@/lib/discovery/types";
 import { FileCard } from "./file-card";
 
 interface FileListProps {
@@ -13,19 +13,32 @@ interface FileListProps {
   onGenerateAll: () => void;
 }
 
-function TierLabel({ tier }: { tier: "essential" | "recommended" | "optional" }) {
-  const labels = { essential: "Essential", recommended: "Recommended", optional: "Optional" };
+function TierLabel({ tier }: { tier: FileTier }) {
+  const labels: Record<FileTier, string> = { essential: "Essential", recommended: "Recommended", complete: "Complete" };
+  const color = TIER_COLORS[tier].color;
   return (
     <p
       style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.5rem",
         fontSize: "0.6875rem",
         fontWeight: 700,
         letterSpacing: "0.08em",
         textTransform: "uppercase",
-        color: "var(--mm-text-muted)",
+        color: color,
         marginBottom: "0.75rem",
       }}
     >
+      <span
+        style={{
+          display: "inline-block",
+          width: "8px",
+          height: "8px",
+          borderRadius: "50%",
+          backgroundColor: color,
+        }}
+      />
       {labels[tier]}
     </p>
   );
@@ -87,11 +100,11 @@ export function FileList({
   onGenerate,
   onGenerateAll,
 }: FileListProps) {
-  const [showOptional, setShowOptional] = useState(false);
+  const [showComplete, setShowComplete] = useState(false);
 
   const essential = scanResults.filter((f) => FILE_TIER[f.type] === "essential");
   const recommended = scanResults.filter((f) => FILE_TIER[f.type] === "recommended");
-  const optional = scanResults.filter((f) => FILE_TIER[f.type] === "optional");
+  const complete = scanResults.filter((f) => FILE_TIER[f.type] === "complete");
 
   const missingCount = scanResults.filter((f) => !f.found).length;
   const foundCount = scanResults.filter((f) => f.found).length;
@@ -137,12 +150,12 @@ export function FileList({
         </div>
       )}
 
-      {/* Optional */}
-      {optional.length > 0 && (
+      {/* Complete */}
+      {complete.length > 0 && (
         <div>
-          <TierLabel tier="optional" />
+          <TierLabel tier="complete" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem" }}>
-            {(showOptional ? optional : optional.slice(0, 3)).map((r) => (
+            {(showComplete ? complete : complete.slice(0, 3)).map((r) => (
               <FileCard
                 key={r.type}
                 result={r}
@@ -153,9 +166,9 @@ export function FileList({
             ))}
           </div>
 
-          {optional.length > 3 && (
+          {complete.length > 3 && (
             <button
-              onClick={() => setShowOptional(!showOptional)}
+              onClick={() => setShowComplete(!showComplete)}
               style={{
                 marginTop: "0.75rem",
                 background: "none",
@@ -169,7 +182,7 @@ export function FileList({
                 fontWeight: 500,
               }}
             >
-              {showOptional ? "Show less" : `Show all (${optional.length})`}
+              {showComplete ? "Show less" : `Show all (${complete.length})`}
             </button>
           )}
         </div>

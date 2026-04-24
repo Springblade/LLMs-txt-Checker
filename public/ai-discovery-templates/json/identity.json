@@ -1,5 +1,5 @@
 {
-  "$schema": "https://www.365i.co.uk/ai-visibility-definition/specifications/identity-json/identity-json.schema.json",
+  "$schema": "https://www.ai-visibility.org.uk/specifications/identity-json/identity-json.schema.json",
 
   "name": "{{business-name}}",
   "legalName": "{{legal-name}}",
