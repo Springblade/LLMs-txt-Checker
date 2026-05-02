@@ -98,15 +98,10 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "has_links",     label: "Links present",               severity: "warning" },
   ],
   "robots-ai.txt": [
-    // Per robots-ai.txt standard structure (ADF-010) — INI directive syntax
-    { id: "has_official_names",     label: "Has [official-names] section",      severity: "error" },
-    { id: "has_allow_training",    label: "Has [allow-training] section",    severity: "error" },
-    { id: "has_disallow_training", label: "Has [disallow-training] section", severity: "error" },
-    { id: "has_allow_retrieval",   label: "Has [allow-retrieval] section",   severity: "warning" },
-    { id: "has_disallow_retrieval",label: "Has [disallow-retrieval] section", severity: "warning" },
-    { id: "has_allow_citation",    label: "Has [allow-citation] section",    severity: "warning" },
-    { id: "has_disallow_citation", label: "Has [disallow-citation] section",  severity: "warning" },
-    { id: "has_contact",           label: "Has [contact] section",           severity: "warning" },
+    // Per robots-ai.txt spec from ai-visibility.org.uk (ADF-010)
+    { id: "has_user_agent", label: "User-Agent directive present", severity: "error" },
+    { id: "has_directives", label: "AI directive lines present",  severity: "error" },
+    { id: "has_contact",    label: "[contact] section present",   severity: "warning" },
   ],
   "identity.json": [
     // Per identity.json spec from ai-visibility.org.uk (ADF-006)
