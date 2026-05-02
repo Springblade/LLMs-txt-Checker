@@ -234,7 +234,15 @@ function validateLlmsTxtContent(content: string, linkResults: LinkResult[] = [])
     });
   }
 
-  // Check for ## Contact section (required per ai-visibility.org.uk spec S4)
+  // Check for ## Contact section (per ai-visibility.org.uk spec S4)
+  const hasContact = /^##\s+Contact\b/im.test(content);
+  if (!hasContact) {
+    warnings.push({
+      rule: "has_contact",
+      message: "Missing ## Contact section — recommended per spec",
+    });
+  }
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line === undefined) continue;
@@ -283,7 +291,16 @@ function validateLlmsTxtContent(content: string, linkResults: LinkResult[] = [])
   return { errors, warnings };
 }
 
-function validateLlmTxt(content: string) {
+// Backward-compatible wrapper for validateLlmsTxt — returns ValidationResult shape
+export function validateLlmsTxt(
+  content: string,
+  linkResults?: LinkResult[]
+): import("@/lib/types").ValidationResult {
+  const { errors, warnings } = validateLlmsTxtContent(content, linkResults);
+  return { found: true, errors, warnings, content };
+}
+
+export function validateLlmTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
