@@ -48,6 +48,7 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "markdown_format",  label: "Valid Markdown format",                        severity: "error" },
     { id: "has_h1",         label: "H1 heading (brand/project name)",              severity: "error" },
     { id: "quote_block",    label: "Blockquote (one-sentence summary)",              severity: "error" },
+    { id: "has_contact",    label: "## Contact section present",                    severity: "warning" },
     { id: "has_paragraphs", label: "Description paragraphs (more detail)",            severity: "error" },
     { id: "has_h2",         label: "H2 sections (groups of related links)",          severity: "warning" },
     { id: "has_links",      label: "Link lists (title + URL)",                     severity: "warning", showValue: true },
@@ -60,13 +61,11 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "has_links",  label: "Links to other AI files present",        severity: "warning" },
   ],
   "ai.txt": [
-    // Per ai.txt standard structure (ADF-004) — INI syntax
-    { id: "has_official_names",   label: "Has [official-names] section",    severity: "error" },
-    { id: "has_incorrect_names", label: "Has [incorrect-names] section",  severity: "warning" },
-    { id: "has_overview",       label: "Has [overview] section",         severity: "warning" },
-    { id: "has_permissions",    label: "Has [permissions] section",       severity: "error" },
-    { id: "has_restrictions",   label: "Has [restrictions] section",     severity: "warning" },
-    { id: "has_contact",       label: "Has [contact] section",          severity: "warning" },
+    // Per ai.txt spec from ai-visibility.org.uk (ADF-004)
+    { id: "has_permissions", label: "[permissions] section present",   severity: "error" },
+    { id: "has_restrictions", label: "[restrictions] section present", severity: "error" },
+    { id: "has_h2",         label: "H2 sections present",           severity: "warning" },
+    { id: "has_links",       label: "Links present",                severity: "warning" },
   ],
   "faq-ai.txt": [
     // Per faq-ai.txt standard structure (ADF-008): Q:/A: pairs + URL: attribution
@@ -76,19 +75,18 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "has_url_attrib",  label: "URL: attribution present",  severity: "error" },
   ],
   "brand.txt": [
-    // Per brand.txt standard structure (ADF-007) — INI syntax
-    { id: "has_official_names",   label: "Has [official-names] section",    severity: "error" },
-    { id: "has_incorrect_names", label: "Has [incorrect-names] section",  severity: "warning" },
-    { id: "has_naming_rules",    label: "Has [naming-rules] section",     severity: "error" },
-    { id: "has_contact",        label: "Has [contact] section",          severity: "warning" },
+    // Per brand.txt spec from ai-visibility.org.uk (ADF-007)
+    { id: "has_official_names",  label: "[official-names] section present",  severity: "error" },
+    { id: "has_incorrect_names", label: "[incorrect-names] section present", severity: "error" },
+    { id: "has_naming_rules",   label: "[naming-rules] section present", severity: "error" },
+    { id: "has_links",          label: "Links present",                   severity: "warning" },
   ],
   "developer-ai.txt": [
-    // Per developer-ai.txt standard structure (ADF-009) — INI syntax
-    { id: "has_official_names", label: "Has [official-names] section",  severity: "error" },
-    { id: "has_overview",     label: "Has [overview] section",       severity: "error" },
-    { id: "has_public_api",   label: "Has [public-api] section",     severity: "error" },
-    { id: "has_public_areas", label: "Has [public-areas] section",   severity: "warning" },
-    { id: "has_contact",      label: "Has [contact] section",        severity: "warning" },
+    // Per developer-ai.txt spec from ai-visibility.org.uk (ADF-009)
+    { id: "has_overview",     label: "[overview] section present",        severity: "error" },
+    { id: "has_public_api",   label: "[public-api] section present",      severity: "error" },
+    { id: "has_public_areas", label: "[public-areas] section present",    severity: "error" },
+    { id: "has_links",        label: "Links present",                      severity: "warning" },
   ],
   "llms.html": [
     // Per llms.html standard structure (ADF-003): noindex + canonical link
@@ -111,12 +109,13 @@ const FILE_CHECKLISTS: Record<FileName, ChecklistRule[]> = {
     { id: "has_contact",           label: "Has [contact] section",           severity: "warning" },
   ],
   "identity.json": [
-    // Per identity.json spec from ai-visibility.org.uk
-    { id: "valid_json",               label: "Valid JSON structure",                        severity: "error" },
-    { id: "has_name",                label: "Has name field",                            severity: "error" },
-    { id: "has_url",                 label: "Has url field",                             severity: "error" },
-    { id: "has_schema",              label: "Has $schema reference",                     severity: "warning" },
-    { id: "has_schema_ai_visibility", label: "$schema points to ai-visibility.org.uk",   severity: "error" },
+    // Per identity.json spec from ai-visibility.org.uk (ADF-006)
+    { id: "valid_json", label: "Valid JSON structure",          severity: "error" },
+    { id: "has_name",  label: "Has name field",               severity: "error" },
+    { id: "has_url",   label: "Has url field",                 severity: "error" },
+    { id: "has_type",  label: "Has type field",               severity: "error" },
+    { id: "has_desc",  label: "Has description field",         severity: "error" },
+    { id: "has_schema", label: "Has $schema reference",         severity: "warning" },
   ],
   "ai.json": [
     // Per ai.json spec from ai-visibility.org.uk
@@ -317,23 +316,14 @@ export function validateAiTxt(content: string) {
   const warnings: ValidationWarning[] = [];
 
   // Per ai.txt ADF-004 spec: INI [section] syntax
-  if (!/^\[official-names\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
+  // [permissions] and [restrictions] must have content, not just the header
+  const permissionsSection = extractIniSection(content, "permissions");
+  if (permissionsSection.trim() === "") {
+    errors.push({ rule: "has_permissions", message: "Missing [permissions] section with content" });
   }
-  if (!/^\[incorrect-names\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_incorrect_names", message: "Missing [incorrect-names] section" });
-  }
-  if (!/^\[overview\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_overview", message: "Missing [overview] section" });
-  }
-  if (!/^\[permissions\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_permissions", message: "Missing [permissions] section" });
-  }
-  if (!/^\[restrictions\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_restrictions", message: "Missing [restrictions] section" });
-  }
-  if (!/^\[contact\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
+  const restrictionsSection = extractIniSection(content, "restrictions");
+  if (restrictionsSection.trim() === "") {
+    errors.push({ rule: "has_restrictions", message: "Missing [restrictions] section with content" });
   }
 
   return { errors, warnings };
@@ -378,18 +368,22 @@ export function validateBrandTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per brand.txt ADF-007 spec: INI [section] syntax
-  if (!/^\[official-names\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
+  // Per brand.txt ADF-007 spec: INI [section] syntax — check sections have content, not just header
+  const officialSection = extractIniSection(content, "official-names");
+  if (!officialSection.trim()) {
+    errors.push({ rule: "has_official_names", message: "Missing [official-names] section with content" });
   }
-  if (!/^\[incorrect-names\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_incorrect_names", message: "Missing [incorrect-names] section" });
+  const incorrectSection = extractIniSection(content, "incorrect-names");
+  if (!incorrectSection.trim()) {
+    errors.push({ rule: "has_incorrect_names", message: "Missing [incorrect-names] section with content" });
   }
-  if (!/^\[naming-rules\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_naming_rules", message: "Missing [naming-rules] section" });
+  const namingRulesSection = extractIniSection(content, "naming-rules");
+  if (!namingRulesSection.trim()) {
+    errors.push({ rule: "has_naming_rules", message: "Missing [naming-rules] section with content" });
   }
-  if (!/^\[contact\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
+  const linkCount = (content.match(/^https?:\/\//im) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No URLs found in brand.txt — consider adding links" });
   }
 
   return { errors, warnings };
@@ -399,21 +393,25 @@ export function validateDeveloperAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per developer-ai.txt ADF-009 spec: INI [section] syntax
-  if (!/^\[official-names\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
+  // Per developer-ai.txt ADF-009 spec: INI [section] syntax — sections must have content
+  const overviewSection = extractIniSection(content, "overview");
+  if (!overviewSection.trim()) {
+    errors.push({ rule: "has_overview", message: "Missing or empty [overview] section" });
   }
-  if (!/^\[overview\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_overview", message: "Missing [overview] section" });
+
+  const publicApiSection = extractIniSection(content, "public-api");
+  if (!publicApiSection.trim()) {
+    errors.push({ rule: "has_public_api", message: "Missing or empty [public-api] section" });
   }
-  if (!/^\[public-api\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_public_api", message: "Missing [public-api] section" });
+
+  const publicAreasSection = extractIniSection(content, "public-areas");
+  if (!publicAreasSection.trim()) {
+    errors.push({ rule: "has_public_areas", message: "Missing or empty [public-areas] section" });
   }
-  if (!/^\[public-areas\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_public_areas", message: "Missing [public-areas] section" });
-  }
-  if (!/^\[contact\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
+
+  const linkCount = (content.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g) ?? []).length;
+  if (linkCount === 0) {
+    warnings.push({ rule: "has_links", message: "No links found" });
   }
 
   return { errors, warnings };
@@ -452,28 +450,27 @@ export function validateRobotsAiTxt(content: string) {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  // Per robots-ai.txt ADF-010 spec: INI directive syntax
-  if (!/^\[official-names\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_official_names", message: "Missing [official-names] section" });
+  // Per robots-ai.txt ADF-010 spec: User-Agent: directive + AI directive lines
+  if (!/^User-Agent\s*:/im.test(content)) {
+    errors.push({ rule: "has_user_agent", message: "Missing User-Agent: directive" });
   }
-  if (!/^\[allow-training\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_allow_training", message: "Missing [allow-training] section" });
+
+  const directivePatterns = [
+    /^Allow-Training\s*:/im,
+    /^Disallow-Training\s*:/im,
+    /^Allow-Retrieval\s*:/im,
+    /^Disallow-Retrieval\s*:/im,
+    /^Allow-Citation\s*:/im,
+    /^Disallow-Citation\s*:/im,
+  ];
+  const hasAnyDirective = directivePatterns.some((re) => re.test(content));
+  if (!hasAnyDirective) {
+    errors.push({
+      rule: "has_directives",
+      message: "Missing AI directive lines (Allow-Training:, Disallow-Training:, Allow-Retrieval:, Disallow-Retrieval:, Allow-Citation:, Disallow-Citation:)",
+    });
   }
-  if (!/^\[disallow-training\]\s*$/im.test(content)) {
-    errors.push({ rule: "has_disallow_training", message: "Missing [disallow-training] section" });
-  }
-  if (!/^\[allow-retrieval\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_allow_retrieval", message: "Missing [allow-retrieval] section" });
-  }
-  if (!/^\[disallow-retrieval\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_disallow_retrieval", message: "Missing [disallow-retrieval] section" });
-  }
-  if (!/^\[allow-citation\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_allow_citation", message: "Missing [allow-citation] section" });
-  }
-  if (!/^\[disallow-citation\]\s*$/im.test(content)) {
-    warnings.push({ rule: "has_disallow_citation", message: "Missing [disallow-citation] section" });
-  }
+
   if (!/^\[contact\]\s*$/im.test(content)) {
     warnings.push({ rule: "has_contact", message: "Missing [contact] section" });
   }
@@ -502,6 +499,8 @@ export function validateIdentityJson(content: string) {
   const obj = parsed as Record<string, unknown>;
   if (!obj.name) errors.push({ rule: "has_name", message: `Missing required field: "name"` });
   if (!obj.url) errors.push({ rule: "has_url", message: `Missing required field: "url"` });
+  if (!obj.type) errors.push({ rule: "has_type", message: `Missing required field: "type"` });
+  if (!obj.description) errors.push({ rule: "has_desc", message: `Missing required field: "description"` });
   if (!obj.$schema) {
     warnings.push({ rule: "has_schema", message: "Missing $schema reference — recommended" });
   } else {
