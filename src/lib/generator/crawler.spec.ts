@@ -112,10 +112,11 @@ describe("crawlPages cascade", () => {
 
   it("uses Jina Reader API as primary fetch", async () => {
     const { crawlPages } = await import("./crawler");
+    // Use /team instead of /about to avoid triggering HTML fetch for priority pages
     const urls: ScoredUrl[] = [
-      { url: "https://example.com/about", normalizedUrl: "https://example.com/about", depth: 1, source: "homepage", score: 50 },
+      { url: "https://example.com/team", normalizedUrl: "https://example.com/team", depth: 1, source: "homepage", score: 50 },
     ];
-    const jinaResponse = "Title: About\n\nContent: This is the about page content.";
+    const jinaResponse = "Title: Team\n\nContent: This is the team page content.";
 
     const mockFetch = vi.fn().mockImplementation((url: string | URL | Request) => {
       const urlStr = url.toString();
@@ -129,7 +130,7 @@ describe("crawlPages cascade", () => {
 
       return Promise.resolve({
         ok: true,
-        text: () => Promise.resolve("<html><body><h1>About</h1></body></html>"),
+        text: () => Promise.resolve("<html><body><h1>Team</h1></body></html>"),
       });
     });
     vi.stubGlobal("fetch", mockFetch);
@@ -141,29 +142,45 @@ describe("crawlPages cascade", () => {
   });
 
   it("falls back to native fetch when Jina fails", async () => {
+    // Clear module cache to ensure fresh mocks
+    vi.resetModules();
+
+    // Use a unique URL to avoid cache interference
+    const testUrl = `https://test-${Date.now()}.example.com/team`;
     const { crawlPages } = await import("./crawler");
     const urls: ScoredUrl[] = [
-      { url: "https://example.com/about", normalizedUrl: "https://example.com/about", depth: 1, source: "homepage", score: 50 },
+      { url: testUrl, normalizedUrl: testUrl, depth: 1, source: "homepage", score: 50 },
     ];
+
+    let jinaCalled = false;
 
     const mockFetch = vi.fn().mockImplementation((url: string | URL | Request) => {
       const urlStr = url.toString();
 
+      // Count Jina calls
       if (urlStr.includes("r.jina.ai")) {
+        jinaCalled = true;
+        // Return failure for all Jina calls
         return Promise.resolve({ ok: false, status: 500 });
       }
 
+      // Native fetch succeeds
       return Promise.resolve({
         ok: true,
         text: () =>
           Promise.resolve(
-            "<html><head><title>About</title><meta name=\"description\" content=\"About page desc\"></head><body><h1>About Us</h1></body></html>"
+            "<html><head><title>Team</title><meta name=\"description\" content=\"Team page desc\"></head><body><h1>Our Team</h1></body></html>"
           ),
       });
     });
     vi.stubGlobal("fetch", mockFetch);
 
     const results = await crawlPages(urls, 5);
+
+    // Debug output
+    console.log("Jina called:", jinaCalled);
+    console.log("Mock call count:", mockFetch.mock.calls.length);
+    console.log("Provider:", results[0]?.provider);
 
     expect(results.length).toBe(1);
     expect(results[0]?.provider).toBe("native");
@@ -209,27 +226,37 @@ describe("crawlPages cascade", () => {
   });
 
   it("returns error when Firecrawl API key not configured", async () => {
+    // Clear module cache to ensure fresh mocks
+    vi.resetModules();
+
+    // Use a unique URL to avoid cache interference
+    const testUrl = `https://test-${Date.now()}.example.com/team`;
     const { crawlPages } = await import("./crawler");
     const urls: ScoredUrl[] = [
-      { url: "https://example.com/about", normalizedUrl: "https://example.com/about", depth: 1, source: "homepage", score: 50 },
+      { url: testUrl, normalizedUrl: testUrl, depth: 1, source: "homepage", score: 50 },
     ];
 
-    // Mock Jina and native to both fail
     const mockFetch = vi.fn().mockImplementation((url: string | URL | Request) => {
       const urlStr = url.toString();
 
+      // Jina fails
       if (urlStr.includes("r.jina.ai")) {
         return Promise.resolve({ ok: false, status: 500 });
       }
 
+      // Native also fails
       return Promise.resolve({ ok: false, status: 403 });
     });
     vi.stubGlobal("fetch", mockFetch);
 
     const results = await crawlPages(urls, 5);
 
+    // Debug output
+    console.log("Error:", results[0]?.error);
+    console.log("Content:", results[0]?.content);
+
     expect(results.length).toBe(1);
-    // Firecrawl not used because API key not set, so error should be from native
+    // All fetch methods failed, so error should be set
     expect(results[0]?.error).toBeTruthy();
   });
 

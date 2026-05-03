@@ -1,8 +1,10 @@
 import type { CrawledPage, ExtractedMetadata, FetchResult, ScoredUrl } from "./types";
 import { mapNetworkError } from "@/lib/network-error-mapper";
 import { assertUrlSafe } from "./security";
+import { crawlManager } from "./crawl-cache";
+import { extractStructuredData, type ExtractedSchema } from "./extract-structured-data";
 
-const FETCH_TIMEOUT_MS = 15_000;
+export const FETCH_TIMEOUT_MS = 15_000;
 const MAX_RETRIES = 2;
 
 async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
@@ -190,12 +192,67 @@ async function fetchViaFirecrawl(pageUrl: string): Promise<FetchResult> {
   }
 }
 
+// ─── Priority Page Detection ─────────────────────────────────────────────────
+const PRIORITY_PATH_PATTERNS = ["", "/", "/about", "/faq", "/home"];
+
+function isPriorityPage(url: string): boolean {
+  const pathname = new URL(url).pathname.toLowerCase();
+  return PRIORITY_PATH_PATTERNS.some((p) => pathname === p || pathname === p + "/");
+}
+
+// ─── HTML Fetch for JSON-LD Extraction ────────────────────────────────────
+export async function fetchHtml(
+  url: string
+): Promise<{ html: string; success: boolean; structuredData?: ExtractedSchema }> {
+  try {
+    const jinaUrl = `https://r.jina.ai/${encodeURIComponent(url)}`;
+    const headers: HeadersInit = {
+      Accept: "text/html",
+      "x-respond-with": "html",
+      "User-Agent": "LLMs-txt-generator/1.0",
+    };
+
+    const jinaKey = process.env.JINA_API_KEY;
+    if (jinaKey) {
+      headers["Authorization"] = `Bearer ${jinaKey}`;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+    const res = await fetch(jinaUrl, {
+      headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timer);
+
+    if (!res.ok) return { html: "", success: false };
+
+    const html = await res.text();
+    const structuredData = extractStructuredData(html);
+
+    return { html, success: true, structuredData };
+  } catch {
+    return { html: "", success: false };
+  }
+}
+
 // ─── Main Crawl Function ───────────────────────────────────────────────────────
+
+async function fetchWithCascadeCached(pageUrl: string): Promise<FetchResult> {
+  const cached = await crawlManager.getOrCrawl(pageUrl, async () => {
+    const result = await fetchWithCascade(pageUrl);
+    return { url: result.url, content: result.content, error: result.error, provider: result.provider ?? null };
+  });
+  return { url: cached.url, content: cached.content, error: cached.error, provider: cached.provider as FetchResult["provider"] };
+}
+
 async function crawlBatched(urls: ScoredUrl[], concurrency: number): Promise<FetchResult[]> {
   const results: FetchResult[] = [];
   for (let i = 0; i < urls.length; i += concurrency) {
     const batch = urls.slice(i, i + concurrency);
-    const batchResults = await Promise.all(batch.map((u) => fetchWithCascade(u.url)));
+    const batchResults = await Promise.all(batch.map((u) => fetchWithCascadeCached(u.url)));
     results.push(...batchResults);
     if (i + concurrency < urls.length) {
       await new Promise((r) => setTimeout(r, 200));
@@ -241,6 +298,17 @@ async function fetchWithCascade(pageUrl: string): Promise<FetchResult> {
 export async function crawlPages(urls: ScoredUrl[], concurrency: number = 5): Promise<CrawledPage[]> {
   const fetchResults = await crawlBatched(urls, concurrency);
 
+  // For priority pages, also fetch HTML for structured data extraction
+  const htmlFetchPromises = fetchResults
+    .filter((r) => r.content && isPriorityPage(r.url))
+    .map(async (r) => {
+      const htmlResult = await fetchHtml(r.url);
+      return { url: r.url, htmlResult };
+    });
+
+  const htmlResults = await Promise.all(htmlFetchPromises);
+  const htmlMap = new Map(htmlResults.map((r) => [r.url, r.htmlResult]));
+
   return fetchResults.map((result) => {
     if (!result.content) {
       return {
@@ -267,6 +335,14 @@ export async function crawlPages(urls: ScoredUrl[], concurrency: number = 5): Pr
 
     const needsAi = !metadata.description || metadata.description.trim() === "";
 
+    // Get structured data from HTML fetch for priority pages
+    const htmlResult = htmlMap.get(result.url);
+    const structuredData = htmlResult?.success ? {
+      organization: htmlResult.structuredData?.organization,
+      faqPage: htmlResult.structuredData?.faqPage,
+      website: htmlResult.structuredData?.website,
+    } : undefined;
+
     return {
       url: result.url,
       normalizedUrl: result.url,
@@ -279,6 +355,7 @@ export async function crawlPages(urls: ScoredUrl[], concurrency: number = 5): Pr
       score: urls.find((u) => u.url === result.url)?.score ?? 0,
       needsAi,
       provider: result.provider,
+      structuredData,
     };
   });
 }

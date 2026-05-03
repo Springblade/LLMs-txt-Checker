@@ -10,6 +10,15 @@ export type OrganizationSchema = {
   founder?: { name?: string };
 };
 
+function normalizeContactPoint(
+  cp: unknown
+): Array<{ email?: string; telephone?: string; contactType?: string }> | undefined {
+  if (!cp) return undefined;
+  if (Array.isArray(cp)) return cp as Array<{ email?: string; telephone?: string; contactType?: string }>;
+  if (typeof cp === "object") return [cp as { email?: string; telephone?: string; contactType?: string }];
+  return undefined;
+}
+
 export type FAQPageSchema = {
   mainEntity: Array<{
     "@type": "Question";
@@ -40,40 +49,54 @@ const JSON_LD_REGEX = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\
 function flattenGraph(entity: unknown): unknown[] {
   if (typeof entity !== "object" || entity === null) return [entity];
   const obj = entity as Record<string, unknown>;
+  const result: unknown[] = [];
+
+  // Keep the parent entity if it has meaningful properties (not just @graph)
+  const hasOwnProps = Object.keys(obj).some((k) => k !== "@graph");
+  if (hasOwnProps) {
+    result.push(entity);
+  }
+
+  // Flatten @graph children
   if (Array.isArray(obj["@graph"])) {
-    const result: unknown[] = [];
     for (const item of obj["@graph"] as unknown[]) {
       result.push(...flattenGraph(item));
     }
-    return result;
   }
-  return [entity];
+
+  return result;
 }
 
 function selectOrganization(entities: unknown[]): OrganizationSchema | undefined {
   const orgs = entities.filter(
     (e) => typeof e === "object" && e !== null && (e as Record<string, unknown>)["@type"] === "Organization"
   );
-  if (orgs.length === 0) return undefined;
-  return orgs.at(0) as OrganizationSchema | undefined;
+  const first = orgs.at(0);
+  if (!first) return undefined;
+  const org = first as OrganizationSchema;
+  // Normalize contactPoint to always be an array
+  if (org.contactPoint && !Array.isArray(org.contactPoint)) {
+    org.contactPoint = normalizeContactPoint(org.contactPoint);
+  }
+  return org;
 }
 
 function selectFaqPage(entities: unknown[]): FAQPageSchema | undefined {
   const faqs = entities.filter(
     (e) => typeof e === "object" && e !== null && (e as Record<string, unknown>)["@type"] === "FAQPage"
   );
-  if (faqs.length === 0) return undefined;
-  const faq = faqs.at(0) as Record<string, unknown> | undefined;
-  if (!faq) return undefined;
-  return { mainEntity: (faq["mainEntity"] as FAQPageSchema["mainEntity"]) ?? [] };
+  const first = faqs.at(0);
+  if (!first) return undefined;
+  return { mainEntity: (first as Record<string, unknown>)["mainEntity"] as FAQPageSchema["mainEntity"] ?? [] };
 }
 
 function selectWebsite(entities: unknown[]): WebSiteSchema | undefined {
   const sites = entities.filter(
     (e) => typeof e === "object" && e !== null && (e as Record<string, unknown>)["@type"] === "WebSite"
   );
-  if (sites.length === 0) return undefined;
-  return sites.at(0) as WebSiteSchema | undefined;
+  const first = sites.at(0);
+  if (!first) return undefined;
+  return first as WebSiteSchema;
 }
 
 export function extractStructuredData(html: string): ExtractedSchema {
@@ -82,10 +105,9 @@ export function extractStructuredData(html: string): ExtractedSchema {
 
   JSON_LD_REGEX.lastIndex = 0;
   while ((match = JSON_LD_REGEX.exec(html)) !== null) {
-    const content = match[1];
-    if (!content) continue;
-
     try {
+      const content = match[1];
+      if (!content) continue;
       const parsed = JSON.parse(content);
       const entities = flattenGraph(parsed);
       rawJsonLd.push(...entities);

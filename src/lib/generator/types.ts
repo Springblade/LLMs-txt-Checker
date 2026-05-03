@@ -7,6 +7,8 @@ export interface GeneratorInput {
   excludePaths?: string[]; // paths to exclude, e.g. ["/login", "/admin"]
 }
 
+import type { OrganizationSchema, FAQPageSchema, WebSiteSchema } from "./extract-structured-data";
+
 export interface CrawledPage {
   url: string;             // original URL
   normalizedUrl: string;   // deduplicated URL (no trailing slash, no query)
@@ -20,6 +22,11 @@ export interface CrawledPage {
   needsAi: boolean;        // true if description is missing/empty
   provider?: "jina" | "native" | "firecrawl" | null;
   error?: string;
+  structuredData?: {
+    organization?: OrganizationSchema;
+    faqPage?: FAQPageSchema;
+    website?: WebSiteSchema;
+  };
 }
 
 export type PageCategory =

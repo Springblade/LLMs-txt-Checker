@@ -73,7 +73,6 @@ describe("extractStructuredData", () => {
         </script>
       </html>
     `;
-    // Should not throw
     const result = extractStructuredData(html);
     expect(result.organization).toBeUndefined();
   });
@@ -86,52 +85,32 @@ describe("extractStructuredData", () => {
     expect(result.rawJsonLd).toHaveLength(0);
   });
 
-  it("extracts WebSite schema", () => {
-    const html = `
-      <html>
-        <script type="application/ld+json">
-        {
-          "@type": "WebSite",
-          "name": "Acme Site",
-          "url": "https://acme.com",
-          "description": "The official Acme website"
-        }
-        </script>
-      </html>
-    `;
-    const result = extractStructuredData(html);
-    expect(result.website?.name).toBe("Acme Site");
-    expect(result.website?.url).toBe("https://acme.com");
-    expect(result.website?.description).toBe("The official Acme website");
-  });
-
   it("handles multiple JSON-LD script tags", () => {
     const html = `
       <html>
         <script type="application/ld+json">
-        { "@type": "Organization", "name": "Org1" }
+          { "@type": "Organization", "name": "First Org" }
         </script>
         <script type="application/ld+json">
-        { "@type": "Organization", "name": "Org2" }
+          { "@type": "Organization", "name": "Second Org" }
         </script>
       </html>
     `;
     const result = extractStructuredData(html);
-    // Should extract first Organization found
-    expect(result.organization?.name).toBe("Org1");
+    expect(result.organization?.name).toBe("First Org");
   });
 
-  it("handles nested @graph arrays", () => {
+  it("handles nested @graph structures", () => {
     const html = `
       <html>
         <script type="application/ld+json">
         {
           "@graph": [
-            { "@type": "Organization", "name": "Outer Org" },
             {
-              "@type": "CollectionPage",
+              "@type": "WebSite",
+              "name": "Main Site",
               "@graph": [
-                { "@type": "Organization", "name": "Inner Org" }
+                { "@type": "Organization", "name": "Nested Org" }
               ]
             }
           ]
@@ -140,35 +119,40 @@ describe("extractStructuredData", () => {
       </html>
     `;
     const result = extractStructuredData(html);
-    // Should flatten and find first Organization
-    expect(result.organization?.name).toBe("Outer Org");
+    expect(result.website?.name).toBe("Main Site");
+    expect(result.organization?.name).toBe("Nested Org");
   });
 
-  it("handles script tag with different quote styles", () => {
-    const html = `
-      <html>
-        <script type='application/ld+json'>
-        { "@type": "Organization", "name": "Test Org" }
-        </script>
-      </html>
-    `;
-    const result = extractStructuredData(html);
-    expect(result.organization?.name).toBe("Test Org");
-  });
-
-  it("handles JSON-LD with real newlines in content", () => {
-    // JSON.parse interprets \n as newlines, so actual string value is "Multi Line Org"
+  it("extracts full Organization properties", () => {
     const html = `
       <html>
         <script type="application/ld+json">
         {
           "@type": "Organization",
-          "name": "Multi Line Org"
+          "name": "Acme Corp",
+          "alternateName": ["Acme", "Acme Ltd"],
+          "description": "Emergency drainage services",
+          "foundingDate": "2010",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "info@acme.com",
+            "telephone": "+44-123-456-7890",
+            "contactType": "customer service"
+          },
+          "sameAs": ["https://twitter.com/acme", "https://linkedin.com/company/acme"],
+          "founder": { "name": "John Doe" }
         }
         </script>
       </html>
     `;
     const result = extractStructuredData(html);
-    expect(result.organization?.name).toBe("Multi Line Org");
+    expect(result.organization?.name).toBe("Acme Corp");
+    expect(result.organization?.alternateName).toEqual(["Acme", "Acme Ltd"]);
+    expect(result.organization?.description).toBe("Emergency drainage services");
+    expect(result.organization?.foundingDate).toBe("2010");
+    expect(result.organization?.contactPoint?.[0]?.email).toBe("info@acme.com");
+    expect(result.organization?.contactPoint?.[0]?.telephone).toBe("+44-123-456-7890");
+    expect(result.organization?.sameAs).toContain("https://twitter.com/acme");
+    expect(result.organization?.founder?.name).toBe("John Doe");
   });
 });

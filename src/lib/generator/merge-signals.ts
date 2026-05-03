@@ -49,7 +49,7 @@ export function mergePageSignals(signals: PageSignals, schema?: ExtractedSchema)
   };
 }
 
-// Priority ranking for page types (lower = higher priority)
+// Priority ranking for page types
 const PAGE_TYPE_RANK: Record<string, number> = {
   homepage: 1,
   about: 2,
@@ -63,19 +63,16 @@ const PAGE_TYPE_RANK: Record<string, number> = {
 
 function pageRank(url: string): number {
   const lower = url.toLowerCase();
-  
-  // Homepage is root path
-  if (lower === "https://example.com/" || lower === "http://example.com/" || 
-      lower === "https://example.com" || lower === "http://example.com" ||
-      lower.endsWith("/")) {
-    const path = lower.replace(/^https?:\/\/[^/]+\/?$/, "");
-    if (path === "/" || path === "") return 1; // homepage rank
-  }
-  
+  const pathname = lower.replace(/^https?:\/\/[^/]+/, "");
+
+  // Homepage: empty path or just "/"
+  if (pathname === "/" || pathname === "") return 1;
+  // Match specific page type patterns
   for (const [type, rank] of Object.entries(PAGE_TYPE_RANK)) {
-    if (type !== "default" && lower.includes(`/${type}`)) return rank ?? 99;
+    if (type === "default" || type === "homepage") continue;
+    if (pathname.includes(`/${type}`) || pathname === `/${type}`) return rank;
   }
-  return 99;
+  return PAGE_TYPE_RANK.default ?? 99;
 }
 
 export function mergeAcrossPages(pageSignals: MergedPageSignal[]): SiteSignal {
@@ -91,11 +88,13 @@ export function mergeAcrossPages(pageSignals: MergedPageSignal[]): SiteSignal {
   unique.sort((a, b) => pageRank(a.canonical) - pageRank(b.canonical));
 
   const homepage = unique.at(0);
+  const faqPage = unique.find((p) => p.schema?.faqPage)?.schema?.faqPage;
+
   return {
     name: homepage?.name ?? "Unknown Site",
     description: homepage?.description,
     organization: homepage?.schema?.organization,
-    faqPage: unique.find((p) => p.schema?.faqPage)?.schema?.faqPage,
+    faqPage,
     pages: unique,
   };
 }
