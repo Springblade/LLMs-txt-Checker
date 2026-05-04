@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 
-const CACHE_DIR = process.env.CRAWL_CACHE_DIR ?? ".cache";
+const CACHE_DIR = process.env.CRAWL_CACHE_DIR ?? (process.env.RAILWAY ? "/tmp/.cache" : ".cache");
 
 function getDefaultTtlMs(): number {
   return parseInt(process.env.CRAWL_CACHE_TTL_MS ?? "", 10) || 3 * 24 * 60 * 60 * 1000;
