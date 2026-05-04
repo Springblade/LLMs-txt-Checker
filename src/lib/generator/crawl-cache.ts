@@ -1,7 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
 
-const CACHE_DIR = process.env.CRAWL_CACHE_DIR ?? (process.env.RAILWAY ? "/tmp/.cache" : ".cache");
+// Railway: set CRAWL_CACHE_DIR=/tmp/.cache in Railway Dashboard env vars
+// Or use any writable directory via CRAWL_CACHE_DIR environment variable
+const CACHE_DIR = process.env.CRAWL_CACHE_DIR ?? ".cache";
 
 function getDefaultTtlMs(): number {
   return parseInt(process.env.CRAWL_CACHE_TTL_MS ?? "", 10) || 3 * 24 * 60 * 60 * 1000;
