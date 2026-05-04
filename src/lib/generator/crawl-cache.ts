@@ -4,7 +4,7 @@ import path from "path";
 const CACHE_DIR = process.env.CRAWL_CACHE_DIR ?? ".cache";
 
 function getDefaultTtlMs(): number {
-  return parseInt(process.env.CRAWL_CACHE_TTL_MS ?? "", 10) || 5 * 60 * 1000;
+  return parseInt(process.env.CRAWL_CACHE_TTL_MS ?? "", 10) || 3 * 24 * 60 * 60 * 1000;
 }
 
 type CacheEntry<T> = {
