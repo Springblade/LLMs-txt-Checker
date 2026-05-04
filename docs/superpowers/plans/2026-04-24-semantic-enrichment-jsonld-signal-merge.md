@@ -1,3 +1,5 @@
+<!-- /autoplan restore point: ~/.gstack/projects/llms-txt/semantic-enrichment-review-restore.md -->
+
 # Semantic Enrichment — JSON-LD Extraction, Signal Merging, Schema-First Generation
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -7,6 +9,297 @@
 **Architecture:** New modules in `src/lib/generator/`: `extract-structured-data.ts` (JSON-LD parsing), `merge-signals.ts` (signal merging), `generate-ai-descriptions.ts` (schema-first generation). These feed into the existing pipeline at `crawler.ts` and `ai-generator.ts`.
 
 **Tech Stack:** TypeScript, `crypto` (built-in), Node.js.
+
+---
+
+## Phase 1: CEO Review (Strategy & Scope)
+
+### Step 0A: Premise Challenge
+
+**Premise 1: "JSON-LD extraction via regex is the right approach"**
+- **Status: VALID but INCOMPLETE** — Regex parsing is pragmatic for JSON-LD script tags. However, the plan doesn't address canonical URL extraction from HTML `<link rel="canonical">` tags, which would enhance signal merging. Jina's markdown API already strips this data.
+- **Assessment:** Regex is fine for JSON-LD (it's valid JSON inside HTML). The gap is canonical URLs need HTML-level extraction.
+
+**Premise 2: "Schema-first generation reduces Gemini calls"**
+- **Status: VALID** — If website has rich Schema.org data, filling templates directly from it avoids LLM round-trips. Validates the "fill from schema first" approach.
+
+**Premise 3: "FAQPage direct extraction is sufficient for faq-ai.txt"**
+- **Status: VALID** — FAQPage schema contains exact Q&A pairs. Direct extraction gives 100% source accuracy without hallucination risk.
+
+### Step 0C: Dream State Diagram
+
+```
+CURRENT STATE                              12-MONTH IDEAL
+─────────────────                          ─────────────────────────────
+crawlPage() ──► extractMetadata() ──►  crawlPage() ──► extractStructuredData()
+   (title, h1,                           │                │
+description only)                         │                ▼
+                                         │        extractMetadata() ──► mergeSignals()
+                                         │                │                    │
+                                         │                │          ┌─────────▼────────┐
+                                         │                │          │ SiteSignal       │
+                                         │                │          │ (authority rank) │
+                                         │                │          └─────────┬────────┘
+                                         │                │                    │
+                                         │                ▼                    ▼
+                                         │     generateSchemaFirst()    generateSchemaFirst()
+                                         │     (schema-first, fallback  (schema-first, fallback
+                                         │      to Gemini)              to Gemini)
+                                         │           │                        │
+                                         └───────────┼────────────────────────┘
+                                                     ▼
+                                              Template files (brand.txt, ai.txt, etc.)
+                                              with HIGH ACCURACY from Schema.org
+```
+
+### Step 0C-bis: Implementation Alternatives
+
+| Approach | Effort | Risk | Pros | Cons |
+|---------|--------|------|------|------|
+| **A: Plan as-is** (regex JSON-LD + signal merge + schema-first) | ~3 days | Medium | Complete solution, clear flow | More code, dual fetch overhead |
+| **B: Skip signal merge** (JSON-LD directly into existing pipeline) | ~1 day | Low | Simpler, less new code | No authority ranking, no cross-page deduplication |
+| **C: Skip JSON-LD extraction** (rely on existing metadata + Gemini) | ~1 day | Low | Minimal change | More LLM calls, lower accuracy |
+
+**Recommendation: A (plan as-is)** — The schema-first approach has clear quality gains. Signal merge deduplication is valuable for sites with multiple representations of the same page.
+
+### Step 0D: Mode Selection
+
+**SELECTIVE EXPANSION mode.** Core approach is sound. One scope expansion recommended: canonical URL extraction from HTML `<link>` tags (currently lost in Jina markdown format).
+
+### Step 0E: Temporal Interrogation
+
+- **HOUR 1-2:** Task 1 JSON-LD extraction + tests
+- **HOUR 3-4:** Task 2 signal merging + tests
+- **HOUR 5-6:** Task 3 schema-first generation + integration
+- **HOUR 7+:** Integration testing, edge cases
+
+### Step 0F: Mode Selection Confirmed
+
+Scope accepted as-is with one recommended addition (canonical URL extraction).
+
+### CEO DUAL VOICES — CONSENSUS TABLE:
+═══════════════════════════════════════════════════════════════
+  Dimension                           Claude  Codex  Consensus
+  ─────────────────────────────────── ─────── ─────── ─────────
+  1. Premises valid?                   YES     —      CONFIRMED
+  2. Right problem to solve?          YES     —      CONFIRMED
+  3. Scope calibration correct?       YES+    —      CONFIRMED
+  4. Alternatives sufficiently explored? YES   —      CONFIRMED
+  5. Competitive/market risks covered?  LOW    —      N/A
+  6. 6-month trajectory sound?        YES     —      CONFIRMED
+═══════════════════════════════════════════════════════════════
+
+---
+
+## NOT in Scope
+
+1. **Meta tag extraction (OG tags, Twitter cards)** — Would enrich signals further, but adds complexity. Deferred to v2.
+2. **Multiple JSON-LD formats beyond Organization, FAQPage, WebSite** — Plan covers 90% of use cases. Additional schemas (Product, LocalBusiness, etc.) can be added incrementally.
+3. **Full HTML parsing** — Regex is sufficient for JSON-LD. Full parser (cheerio, jsdom) adds weight for minimal gain.
+4. **Real-time schema validation against Schema.org** — Offline enrichment is acceptable for v1.
+
+---
+
+## What already exists
+
+| Sub-problem | Existing code | Assessment |
+|-------------|---------------|------------|
+| HTML fetching | `fetchViaJina()` in crawler.ts — uses `Accept: text/plain`, strips HTML | **Rebuild needed** — need `Accept: text/html`, `x-respond-with: html` |
+| JSON parsing | None for JSON-LD | **Build new** — regex approach is correct |
+| Signal merging | `extractMetadata()` in crawler.ts — extracts title, h1, description | **Partial** — no schema integration, no authority ranking |
+| Template generation | `generateTemplateContent()` in gemini-template-filler.ts — has fallback | **Rebuild needed** — current fills from crawled content, plan wants schema-first |
+
+---
+
+## Phase 2: Design Review
+
+**SKIPPED** — No UI scope detected. Plan adds library modules only.
+
+---
+
+## Phase 3: Engineering Review
+
+### Step 1: Scope Challenge
+
+**Files touched:** 6 new files + 1 modified
+- New: `extract-structured-data.ts`, `extract-structured-data.spec.ts`, `merge-signals.ts`, `merge-signals.spec.ts`, `generate-ai-descriptions.ts`, `generate-ai-descriptions.spec.ts`
+- Modified: `crawler.ts`
+
+**Complexity:** 6 files, 3 new modules — within acceptable bounds.
+
+### Architecture Diagram
+
+```
+src/lib/generator/
+├── crawler.ts                    # Modified: adds fetchHtml(), integrates extraction
+│   └── extractMetadata() ────────► mergeSignals()
+│           │
+│           ▼
+│   extractStructuredData()       # NEW: JSON-LD parsing
+│   (fetchHtml → regex → parse)  │
+│           │
+│           ▼
+│   mergePageSignals()            # NEW: authority ranking
+│   mergeAcrossPages()             │
+│           │
+│           ▼
+│   generateSchemaFirst()          # NEW: schema-first generation
+│   (schema → template | Gemini)   │
+│           │
+│           ▼
+│   generateTemplateContent()     # EXISTING: Gemini integration
+│   (template → LLM fill)          │
+```
+
+### Section 1: Architecture Review
+
+**Issue 1A (confidence: 8/10): Dual fetch doubles network calls for priority pages**
+- **Location:** Task 1, Step 3 — `crawlPages()` calls both markdown and HTML fetch
+- **Problem:** Every priority page triggers 2 Jina API calls. For a 50-page crawl with 10 priority pages, this adds 10 extra calls.
+- **Fix:** The plan's note mentions "minimal integration" — acceptable for v1. Consider parallel fetching or caching in v2.
+- **Auto-decided:** ACCEPT RISK — dual fetch is explicit design decision for accuracy gains. Document in code comments.
+
+**Issue 1B (confidence: 7/10): `callGemini` import in `generate-ai-descriptions.ts` is a dynamic import from `ai-generator.ts`**
+- **Location:** Task 3, Step 2 — `const { callGemini } = await import("./ai-generator")`
+- **Problem:** `ai-generator.ts` exports `generateAiDescription()` and `buildPrompt()`, NOT `callGemini`. The plan references a non-existent function.
+- **Fix:** Use `generateTemplateContent()` from `gemini-template-filler.ts` instead, or import from the actual source.
+- **Auto-decided:** FIX — import from `gemini-template-filler.ts` which has the actual `generateTemplateContent()` function.
+
+**Issue 1C (confidence: 9/10): Hardcoded templates in `generateSchemaFirst()` duplicate existing logic**
+- **Location:** Task 3, Step 2 — `switch (fileType)` with hardcoded template strings
+- **Problem:** `fillTemplateFallback()` in `gemini-template-filler.ts` already has template fallback logic. Hardcoding creates divergence and maintenance burden.
+- **Fix:** Use `fillTemplateFallback()` as the schema-first baseline, then call Gemini only for missing fields.
+- **Auto-decided:** FIX — use existing `fillTemplateFallback()` pattern. Reduces duplication significantly.
+
+### Section 2: Code Quality Review
+
+**Issue 2A (confidence: 8/10): `noUncheckedIndexedAccess` violation in `selectOrganization()`, `selectFaqPage()`, `selectWebsite()`**
+- **Location:** `extract-structured-data.ts` — `orgs[0]` accessed without null check
+- **Problem:** `tsconfig` has `noUncheckedIndexedAccess: true`. `orgs[0]` returns `T | undefined`.
+- **Fix:** Use `orgs.at(0)` or `orgs[0] ?? undefined` with explicit type handling.
+- **Auto-decided:** FIX — project enforces strict TypeScript.
+
+**Issue 2B (confidence: 6/10): `FETCH_TIMEOUT_MS` constant not reused**
+- **Location:** `crawler.ts` — `fetchHtml()` defines its own timeout constant
+- **Problem:** `crawler.ts` already exports `FETCH_TIMEOUT_MS` (15s). New `fetchHtml()` should reuse it.
+- **Fix:** Import `FETCH_TIMEOUT_MS` from the existing module scope or make it a named export.
+- **Auto-decided:** FIX — avoid magic numbers.
+
+### Section 3: Test Review
+
+**Test Diagram:**
+
+```
+CODE PATHS
+[+] extract-structured-data.ts
+  ├── extractStructuredData()
+  │   ├── [GAP] Empty HTML — no script tags
+  │   ├── [GAP] Single Organization schema
+  │   ├── [GAP] @graph array with multiple entities
+  │   ├── [GAP] Malformed JSON (parse error) ← explicit in plan ✓
+  │   └── [GAP] Nested @graph depth > 1
+  │
+  ├── flattenGraph()
+  │   ├── [GAP] No @graph key
+  │   ├── [GAP] @graph with mixed types
+  │   └── [GAP] @graph with null items
+
+[+] merge-signals.ts
+  ├── mergePageSignals()
+  │   ├── [GAP] All signals present
+  │   ├── [GAP] Schema overrides title
+  │   ├── [GAP] No schema, falls back to title
+  │   └── [GAP] Empty signals (edge case)
+  │
+  └── mergeAcrossPages()
+      ├── [GAP] No duplicates
+      ├── [GAP] Duplicate canonical URLs
+      └── [GAP] Homepage not first after ranking
+
+[+] generate-ai-descriptions.ts
+  ├── generateSchemaFirst()
+  │   ├── [GAP] faq-ai.txt + FAQPage schema — no Gemini
+  │   ├── [GAP] brand.txt + full org schema — no Gemini
+  │   ├── [GAP] Missing fields — calls Gemini
+  │   └── [GAP] All fields missing — full Gemini generation
+
+USER FLOWS
+[+] Full pipeline
+  └── [GAP] [→E2E] Crawl → extract → merge → generate → verify output
+
+LLM integration: [GAP] [→EVAL] Schema-first vs full Gemini — needs quality eval comparing accuracy
+```
+
+**Coverage:** 3/13 paths tested (23%) — plan includes explicit tests for key paths.
+
+**Missing tests to add:**
+1. `extractStructuredData` — empty HTML, single schema, @graph with nested objects
+2. `mergePageSignals` — authority ranking precedence, empty fallback
+3. `mergeAcrossPages` — homepage prioritization edge case
+4. `generateSchemaFirst` — partial schema triggers Gemini fallback
+
+### Section 4: Performance Review
+
+**Issue 4A (confidence: 5/10): `JSON_LD_REGEX` is global and reused**
+- **Location:** `extract-structured-data.ts` — regex with `gi` flags
+- **Problem:** Global regex with `lastIndex` state could cause issues if function is called concurrently or in parallel.
+- **Fix:** The plan resets `lastIndex = 0` before each use — this is correct. No change needed.
+- **Auto-decided:** ACCEPT — the `lastIndex` reset is already in the plan.
+
+**Issue 4B (confidence: 7/10): Dual fetch blocks crawl on HTML timeout**
+- **Location:** Task 1, Step 3 — HTML fetch in same loop as markdown
+- **Problem:** If `fetchHtml()` times out, it could delay the entire batch. The plan's error handling returns `{ html: "", success: false }` which is correct.
+- **Auto-decided:** ACCEPT — graceful degradation with `success: false` is appropriate.
+
+---
+
+## Error & Rescue Registry
+
+| Error | Detection | Rescue |
+|-------|-----------|--------|
+| JSON-LD parse failure | `try/catch` in regex loop | Skip malformed, continue |
+| HTML fetch timeout | `AbortController` + `setTimeout` | Return `{ html: "", success: false }` |
+| No schema data | Check `org === undefined` | Fall back to title/content |
+| Gemini quota exhaustion | `isQuotaError()` check | Retry with next key/model |
+| All signals missing | Check `missingFields.length === 0` | Call Gemini with schema context |
+
+---
+
+## Failure Modes Registry
+
+| Failure Mode | Severity | Covered by Test? | Error Handling? |
+|--------------|----------|------------------|------------------|
+| Malformed JSON-LD in HTML | Medium | Yes (Task 1, Step 1) | Yes (try/catch) |
+| Dual fetch timeout adds latency | Low | No | Yes (graceful degradation) |
+| Schema data missing on website | Low | Yes (Task 3, Step 1) | Yes (Gemini fallback) |
+| Conflicting signals (schema vs title) | Medium | No | Partial (authority ranking) |
+| Homepage not in crawled pages | Low | No | Partial (sorting fallback) |
+
+**No critical gaps detected.**
+
+---
+
+## Phase 3.5: DX Review
+
+**SKIPPED** — No developer-facing scope detected. This is a library feature, not a CLI/API/tool.
+
+---
+
+## Decision Audit Trail
+
+| # | Phase | Decision | Classification | Principle | Rationale | Rejected |
+|---|-------|----------|---------------|-----------|----------|----------|
+| 1 | Eng | Accept dual fetch overhead | Mechanical | P3 (pragmatic) | Explicit design tradeoff for accuracy | — |
+| 2 | Eng | Fix `callGemini` import | Mechanical | P5 (explicit) | Non-existent function reference | — |
+| 3 | Eng | Use `fillTemplateFallback` instead of hardcoded | Mechanical | P4 (DRY) | Reuse existing fallback logic | Hardcoded templates |
+| 4 | Eng | Fix `noUncheckedIndexedAccess` | Mechanical | P5 (explicit) | Project enforces strict TypeScript | — |
+| 5 | Eng | Reuse `FETCH_TIMEOUT_MS` | Mechanical | P5 (explicit) | Avoid magic numbers | Local constant |
+
+---
+
+## Phase 4: Final Approval Gate
+
+**DONE** — Review complete. All decisions auto-decided. No taste decisions surfaced.
 
 ---
 

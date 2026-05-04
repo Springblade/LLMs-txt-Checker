@@ -35,7 +35,6 @@ AGENTS.md
 # OS files
 .DS_Store
 Thumbs.db
-.gitnexus
 
 # Test
 scripts/
@@ -49,3 +48,8 @@ e2e/
 test-results/
 
 ai_template_files/
+
+.gitnexus/
+
+# Cache
+.cache/

@@ -106,8 +106,8 @@ export function FileList({
   const recommended = scanResults.filter((f) => FILE_TIER[f.type] === "recommended");
   const complete = scanResults.filter((f) => FILE_TIER[f.type] === "complete");
 
-  const missingCount = scanResults.filter((f) => !f.found).length;
-  const foundCount = scanResults.filter((f) => f.found).length;
+  const missingCount = scanResults.filter((f) => !f.found && !generatedFiles.has(f.type)).length;
+  const foundCount = scanResults.filter((f) => f.found || generatedFiles.has(f.type)).length;
   const score = Math.round((foundCount / scanResults.length) * 100);
 
   return (

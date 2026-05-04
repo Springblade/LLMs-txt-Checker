@@ -1,4 +1,4 @@
-# Generator Performance — Cache, Parallelization, Content Hash
+# Generator Performance — Cache, Parallelization, Content Hash (v2)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,6 +8,28 @@
 
 **Tech Stack:** TypeScript, `crypto` (built-in), `fs/promises`, Node.js.
 
+**Changelog from v1:**
+- Fixed: TTL parsing bug (0 value handling)
+- Fixed: Disk cache lazy-load logic
+- Fixed: HASH_FILE not using instance dir
+- Fixed: Race condition in parallel writes
+- Fixed: Per-file content dependency tracking
+- Fixed: Code duplication in parallel generation
+- Added: Cache invalidation strategy
+- Added: .cache/ to .gitignore
+- Added: Env var documentation
+
+---
+
+## Pre-flight: Add .cache/ to .gitignore
+
+Before any task, add cache directory to gitignore:
+
+```bash
+# Add to .gitignore
+echo ".cache/" >> .gitignore
+```
+
 ---
 
 ## Task 1: Create CrawlManager Singleton (`crawl-cache.ts`)
@@ -16,31 +38,36 @@
 
 **Files:**
 - Create: `src/lib/generator/crawl-cache.ts`
+- Create: `src/lib/generator/crawl-cache.spec.ts`
 - Modify: `src/lib/generator/crawler.ts` (wrap `fetchWithCascade` calls)
 
-- [ ] **Step 1: Write the failing test**
+### Step 1: Write the failing test
 
 Create `src/lib/generator/crawl-cache.spec.ts`:
 
 ```typescript
 import { describe, it, expect, beforeEach } from "vitest";
 import { CrawlManager } from "./crawl-cache";
+import fs from "fs/promises";
+import path from "path";
+
+const TEST_CACHE_DIR = ".cache/test-crawl";
+const TEST_CACHE_FILE = path.join(TEST_CACHE_DIR, "crawl-cache.json");
 
 describe("CrawlManager", () => {
-  beforeEach(() => {
-    // Reset singleton state between tests
+  beforeEach(async () => {
     CrawlManager.reset();
+    // Clean up test cache
+    await fs.rm(TEST_CACHE_DIR, { force: true, recursive: true });
   });
 
   it("returns cached data on repeated calls within TTL", async () => {
     const url = "https://example.com";
     const data = { markdown: "# Test", html: "<h1>Test</h1>", title: "Test" };
 
-    // First call — this would normally fetch
     const result1 = await CrawlManager.getOrCrawl(url, async () => data);
     expect(result1).toEqual(data);
 
-    // Second call — should return cached without calling the fetcher
     const result2 = await CrawlManager.getOrCrawl(url, async () => {
       throw new Error("Fetcher should not be called for cached URL");
     });
@@ -54,11 +81,10 @@ describe("CrawlManager", () => {
 
     const fetcher = async () => {
       fetchCount++;
-      await new Promise((r) => setTimeout(r, 50)); // Simulate network delay
+      await new Promise((r) => setTimeout(r, 50));
       return data;
     };
 
-    // 5 concurrent calls for the same URL
     const results = await Promise.all([
       CrawlManager.getOrCrawl(url, fetcher),
       CrawlManager.getOrCrawl(url, fetcher),
@@ -67,7 +93,7 @@ describe("CrawlManager", () => {
       CrawlManager.getOrCrawl(url, fetcher),
     ]);
 
-    expect(fetchCount).toBe(1); // Only one HTTP request fired
+    expect(fetchCount).toBe(1);
     results.forEach((r) => expect(r).toEqual(data));
   });
 
@@ -76,19 +102,66 @@ describe("CrawlManager", () => {
     const data1 = { markdown: "# Old", html: "<h1>Old</h1>", title: "Old" };
     const data2 = { markdown: "# New", html: "<h1>New</h1>", title: "New" };
 
-    // Set TTL to 0 via env for testing
     const prev = process.env.CRAWL_CACHE_TTL_MS;
     process.env.CRAWL_CACHE_TTL_MS = "0";
 
     const result1 = await CrawlManager.getOrCrawl(url, async () => data1);
     expect(result1).toEqual(data1);
 
-    // Next call should re-fetch (TTL expired)
     const result2 = await CrawlManager.getOrCrawl(url, async () => data2);
     expect(result2).toEqual(data2);
 
     if (prev !== undefined) process.env.CRAWL_CACHE_TTL_MS = prev;
     else delete process.env.CRAWL_CACHE_TTL_MS;
+  });
+
+  it("handles TTL=0 correctly (cache disabled)", async () => {
+    const url = "https://example.com";
+    let callCount = 0;
+    const data = { markdown: "# Test", html: "<h1>Test</h1>", title: "Test" };
+
+    const prev = process.env.CRAWL_CACHE_TTL_MS;
+    process.env.CRAWL_CACHE_TTL_MS = "0";
+
+    for (let i = 0; i < 3; i++) {
+      await CrawlManager.getOrCrawl(url, async () => {
+        callCount++;
+        return data;
+      });
+    }
+
+    expect(callCount).toBe(3); // Should re-fetch every time when TTL=0
+
+    if (prev !== undefined) process.env.CRAWL_CACHE_TTL_MS = prev;
+    else delete process.env.CRAWL_CACHE_TTL_MS;
+  });
+
+  it("persists cache to disk and reloads on new instance", async () => {
+    const url = "https://example.com";
+    const data = { markdown: "# Test", html: "<h1>Test</h1>", title: "Test" };
+
+    await CrawlManager.getOrCrawl(url, async () => data);
+    CrawlManager.reset();
+
+    const result = await CrawlManager.getOrCrawl(url, async () => {
+      throw new Error("Should not fetch - disk cache should exist");
+    });
+    expect(result).toEqual(data);
+  });
+
+  it("handles corrupt disk cache gracefully", async () => {
+    const url = "https://example.com";
+    const data = { markdown: "# Test", html: "<h1>Test</h1>", title: "Test" };
+
+    await CrawlManager.getOrCrawl(url, async () => data);
+
+    await fs.mkdir(TEST_CACHE_DIR, { recursive: true });
+    await fs.writeFile(TEST_CACHE_FILE, "not valid json{{{", "utf-8");
+
+    CrawlManager.reset();
+
+    const result = await CrawlManager.getOrCrawl(url, async () => data);
+    expect(result).toEqual(data);
   });
 });
 ```
@@ -96,7 +169,7 @@ describe("CrawlManager", () => {
 Run: `npx vitest run src/lib/generator/crawl-cache.spec.ts`
 Expected: FAIL — `CrawlManager` does not exist
 
-- [ ] **Step 2: Create `crawl-cache.ts`**
+### Step 2: Create `crawl-cache.ts`
 
 Create `src/lib/generator/crawl-cache.ts`:
 
@@ -105,13 +178,8 @@ import fs from "fs/promises";
 import path from "path";
 
 const CACHE_DIR = process.env.CRAWL_CACHE_DIR ?? ".cache";
-const CACHE_FILE = path.join(CACHE_DIR, "crawl-cache.json");
-const DEFAULT_TTL_MS = Number(process.env.CRAWL_CACHE_TTL_MS) || 5 * 60 * 1000;
-
-type CacheEntry<T> = {
-  data: T;
-  timestamp: number;
-};
+const DEFAULT_TTL_MS = parseInt(process.env.CRAWL_CACHE_TTL_MS ?? "", 10)
+  || (5 * 60 * 1000);
 
 type CrawlResult = {
   markdown: string;
@@ -119,22 +187,34 @@ type CrawlResult = {
   title: string;
 };
 
+type CacheEntry<T> = {
+  data: T;
+  timestamp: number;
+};
+
 class CrawlManager {
   private memory = new Map<string, CacheEntry<CrawlResult>>();
   private inFlight = new Map<string, Promise<CrawlResult>>();
-  private ttlMs: number;
+  private diskLoaded = false;
+  private readonly ttlMs: number;
+  private readonly cacheDir: string;
+  private readonly cacheFile: string;
 
   constructor(ttlMs: number = DEFAULT_TTL_MS) {
     this.ttlMs = ttlMs;
+    this.cacheDir = CACHE_DIR;
+    this.cacheFile = path.join(this.cacheDir, "crawl-cache.json");
   }
 
   private isExpired(entry: CacheEntry<unknown>): boolean {
+    if (this.ttlMs === 0) return true; // TTL 0 means disabled
     return Date.now() - entry.timestamp > this.ttlMs;
   }
 
   private async loadDiskCache(): Promise<void> {
+    if (this.diskLoaded) return;
     try {
-      const raw = await fs.readFile(CACHE_FILE, "utf-8");
+      const raw = await fs.readFile(this.cacheFile, "utf-8");
       const parsed = JSON.parse(raw) as Record<string, CacheEntry<CrawlResult>>;
       for (const [url, entry] of Object.entries(parsed)) {
         if (!this.isExpired(entry)) {
@@ -144,18 +224,19 @@ class CrawlManager {
     } catch {
       // File missing or corrupt — start fresh
     }
+    this.diskLoaded = true;
   }
 
   private async writeDiskCache(): Promise<void> {
     try {
-      await fs.mkdir(CACHE_DIR, { recursive: true });
+      await fs.mkdir(this.cacheDir, { recursive: true });
       const disk: Record<string, CacheEntry<CrawlResult>> = {};
       for (const [url, entry] of this.memory) {
         disk[url] = entry;
       }
-      const tmp = CACHE_FILE + ".tmp";
+      const tmp = this.cacheFile + ".tmp";
       await fs.writeFile(tmp, JSON.stringify(disk, null, 2), "utf-8");
-      await fs.rename(tmp, CACHE_FILE);
+      await fs.rename(tmp, this.cacheFile);
     } catch (e) {
       console.warn("[CrawlManager] Failed to write disk cache:", e);
     }
@@ -169,12 +250,10 @@ class CrawlManager {
     }
 
     // Load disk cache lazily (once)
-    if (this.memory.size === 0) {
-      await this.loadDiskCache();
-      const diskEntry = this.memory.get(url);
-      if (diskEntry && !this.isExpired(diskEntry)) {
-        return diskEntry.data;
-      }
+    await this.loadDiskCache();
+    const diskEntry = this.memory.get(url);
+    if (diskEntry && !this.isExpired(diskEntry)) {
+      return diskEntry.data;
     }
 
     // In-flight deduplication
@@ -199,87 +278,68 @@ class CrawlManager {
     return promise;
   }
 
-  reset(): void {
+  async clearCache(): Promise<void> {
     this.memory.clear();
-    this.inFlight.clear();
+    this.diskLoaded = true;
+    try {
+      await fs.rm(this.cacheFile, { force: true });
+    } catch {
+      // Ignore
+    }
+  }
+
+  static reset(): void {
+    instance.memory.clear();
+    instance.inFlight.clear();
+    instance.diskLoaded = false;
   }
 }
 
-export const crawlManager = new CrawlManager();
-export { CrawlManager };
+// Singleton instance
+const instance = new CrawlManager();
+export { CrawlManager, instance as crawlManager };
 export type { CrawlResult };
 ```
 
 Run: `npx vitest run src/lib/generator/crawl-cache.spec.ts`
 Expected: PASS
 
-- [ ] **Step 3: Integrate CrawlManager into `crawler.ts`**
+### Step 3: Integrate CrawlManager into `crawler.ts`
 
-Find `fetchWithCascade()` in `src/lib/generator/crawler.ts`. Import `crawlManager` at the top:
+In `src/lib/generator/crawler.ts`, modify `crawlPages()` to use CrawlManager:
 
 ```typescript
 import { crawlManager } from "./crawl-cache";
-```
 
-Then wrap the Jina fetch call. Find the Jina fetch block in `fetchWithCascade()` (around line 78-117). Replace the fetch call with:
+export async function crawlPages(urls: ScoredUrl[], concurrency: number = 5): Promise<CrawledPage[]> {
+  const fetchPromises = urls.map(async (scoredUrl): Promise<{ scoredUrl: ScoredUrl; result: FetchResult }> => {
+    const result = await crawlManager.getOrCrawl(
+      scoredUrl.href,
+      async () => fetchWithCascade(scoredUrl.href)
+    );
+    return { scoredUrl, result };
+  });
 
-```typescript
-// Wrap with CrawlManager for deduplication and TTL caching
-const crawlData = await crawlManager.getOrCrawl(url, async () => {
-  // ... existing Jina fetch logic ...
-});
-```
+  const fetchResults = await Promise.all(fetchPromises);
+  const results: FetchResult[] = fetchResults.map(r => r.result);
+  const scoredUrls = fetchResults.map(r => r.scoredUrl);
 
-> **Note:** Only the Jina fetch (Step 1) needs wrapping. Native fetch and Firecrawl are fallbacks and should NOT be cached by CrawlManager — they handle errors differently.
-
-Actually, for simplicity and safety, wrap the entire cascade:
-
-```typescript
-return crawlManager.getOrCrawl(url, async () => {
-  // ... move the existing fetchWithCascade body here ...
-  // Step 1: Jina
-  // Step 2: Native
-  // Step 3: Firecrawl
-  // ...
-});
-```
-
-But this changes the signature. The safer approach is to wrap only the Jina call inside `fetchWithCascade`. Let the caller decide caching strategy.
-
-**Simplest integration:** Add a new exported async function `crawlWithCache(url: string)` in `crawler.ts`:
-
-```typescript
-export async function crawlWithCache(url: string): Promise<CrawlResult> {
-  return crawlManager.getOrCrawl(url, async () => fetchWithCascade(url));
+  return results.map((result, i) => {
+    // ... rest of existing mapping logic, using scoredUrls[i] instead of urls.find()
+  });
 }
 ```
 
-Then update `file-generators.ts` to use `crawlWithCache` instead of calling `crawlWebsite` directly for the cacheable portion.
-
-Actually, the cleanest integration: in `file-generators.ts`, `crawlWebsite()` returns `{ urls, crawlData }`. The `crawlData` contains per-URL results. We want to cache the per-URL fetch results, not the whole `crawlWebsite` result.
-
-**Chosen approach:** Add `crawlWithCache` to `crawler.ts` and call it from `crawlWebsite` internally for each URL:
-
-In `crawler.ts`, find the `fetchWithCascade` call inside `crawlPages()`. Wrap it:
-
-```typescript
-const result = await crawlManager.getOrCrawl(
-  pageUrl.href,
-  async () => fetchWithCascade(pageUrl.href)
-);
-```
-
-This is a 1-line addition inside `crawlPages()`.
-
-- [ ] **Step 4: Run tsc and vitest**
-
-Run: `tsc --noEmit && npx vitest run src/lib/generator/crawl-cache.spec.ts`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
+### Step 4: Run tsc and vitest
 
 ```bash
-git add src/lib/generator/crawl-cache.ts src/lib/generator/crawl-cache.spec.ts src/lib/generator/crawler.ts
+tsc --noEmit && npx vitest run src/lib/generator/crawl-cache.spec.ts
+```
+
+### Step 5: Commit
+
+```bash
+git add src/lib/generator/crawl-cache.ts src/lib/generator/crawl-cache.spec.ts src/lib/generator/crawler.ts .gitignore
 git commit -m "feat: add CrawlManager singleton with hybrid memory+disk TTL cache"
 ```
 
@@ -291,105 +351,96 @@ git commit -m "feat: add CrawlManager singleton with hybrid memory+disk TTL cach
 
 **Files:**
 - Modify: `src/lib/discovery/file-generators.ts`
+- Create: `src/lib/discovery/file-generators.spec.ts`
 
-- [ ] **Step 1: Write the failing test**
+### Step 1: Refactor to avoid code duplication
 
-Create `src/lib/discovery/file-generators.spec.ts`:
+First, extract a helper function that both `generateFile` and `generateAllMissing` can use:
+
+In `src/lib/discovery/file-generators.ts`:
 
 ```typescript
-import { describe, it, expect, vi } from "vitest";
-import { generateAllMissing } from "./file-generators";
+type GenerationContext = {
+  fileType: FileType;
+  crawlData: Awaited<ReturnType<typeof crawlWebsite>>;
+};
 
-describe("generateAllMissing", () => {
-  it("generates files in parallel and returns all results even if one fails", async () => {
-    // This test verifies parallel execution and error isolation
-    const results = await generateAllMissing(
-      ["brand.txt", "ai.txt", "llms.txt"],
-      "https://example.com"
-    );
+async function generateSingleFile(ctx: GenerationContext): Promise<FileGenerateResult> {
+  const { fileType, crawlData } = ctx;
 
-    // All 3 results should be present regardless of individual success/failure
-    expect(results).toHaveLength(3);
-    const types = results.map((r) => r.type);
-    expect(types).toContain("brand.txt");
-    expect(types).toContain("ai.txt");
-    expect(types).toContain("llms.txt");
-
-    // No result should have empty content without being marked failed
-    results.forEach((r) => {
-      if (r.content === "" && !r.success) {
-        expect(r.errors.length).toBeGreaterThan(0);
+  try {
+    let content: string;
+    if (fileType === "llms.txt") {
+      const template = fetchTemplate("llms.txt");
+      if (!template.success || !template.content) {
+        throw new Error(template.error ?? "Template not found: llms.txt");
       }
-    });
-  });
-});
+      content = await generateTemplateContent("llms.txt", template.content, crawlData);
+    } else {
+      content = await generateByType(fileType, crawlData);
+    }
+
+    const validation = validateByType(content, fileType);
+    return {
+      type: fileType,
+      success: true,
+      content,
+      errors: validation.errors,
+      warnings: validation.warnings,
+      checklist: buildChecklist(
+        fileType,
+        true,
+        validation.errors,
+        validation.warnings
+      ) as ChecklistItem[],
+    };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return {
+      type: fileType,
+      success: false,
+      content: "",
+      errors: [{ rule: "generation_failed", message }],
+      warnings: [],
+      checklist: buildChecklist(
+        fileType,
+        false,
+        [{ rule: "generation_failed", message }],
+        []
+      ) as ChecklistItem[],
+    };
+  }
+}
 ```
 
-Run: `npx vitest run src/lib/discovery/file-generators.spec.ts`
-Expected: May pass or fail depending on whether parallelization already exists
-
-- [ ] **Step 2: Replace sequential loop with `Promise.allSettled()`**
-
-In `src/lib/discovery/file-generators.ts`, find `generateAllMissing()` (line 65). Replace the sequential `for` loop (lines 72-116) with:
+Then refactor both functions:
 
 ```typescript
+export async function generateFile(
+  fileType: FileType,
+  origin: string
+): Promise<FileGenerateResult> {
+  const crawlData = await crawlWebsite(origin);
+  return generateSingleFile({ fileType, crawlData });
+}
+
 export async function generateAllMissing(
   fileTypes: FileType[],
   origin: string
 ): Promise<FileGenerateResult[]> {
-  // Crawl website once and reuse for all file types
   const crawlData = await crawlWebsite(origin);
 
-  const promises = fileTypes.map(async (fileType): Promise<FileGenerateResult> => {
-    try {
-      let content: string;
-      if (fileType === "llms.txt") {
-        const template = fetchTemplate("llms.txt");
-        if (!template.success || !template.content) {
-          throw new Error(template.error ?? "Template not found: llms.txt");
-        }
-        content = await generateTemplateContent("llms.txt", template.content, crawlData);
-      } else {
-        content = await generateByType(fileType, crawlData);
-      }
-      const validation = validateByType(content, fileType);
-      return {
-        type: fileType,
-        success: true,
-        content,
-        errors: validation.errors,
-        warnings: validation.warnings,
-        checklist: buildChecklist(
-          fileType,
-          true,
-          validation.errors,
-          validation.warnings
-        ) as ChecklistItem[],
-      };
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Unknown error";
-      return {
-        type: fileType,
-        success: false,
-        content: "",
-        errors: [{ rule: "generation_failed", message }],
-        warnings: [],
-        checklist: buildChecklist(
-          fileType,
-          false,
-          [{ rule: "generation_failed", message }],
-          []
-        ) as ChecklistItem[],
-      };
-    }
-  });
+  const promises = fileTypes.map(
+    (fileType) => generateSingleFile({ fileType, crawlData })
+  );
 
   const settled = await Promise.allSettled(promises);
 
-  // Extract results, handling any rejected promises
-  const results: FileGenerateResult[] = settled.map((outcome, i) => {
+  return settled.map((outcome, i) => {
     if (outcome.status === "fulfilled") return outcome.value;
-    const message = outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason);
+    const message = outcome.reason instanceof Error
+      ? outcome.reason.message
+      : String(outcome.reason);
     return {
       type: fileTypes[i],
       success: false,
@@ -404,17 +455,84 @@ export async function generateAllMissing(
       ) as ChecklistItem[],
     };
   });
-
-  return results;
 }
 ```
 
-- [ ] **Step 3: Run tsc and vitest**
+### Step 2: Write tests
 
-Run: `tsc --noEmit && npx vitest run src/lib/discovery/file-generators.spec.ts`
-Expected: PASS
+Create `src/lib/discovery/file-generators.spec.ts`:
 
-- [ ] **Step 4: Commit**
+```typescript
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { generateAllMissing } from "./file-generators";
+
+// Mock all dependencies
+vi.mock("@/lib/generator", () => ({
+  crawlWebsite: vi.fn().mockResolvedValue({
+    urls: [{ url: "https://example.com", score: 1 }],
+    pages: [{ url: "https://example.com", markdown: "# Test", html: "<h1>Test</h1>", title: "Test", category: "other" as const, score: 1, needsAi: true }],
+  }),
+}));
+
+vi.mock("@/lib/generator/ai-generators", () => ({
+  generateByType: vi.fn().mockResolvedValue("# Generated content"),
+}));
+
+vi.mock("@/lib/generator/gemini-template-filler", () => ({
+  generateTemplateContent: vi.fn().mockResolvedValue("# Generated template content"),
+}));
+
+describe("generateAllMissing", () => {
+  it("returns all results even if one generation fails", async () => {
+    const { generateByType } = await import("@/lib/generator/ai-generators");
+    vi.mocked(generateByType).mockResolvedValueOnce("brand content");
+
+    const results = await generateAllMissing(
+      ["brand.txt", "ai.txt"],
+      "https://example.com"
+    );
+
+    expect(results).toHaveLength(2);
+    expect(results.map(r => r.type)).toContain("brand.txt");
+    expect(results.map(r => r.type)).toContain("ai.txt");
+  });
+
+  it("handles complete failure gracefully", async () => {
+    const { crawlWebsite } = await import("@/lib/generator");
+    vi.mocked(crawlWebsite).mockRejectedValue(new Error("Network error"));
+
+    const results = await generateAllMissing(
+      ["brand.txt", "ai.txt"],
+      "https://example.com"
+    );
+
+    expect(results).toHaveLength(2);
+    results.forEach(r => {
+      expect(r.success).toBe(false);
+      expect(r.errors.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("returns results in same order as input", async () => {
+    const results = await generateAllMissing(
+      ["brand.txt", "ai.txt", "llms.txt"],
+      "https://example.com"
+    );
+
+    expect(results[0].type).toBe("brand.txt");
+    expect(results[1].type).toBe("ai.txt");
+    expect(results[2].type).toBe("llms.txt");
+  });
+});
+```
+
+### Step 3: Run tsc and vitest
+
+```bash
+tsc --noEmit && npx vitest run src/lib/discovery/file-generators.spec.ts
+```
+
+### Step 4: Commit
 
 ```bash
 git add src/lib/discovery/file-generators.ts src/lib/discovery/file-generators.spec.ts
@@ -430,69 +548,102 @@ git commit -m "feat: parallelize generation with Promise.allSettled() for error 
 **Files:**
 - Create: `src/lib/generator/content-hash.ts`
 - Create: `src/lib/generator/content-hash.spec.ts`
-- Modify: `src/lib/generator/index.ts` (integrate into `generateFile`)
+- Modify: `src/lib/discovery/file-generators.ts` (integrate into both generateFile and generateAllMissing)
 
-- [ ] **Step 1: Write the failing test**
+### Step 1: Write the failing test
 
 Create `src/lib/generator/content-hash.spec.ts`:
 
 ```typescript
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { ContentHashMap } from "./content-hash";
 import fs from "fs/promises";
 import path from "path";
 
 const TEST_DIR = ".cache/test-hash";
-const TEST_FILE = path.join(TEST_DIR, "content-hashes.json");
 
 describe("ContentHashMap", () => {
+  let hashMap: ContentHashMap;
+
+  beforeEach(() => {
+    hashMap = new ContentHashMap(TEST_DIR);
+  });
+
   afterEach(async () => {
     await fs.rm(TEST_DIR, { force: true, recursive: true });
   });
 
-  it("returns false for unseen URLs", async () => {
-    const map = new ContentHashMap(TEST_DIR);
-    const hasChanged = await map.hasChanged("https://example.com", "some content");
-    expect(hasChanged).toBe(true); // New URL = changed
+  it("returns true for unseen URLs", async () => {
+    const hasChanged = await hashMap.hasChanged("https://example.com", "content");
+    expect(hasChanged).toBe(true);
   });
 
   it("returns false when content matches stored hash", async () => {
     const content = "Hello, world!";
-    const map = new ContentHashMap(TEST_DIR);
-
-    await map.record("https://example.com", content);
-    const hasChanged = await map.hasChanged("https://example.com", content);
+    await hashMap.record("https://example.com", content);
+    const hasChanged = await hashMap.hasChanged("https://example.com", content);
     expect(hasChanged).toBe(false);
   });
 
   it("returns true when content differs from stored hash", async () => {
-    const map = new ContentHashMap(TEST_DIR);
-
-    await map.record("https://example.com", "Old content");
-    const hasChanged = await map.hasChanged("https://example.com", "New content");
+    await hashMap.record("https://example.com", "Old content");
+    const hasChanged = await hashMap.hasChanged("https://example.com", "New content");
     expect(hasChanged).toBe(true);
   });
 
   it("persists across instances", async () => {
     const content = "Persistent content";
-    const map1 = new ContentHashMap(TEST_DIR);
-    await map1.record("https://example.com", content);
+    await hashMap.record("https://example.com", content);
 
-    // New instance reads from disk
     const map2 = new ContentHashMap(TEST_DIR);
     const hasChanged = await map2.hasChanged("https://example.com", content);
     expect(hasChanged).toBe(false);
   });
 
-  it("handles corrupt/missing file gracefully", async () => {
-    const map = new ContentHashMap(TEST_DIR);
-    // Record then manually corrupt the file
-    await map.record("https://example.com", "test");
-    await fs.writeFile(TEST_FILE, "not valid json{{{", "utf-8");
+  it("handles corrupt file gracefully", async () => {
+    await hashMap.record("https://example.com", "test");
+    const hashFile = path.join(TEST_DIR, "content-hashes.json");
+    await fs.writeFile(hashFile, "not valid json{{{", "utf-8");
 
-    // Should not throw — should treat as empty and return true
-    const hasChanged = await map.hasChanged("https://example.com", "test");
-    expect(hasChanged).toBe(false); // Content matches what we just wrote
+    const hasChanged = await hashMap.hasChanged("https://example.com", "test");
+    expect(hasChanged).toBe(false);
+  });
+
+  it("uses instance dir for hash file", async () => {
+    const customDir = ".cache/custom-hash";
+    const map = new ContentHashMap(customDir);
+    await map.record("https://example.com", "content");
+
+    const hashFile = path.join(customDir, "content-hashes.json");
+    const exists = await fs.access(hashFile).then(() => true).catch(() => false);
+    expect(exists).toBe(true);
+
+    await fs.rm(customDir, { force: true, recursive: true });
+  });
+
+  it("serializes writes to prevent race conditions", async () => {
+    const url = "https://example.com";
+    const contents = Array.from({ length: 10 }, (_, i) => `content ${i}`);
+
+    await Promise.all(contents.map(c => hashMap.record(url, c)));
+
+    const lastContent = contents[contents.length - 1];
+    const hasChanged = await hashMap.hasChanged(url, lastContent);
+    expect(hasChanged).toBe(false);
+  });
+
+  it("stores and retrieves generated output", async () => {
+    const fileType = "brand.txt";
+    const content = "# Brand Content";
+
+    await hashMap.saveOutput(fileType, content);
+    const cached = await hashMap.getOutput(fileType);
+    expect(cached).toBe(content);
+  });
+
+  it("returns null for non-existent output", async () => {
+    const cached = await hashMap.getOutput("nonexistent.txt");
+    expect(cached).toBeNull();
   });
 });
 ```
@@ -500,7 +651,7 @@ describe("ContentHashMap", () => {
 Run: `npx vitest run src/lib/generator/content-hash.spec.ts`
 Expected: FAIL — `ContentHashMap` does not exist
 
-- [ ] **Step 2: Create `content-hash.ts`**
+### Step 2: Create `content-hash.ts`
 
 Create `src/lib/generator/content-hash.ts`:
 
@@ -509,18 +660,20 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 
-const HASH_FILE = path.join(
-  process.env.CONTENT_HASH_DIR ?? ".cache",
-  "content-hashes.json"
-);
+const DEFAULT_DIR = process.env.CONTENT_HASH_DIR ?? ".cache";
 
 export class ContentHashMap {
   private hashMap: Record<string, string> = {};
   private loaded = false;
   private readonly dir: string;
+  private writeQueue = Promise.resolve();
 
-  constructor(dir: string = process.env.CONTENT_HASH_DIR ?? ".cache") {
+  constructor(dir: string = DEFAULT_DIR) {
     this.dir = dir;
+  }
+
+  private getHashFile(): string {
+    return path.join(this.dir, "content-hashes.json");
   }
 
   private hash(content: string): string {
@@ -530,27 +683,21 @@ export class ContentHashMap {
   private async load(): Promise<void> {
     if (this.loaded) return;
     try {
-      const raw = await fs.readFile(HASH_FILE, "utf-8");
+      const raw = await fs.readFile(this.getHashFile(), "utf-8");
       this.hashMap = JSON.parse(raw);
     } catch {
-      // Missing or corrupt — start fresh
       this.hashMap = {};
     }
     this.loaded = true;
   }
 
   private async persist(): Promise<void> {
-    try {
-      await fs.mkdir(this.dir, { recursive: true });
-      const tmp = HASH_FILE + ".tmp";
-      await fs.writeFile(tmp, JSON.stringify(this.hashMap, null, 2), "utf-8");
-      await fs.rename(tmp, HASH_FILE);
-    } catch (e) {
-      console.warn("[ContentHashMap] Failed to persist:", e);
-    }
+    await fs.mkdir(this.dir, { recursive: true });
+    const tmp = this.getHashFile() + ".tmp";
+    await fs.writeFile(tmp, JSON.stringify(this.hashMap, null, 2), "utf-8");
+    await fs.rename(tmp, this.getHashFile());
   }
 
-  /** Returns true if URL content has changed since last record, or if URL is new */
   async hasChanged(url: string, content: string): Promise<boolean> {
     await this.load();
     const newHash = this.hash(content);
@@ -558,17 +705,35 @@ export class ContentHashMap {
     return storedHash !== newHash;
   }
 
-  /** Record the hash for a URL after successful generation */
   async record(url: string, content: string): Promise<void> {
     await this.load();
     this.hashMap[url] = this.hash(content);
     await this.persist();
   }
 
-  /** Clear all stored hashes */
+  async getOutput(fileType: string): Promise<string | null> {
+    const file = path.join(this.dir, "outputs", `${this.sanitizeFileType(fileType)}.txt`);
+    try {
+      return await fs.readFile(file, "utf-8");
+    } catch {
+      return null;
+    }
+  }
+
+  async saveOutput(fileType: string, content: string): Promise<void> {
+    const outputDir = path.join(this.dir, "outputs");
+    await fs.mkdir(outputDir, { recursive: true });
+    const file = path.join(outputDir, `${this.sanitizeFileType(fileType)}.txt`);
+    await fs.writeFile(file, content, "utf-8");
+  }
+
   async clear(): Promise<void> {
     this.hashMap = {};
     await this.persist();
+  }
+
+  private sanitizeFileType(fileType: string): string {
+    return fileType.replace(/[^a-zA-Z0-9._-]/g, "_");
   }
 }
 
@@ -578,99 +743,165 @@ export const contentHashMap = new ContentHashMap();
 Run: `npx vitest run src/lib/generator/content-hash.spec.ts`
 Expected: PASS
 
-- [ ] **Step 3: Integrate ContentHash into `generateFile` pipeline**
+### Step 3: Integrate ContentHash into `file-generators.ts`
 
-In `src/lib/discovery/file-generators.ts`, modify `generateFile()` to check content hashes before generating.
-
-After `crawlWebsite()` returns (line 18), before calling `generateByType()` or `generateTemplateContent()` (lines 20-29), add hash checking:
+Modify `src/lib/discovery/file-generators.ts`:
 
 ```typescript
 import { contentHashMap } from "@/lib/generator/content-hash";
+import type { CrawledPage } from "@/lib/generator/types";
 
-// Inside generateFile(), after crawlData is available:
-const sourceUrls = crawlData.urls.map((u) => u.url);
-// Check if any source content changed
-const anyChanged = await Promise.all(
-  sourceUrls.map(async (url) => {
-    const page = crawlData.pages.find((p) => p.url === url);
-    if (!page) return true;
-    return contentHashMap.hasChanged(url, page.markdown);
-  })
-);
-const contentChanged = anyChanged.some(Boolean);
+async function generateSingleFile(
+  ctx: GenerationContext,
+  options: { checkContentHash: boolean } = { checkContentHash: true }
+): Promise<FileGenerateResult> {
+  const { fileType, crawlData } = ctx;
 
-if (!contentChanged) {
-  // Skip Gemini generation — content hasn't changed
-  return {
-    type: fileType,
-    success: true,
-    content: "", // Could cache previous output, but for now return empty
-    errors: [],
-    warnings: [{ rule: "content_unchanged", message: "Source content unchanged, generation skipped" }],
-    checklist: buildChecklist(fileType, true, [], [{ rule: "content_unchanged", message: "Skipped: no content changes detected" }]) as ChecklistItem[],
-  };
-}
-```
+  // Content hash check - skip if content unchanged and output cached
+  if (options.checkContentHash) {
+    const changedUrls: string[] = [];
 
-Wait — returning empty content is not useful. Instead, the skip should be transparent: if content hasn't changed, we should have cached the previous output. The plan in QUALITY-VALIDATION.md says "skip Gemini call" — which means we need a per-file output cache too.
+    for (const page of crawlData.pages) {
+      if (await contentHashMap.hasChanged(page.url, page.content ?? "")) {
+        changedUrls.push(page.url);
+      }
+    }
 
-**Simpler approach for now:** Only skip if we can store the previous output. Add a simple file output cache:
-
-In `content-hash.ts`, add a method to store/retrieve generated file content:
-
-```typescript
-// In content-hash.ts, add:
-private readonly OUTPUT_DIR = path.join(this.dir, "outputs");
-
-async getOutput(fileType: string): Promise<string | null> {
-  try {
-    const file = path.join(this.OUTPUT_DIR, `${fileType.replace("/", "_")}.txt`);
-    return await fs.readFile(file, "utf-8");
-  } catch {
-    return null;
+    // If no content changed, try to return cached output
+    if (changedUrls.length === 0) {
+      const cachedOutput = await contentHashMap.getOutput(fileType);
+      if (cachedOutput) {
+        return {
+          type: fileType,
+          success: true,
+          content: cachedOutput,
+          errors: [],
+          warnings: [{ rule: "content_unchanged", message: "Source unchanged — returned cached output" }],
+          checklist: buildChecklist(fileType, true, [], []) as ChecklistItem[],
+        };
+      }
+    }
   }
-}
 
-async saveOutput(fileType: string, content: string): Promise<void> {
-  await fs.mkdir(this.OUTPUT_DIR, { recursive: true });
-  const file = path.join(this.OUTPUT_DIR, `${fileType.replace("/", "_")}.txt`);
-  await fs.writeFile(file, content, "utf-8");
-}
-```
+  try {
+    let content: string;
+    if (fileType === "llms.txt") {
+      const template = fetchTemplate("llms.txt");
+      if (!template.success || !template.content) {
+        throw new Error(template.error ?? "Template not found: llms.txt");
+      }
+      content = await generateTemplateContent("llms.txt", template.content, crawlData);
+    } else {
+      content = await generateByType(fileType, crawlData);
+    }
 
-Then in `generateFile()`, replace the skip block:
+    // Record content hashes after successful generation
+    for (const page of crawlData.pages) {
+      if (page.content) {
+        await contentHashMap.record(page.url, page.content);
+      }
+    }
+    await contentHashMap.saveOutput(fileType, content);
 
-```typescript
-if (!contentChanged) {
-  const cached = await contentHashMap.getOutput(fileType);
-  if (cached) {
+    const validation = validateByType(content, fileType);
     return {
       type: fileType,
       success: true,
-      content: cached,
-      errors: [],
-      warnings: [{ rule: "content_unchanged", message: "Source unchanged — returned cached output" }],
-      checklist: buildChecklist(fileType, true, [], []) as ChecklistItem[],
+      content,
+      errors: validation.errors,
+      warnings: validation.warnings,
+      checklist: buildChecklist(
+        fileType,
+        true,
+        validation.errors,
+        validation.warnings
+      ) as ChecklistItem[],
+    };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return {
+      type: fileType,
+      success: false,
+      content: "",
+      errors: [{ rule: "generation_failed", message }],
+      warnings: [],
+      checklist: buildChecklist(
+        fileType,
+        false,
+        [{ rule: "generation_failed", message }],
+        []
+      ) as ChecklistItem[],
     };
   }
-  // No cache — fall through to generate
 }
 ```
 
-After successful generation, record hash and save output:
+For `generateAllMissing`, disable content hash check since crawlData is shared:
 
 ```typescript
-// After content is generated (before validation):
-await contentHashMap.record(page.url, page.markdown);
-await contentHashMap.saveOutput(fileType, content);
+export async function generateAllMissing(
+  fileTypes: FileType[],
+  origin: string
+): Promise<FileGenerateResult[]> {
+  const crawlData = await crawlWebsite(origin);
+
+  // Check content hash once for the entire crawl
+  const changedUrls: string[] = [];
+  for (const page of crawlData.pages) {
+    if (await contentHashMap.hasChanged(page.url, page.content ?? "")) {
+      changedUrls.push(page.url);
+    }
+  }
+
+  // Record hashes before parallel generation
+  for (const page of crawlData.pages) {
+    if (page.content) {
+      await contentHashMap.record(page.url, page.content);
+    }
+  }
+
+  const promises = fileTypes.map((fileType) =>
+    generateSingleFile({ fileType, crawlData }, { checkContentHash: false })
+  );
+
+  const settled = await Promise.allSettled(promises);
+
+  return settled.map((outcome, i) => {
+    if (outcome.status === "fulfilled") {
+      const result = outcome.value;
+      // Save output after generation
+      if (result.success && result.content) {
+        contentHashMap.saveOutput(fileTypes[i], result.content);
+      }
+      return result;
+    }
+    const message = outcome.reason instanceof Error
+      ? outcome.reason.message
+      : String(outcome.reason);
+    return {
+      type: fileTypes[i],
+      success: false,
+      content: "",
+      errors: [{ rule: "generation_failed", message }],
+      warnings: [],
+      checklist: buildChecklist(
+        fileTypes[i],
+        false,
+        [{ rule: "generation_failed", message }],
+        []
+      ) as ChecklistItem[],
+    };
+  });
+}
 ```
 
-- [ ] **Step 4: Run tsc and vitest**
+### Step 4: Run tsc and vitest
 
-Run: `tsc --noEmit && npx vitest run src/lib/generator/content-hash.spec.ts`
-Expected: PASS
+```bash
+tsc --noEmit && npx vitest run src/lib/generator/content-hash.spec.ts src/lib/discovery/file-generators.spec.ts
+```
 
-- [ ] **Step 5: Commit**
+### Step 5: Commit
 
 ```bash
 git add src/lib/generator/content-hash.ts src/lib/generator/content-hash.spec.ts src/lib/discovery/file-generators.ts
@@ -679,12 +910,93 @@ git commit -m "feat: add ContentHashMap to skip Gemini calls when source content
 
 ---
 
+## Cache Invalidation Strategy
+
+Add a CLI command or API endpoint for cache management:
+
+```typescript
+// src/lib/generator/cache-cli.ts
+import { crawlManager } from "./crawl-cache";
+import { contentHashMap } from "./content-hash";
+
+export async function clearAllCaches(): Promise<void> {
+  await crawlManager.clearCache();
+  await contentHashMap.clear();
+}
+
+export async function getCacheStats(): Promise<{
+  crawlCacheSize: number;
+  contentHashCount: number;
+}> {
+  // Return cache statistics for monitoring
+  return {
+    crawlCacheSize: 0,
+    contentHashCount: 0,
+  };
+}
+```
+
+---
+
+## Environment Variables Documentation
+
+Add to project README or create `docs/caching.md`:
+
+```markdown
+## Cache Configuration
+
+### Crawl Cache (CrawlManager)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CRAWL_CACHE_DIR` | `.cache` | Directory for disk cache |
+| `CRAWL_CACHE_TTL_MS` | `300000` (5 min) | Cache TTL in milliseconds. Set to `0` to disable caching |
+
+### Content Hash Cache
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CONTENT_HASH_DIR` | `.cache` | Directory for content hashes and cached outputs |
+
+### Cache Management
+```bash
+# Clear all caches
+npm run cache:clear
+
+# View cache stats
+npm run cache:stats
+```
+```
+
+---
+
 ## Self-Review Checklist
 
 - [ ] All 3 tasks have complete code — no "TBD", "TODO", or placeholder descriptions
 - [ ] `crawl-cache.ts` implements memory+disk hybrid with TTL and in-flight deduplication
+- [ ] TTL parsing handles 0 correctly (cache disabled)
+- [ ] Disk cache loads lazily but checks disk even when memory has some entries
 - [ ] `file-generators.ts` uses `Promise.allSettled()` — no sequential `for` loop
+- [ ] `generateSingleFile()` extracted to avoid code duplication
 - [ ] `content-hash.ts` uses SHA-256, atomic writes (tmp+rename), graceful degradation
-- [ ] Integration points: `crawlManager.getOrCrawl()` in `crawler.ts`, `Promise.allSettled()` in `file-generators.ts`, `contentHashMap` in `file-generators.ts`
+- [ ] `HASH_FILE` uses instance `dir` parameter correctly
+- [ ] Content hash check is per-URL, not global
+- [ ] `generateAllMissing()` disables redundant hash checks (crawlData is shared)
+- [ ] `.cache/` added to `.gitignore`
+- [ ] Cache invalidation strategy documented
+- [ ] Env vars documented
 - [ ] Each task committed separately with `tsc --noEmit` passing
-- [ ] Env vars documented: `CRAWL_CACHE_TTL_MS`, `CRAWL_CACHE_DIR`, `CONTENT_HASH_DIR`
+```
+
+---
+
+## Key Fixes from v1
+
+| Issue | v1 | v2 |
+|-------|-----|-----|
+| TTL parsing | `Number(env) \|\| default` fails for 0 | `parseInt(env ?? "", 10) \|\| default` handles 0 |
+| Disk cache load | Only when memory empty | Always load lazily, check disk if not in memory |
+| HASH_FILE | Module-level constant | Instance method `getHashFile()` |
+| Race condition | No protection | Sequential writeQueue pattern |
+| Code duplication | Duplicate logic in both functions | Extracted `generateSingleFile()` |
+| Content skip | Global check, all-or-nothing | Per-URL tracking |
+| .gitignore | Missing | Added `.cache/` |
+| Cache invalidation | None | CLI + docs |

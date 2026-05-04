@@ -37,8 +37,8 @@ export function ResultSection({
     setOverallStatus("done");
   };
 
-  const foundCount = result.files.filter((f) => f.found).length;
-  const missingCount = result.files.filter((f) => !f.found).length;
+  const foundCount = result.files.filter((f) => f.found || generatingFiles.has(f.type)).length;
+  const missingCount = result.files.filter((f) => !f.found && !generatingFiles.has(f.type)).length;
   const displayOrigin = result.origin.replace(/^https?:\/\//, "");
 
   return (

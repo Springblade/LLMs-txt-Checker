@@ -2,15 +2,15 @@
 alwaysApply: true
 ---
 
-# Personal Workflow — 6-Phase Production Pipeline
+# Personal Workflow — 7-Phase Production Pipeline
 
-End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
+End-to-end workflow: Research → PRD → Plan → Implement → Review → QA → Ship.
 
 ## Tier-Based Skip Logic
 
 | Tier | Scale | Skippable Phases |
 |------|-------|-----------------|
-| **Micro** | < 1 day, < 10 files | Research (optional), PRD (optional), QA (optional) |
+| **Micro** | < 1 day, < 10 files | Research (optional), PRD (optional), Plan (optional), QA (optional) |
 | **Standard** | 1-7 days, 10-50 files | Micro-tier skips + `/health` + `/review` |
 | **Enterprise** | 1+ week, 50+ files | Full pipeline |
 
@@ -62,13 +62,12 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 
 ### Phase 2: PRD
 
-**Skills:** `mattpocock:to-prd` + `gstack:autoplan`
+**Skill:** `mattpocock:to-prd`
 
-**Purpose:** Create a detailed PRD with user stories, implementation decisions, and testing strategy.
+**Purpose:** Create a detailed PRD with user stories and product requirements.
 
 **Outputs:**
 - `docs/prd/<slug>.md` — Product Requirements Document
-- `docs/plans/<slug>.md` — Implementation plan (from autoplan)
 
 **Gate:** User approves PRD.
 
@@ -82,23 +81,47 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 - [ ] Testing decisions documented (what to test, where, prior art)
 - [ ] Out of scope clearly defined
 
+**Skip conditions:**
+- Micro tier (< 1 day): PRD skipped, go directly to Plan or Implement
+
+**Done when:**
+- [ ] Problem statement written and approved
+- [ ] User stories enumerated
+- [ ] Solution described
+- [ ] Out of scope defined
+- [ ] User approves PRD
+
+---
+
+### Phase 3: Plan
+
+**Skills:** `superpowers:writing-plans` + `gstack:autoplan`
+
+**Purpose:** Create a reviewed implementation plan from the approved PRD.
+
+**Outputs:**
+- `docs/plans/<slug>.md` — Implementation plan
+
+**Gate:** User approves plan.
+
 **Autoplan Flow (gstack:autoplan):**
 1. Write implementation plan with `superpowers:writing-plans`
 2. Auto-review pipeline: CEO review → Eng review
 3. Final Approval Gate: user approves plan
 
 **Skip conditions:**
-- Micro tier (< 1 day): PRD skipped, go directly to implement
+- Micro tier (< 1 day): Plan skipped, go directly to Implement
 
 **Done when:**
-- [ ] PRD written and approved
-- [ ] Implementation plan reviewed and approved
+- [ ] Implementation plan written
+- [ ] Plan reviewed (CEO + Eng)
 - [ ] Decision audit trail documented
 - [ ] Failure modes identified
+- [ ] User approves plan
 
 ---
 
-### Phase 3: Implement
+### Phase 4: Implement
 
 **Skills:** `superpowers:subagent-driven-development` (+ `mattpocock:tdd` if requested)
 
@@ -132,9 +155,9 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 
 **Loop-back on unknown:**
 - **Technical unknown** → back to Phase 1 (Research)
-- **Scope change** → back to Phase 2 (PRD)
+- **Scope change** → back to Phase 2 (PRD) or Phase 3 (Plan)
 
-**Verification (mandatory before Phase 4):**
+**Verification (mandatory before Phase 5):**
 1. `tsc --noEmit` — type check passes
 2. Linting — no errors
 3. All todos marked complete
@@ -148,7 +171,7 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 
 ---
 
-### Phase 4: Review
+### Phase 5: Review
 
 **Skills:** `gstack:review` + `gstack:health` + `mattpocock:improve-codebase-architecture` (optional)
 
@@ -182,7 +205,7 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 | Library/Package | always | always | optional |
 
 **Quality gate failure → loop-back:**
-- Critical failure → back to Phase 3 (Implement)
+- Critical failure → back to Phase 4 (Implement)
 - Minor failure → fix then continue
 
 **Done when:**
@@ -193,7 +216,7 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 
 ---
 
-### Phase 5: QA
+### Phase 6: QA
 
 **Skills:** `gstack:qa` (+ `gstack:qa-only` for report-only mode)
 
@@ -218,7 +241,7 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 
 ---
 
-### Phase 6: Ship
+### Phase 7: Ship
 
 **Skill:** `gstack:ship`
 
@@ -257,15 +280,15 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 - Implementation discovers research is incomplete or requirements changed
 - User changes scope mid-way
 - Critical quality gate failure
-- Verification failure (Phase 3)
+- Verification failure (Phase 4)
 
 **Loop-back flow:**
 1. Create addendum doc (`docs/research/<slug>-addendum.md`)
 2. Update main research doc (link to addendum)
 3. Decide target:
    - **Technical unknown** → back to **Phase 1** (Research)
-   - **Scope change** → back to **Phase 2** (PRD)
-   - **Verification failure** → back to **Phase 3** (Implement)
+   - **Scope change** → back to **Phase 2** (PRD) or **Phase 3** (Plan)
+   - **Verification failure** → back to **Phase 4** (Implement)
 4. Continue from that phase
 
 **Max loop-back:** 2 times. After that, must clarify with user.
@@ -277,7 +300,8 @@ End-to-end workflow: Research → PRD → Implement → Review → QA → Ship.
 | Phase | Primary Skills | Optional |
 |-------|---------------|----------|
 | **Research** | `gstack:office-hours` + `mattpocock:grill-with-docs` | — |
-| **PRD** | `mattpocock:to-prd` + `gstack:autoplan` | `gstack:plan-ceo-review` |
+| **PRD** | `mattpocock:to-prd` | — |
+| **Plan** | `superpowers:writing-plans` + `gstack:autoplan` | `gstack:plan-ceo-review` |
 | **Implement** | `superpowers:subagent-driven-development` | `mattpocock:tdd` |
 | **Review** | `gstack:review` + `gstack:health` | `mattpocock:improve-codebase-architecture` |
 | **QA** | `gstack:qa` | `gstack:qa-only` |
