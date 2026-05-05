@@ -75,9 +75,7 @@ class CrawlManager<T> {
       for (const [url, entry] of this.memory) {
         disk[url] = entry;
       }
-      const tmp = this.cacheFile + ".tmp";
-      await fs.writeFile(tmp, JSON.stringify(disk, null, 2), "utf-8");
-      await fs.rename(tmp, this.cacheFile);
+      await fs.writeFile(this.cacheFile, JSON.stringify(disk, null, 2), "utf-8");
     } catch (e) {
       console.warn("[CrawlManager] Failed to write disk cache:", e);
     }
