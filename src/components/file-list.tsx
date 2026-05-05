@@ -126,6 +126,7 @@ export function FileList({
                 generated={generatedFiles.get(r.type)}
                 generating={generatingFiles.has(r.type)}
                 onGenerate={!r.found && !generatingFiles.has(r.type) && !generatedFiles.has(r.type) ? () => onGenerate(r.type) : undefined}
+                onRegenerate={(r.found || generatedFiles.has(r.type)) && !generatingFiles.has(r.type) ? () => onGenerate(r.type) : undefined}
               />
             ))}
           </div>
@@ -144,6 +145,7 @@ export function FileList({
                 generated={generatedFiles.get(r.type)}
                 generating={generatingFiles.has(r.type)}
                 onGenerate={!r.found && !generatingFiles.has(r.type) && !generatedFiles.has(r.type) ? () => onGenerate(r.type) : undefined}
+                onRegenerate={(r.found || generatedFiles.has(r.type)) && !generatingFiles.has(r.type) ? () => onGenerate(r.type) : undefined}
               />
             ))}
           </div>
@@ -162,6 +164,7 @@ export function FileList({
                 generated={generatedFiles.get(r.type)}
                 generating={generatingFiles.has(r.type)}
                 onGenerate={!r.found && !generatingFiles.has(r.type) && !generatedFiles.has(r.type) ? () => onGenerate(r.type) : undefined}
+                onRegenerate={(r.found || generatedFiles.has(r.type)) && !generatingFiles.has(r.type) ? () => onGenerate(r.type) : undefined}
               />
             ))}
           </div>

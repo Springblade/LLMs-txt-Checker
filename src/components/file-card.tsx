@@ -48,11 +48,11 @@ interface FileCardProps {
   generated?: FileGenerateResult;
   generating?: boolean;
   onGenerate?: () => void;
-  onDownload?: () => void;
+  onRegenerate?: () => void;
   onCopy?: () => void;
 }
 
-export function FileCard({ result, generated, generating, onGenerate, onDownload, onCopy }: FileCardProps) {
+export function FileCard({ result, generated, generating, onGenerate, onRegenerate, onCopy }: FileCardProps) {
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -72,6 +72,19 @@ export function FileCard({ result, generated, generating, onGenerate, onDownload
     navigator.clipboard.writeText(displayResult.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const downloadContent = () => {
+    if (!displayResult?.content) return;
+    const blob = new Blob([displayResult.content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = result.type;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -194,12 +207,29 @@ export function FileCard({ result, generated, generating, onGenerate, onDownload
         {/* Actions */}
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {generating ? (
-            <span style={{ fontSize: "0.75rem", color: "var(--mm-text-muted)", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.75rem", color: "var(--mm-text-muted)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mm-brand)" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
                 <path d="M21 12a9 9 0 11-6.219-8.56" />
               </svg>
               Generating...
             </span>
+          ) : hasContent && !generating && onRegenerate ? (
+            <button
+              onClick={onRegenerate}
+              style={{
+                padding: "0.375rem 0.75rem",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                backgroundColor: "var(--mm-bg-secondary)",
+                color: "var(--mm-brand)",
+                border: "1px solid var(--mm-brand)",
+                borderRadius: "var(--mm-radius)",
+                cursor: "pointer",
+                transition: "background-color 0.15s ease",
+              }}
+            >
+              Generate Again
+            </button>
           ) : !result.found && onGenerate ? (
             <button
               onClick={onGenerate}
@@ -238,9 +268,9 @@ export function FileCard({ result, generated, generating, onGenerate, onDownload
             </button>
           )}
 
-          {hasContent && onDownload && (
+          {hasContent && (
             <button
-              onClick={onDownload}
+              onClick={downloadContent}
               style={{
                 padding: "0.375rem 0.75rem",
                 fontSize: "0.75rem",

@@ -11,6 +11,18 @@ const GOOGLE_MODELS = [
 
 export type GeminiErrorType = "quota" | "auth" | "timeout" | "rate_limit" | "unknown";
 
+function stripMarkdownCodeFence(text: string): string {
+  const trimmed = text.trim();
+  // Match first opening fence, capture content, stop at first closing fence.
+  // Handles: ```json ... ```, ``` ... ```, ```json\n...``` (no newline), etc.
+  const fenceRegex = /^```[^\n]*\n?([\s\S]*?)```/;
+  const match = trimmed.match(fenceRegex);
+  if (match) {
+    return match[1]!.trim();
+  }
+  return trimmed;
+}
+
 export interface GeminiErrorDetails {
   type: GeminiErrorType;
   errorCode: "QUOTA_EXHAUSTED" | "AUTH_FAILED" | "TIMEOUT" | "RATE_LIMITED" | "UNKNOWN";
@@ -466,7 +478,7 @@ export async function generateTemplateContent(
         ]);
         const response = await result.response;
         const text = response.text().trim();
-        return text;
+        return stripMarkdownCodeFence(text);
       } catch (e) {
         lastError = e instanceof Error ? e : new Error(String(e));
         lastErrorType = categorizeError(e);
