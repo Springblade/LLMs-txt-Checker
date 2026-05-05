@@ -5,7 +5,7 @@ import { crawlManager } from "./crawl-cache";
 import { extractStructuredData, type ExtractedSchema } from "./extract-structured-data";
 
 export const FETCH_TIMEOUT_MS = 15_000;
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 1;
 
 async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
   const controller = new AbortController();
@@ -200,6 +200,27 @@ function isPriorityPage(url: string): boolean {
   return PRIORITY_PATH_PATTERNS.some((p) => pathname === p || pathname === p + "/");
 }
 
+export function isFallbackPage(content: string, url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname;
+    if (pathname === "/" || pathname === "") return false;
+
+    const titleMatch = content.match(/<title>([^<]+)<\/title>/i);
+    if (!titleMatch) return false;
+
+    const title = titleMatch[1]!.toLowerCase();
+    return (
+      title.includes("404") ||
+      title.includes("not found") ||
+      title.includes("page not found") ||
+      title.includes("site not found") ||
+      title.includes("domain not found")
+    );
+  } catch {
+    return false;
+  }
+}
+
 // ─── HTML Fetch for JSON-LD Extraction ────────────────────────────────────
 export async function fetchHtml(
   url: string
@@ -272,18 +293,27 @@ async function fetchWithCascade(pageUrl: string): Promise<FetchResult> {
   // Step 1: Jina (primary)
   const jinaResult = await fetchViaJina(pageUrl);
   if (jinaResult.content) {
+    if (isFallbackPage(jinaResult.content, pageUrl)) {
+      return { url: pageUrl, error: "Fallback page detected", provider: null };
+    }
     return jinaResult;
   }
 
   // Step 2: Native fetch (fallback 1)
   const nativeResult = await fetchViaNative(pageUrl);
   if (nativeResult.content) {
+    if (isFallbackPage(nativeResult.content, pageUrl)) {
+      return { url: pageUrl, error: "Fallback page detected", provider: null };
+    }
     return nativeResult;
   }
 
   // Step 3: Firecrawl (fallback 2)
   const firecrawlResult = await fetchViaFirecrawl(pageUrl);
   if (firecrawlResult.content) {
+    if (isFallbackPage(firecrawlResult.content, pageUrl)) {
+      return { url: pageUrl, error: "Fallback page detected", provider: null };
+    }
     return firecrawlResult;
   }
 

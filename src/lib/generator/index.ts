@@ -37,7 +37,7 @@ export async function crawlWebsite(url: string): Promise<{
     source: u.source,
     score: 0,
   }));
-  const crawled = await crawlPages(urlsToCrawl, 5);
+  const crawled = await crawlPages(urlsToCrawl, 2);
 
   const siteName = new URL(url).hostname.replace(/^www\./, "");
 
@@ -74,7 +74,7 @@ export async function generateLlmsTxt(
     const prioritized = applyControls(scored, input.maxUrls ?? 50, input.excludePaths ?? []);
 
     onProgress?.(4, `Crawling ${prioritized.length} pages...`);
-    const crawled = await crawlPages(prioritized, 5);
+    const crawled = await crawlPages(prioritized, 2);
 
     const successful = crawled.filter((p) => p.content !== undefined);
     const errors = crawled

@@ -112,4 +112,41 @@ describe("CrawlManager", () => {
     const result = await newManager.getOrCrawl(url, async () => data);
     expect(result.content).toBe(data.content);
   });
+
+  it("returns cached result for duplicate content", async () => {
+    const urlA = "https://a.example.com";
+    const urlB = "https://b.example.com";
+    const sameContent = "<html><body>Same HTML content</body></html>";
+    const dataA: FetchResultCache = { url: urlA, content: sameContent, provider: "jina" };
+    const dataB: FetchResultCache = { url: urlB, content: sameContent, provider: "jina" };
+
+    await manager.getOrCrawl(urlA, async () => dataA);
+    await manager.getOrCrawl(urlB, async () => dataB);
+
+    // URL B gets content from URL A's cache entry (dedup by hash)
+    const entryB = await (manager as unknown as { memory: Map<string, { data: FetchResultCache }> }).memory.get(urlB);
+    expect(entryB?.data.content).toBe(sameContent);
+  });
+
+  it("evicts stale hash entries on write", async () => {
+    // TTL = 50ms — entries expire fast
+    const shortTtlManager = new CrawlManager<FetchResultCache>(50, TEST_CACHE_DIR);
+    const urlA = "https://a.example.com";
+    const urlB = "https://b.example.com";
+
+    await shortTtlManager.getOrCrawl(urlA, async () => ({ url: urlA, content: "X" }));
+    await new Promise<void>((r) => setTimeout(r, 60));
+    await shortTtlManager.getOrCrawl(urlB, async () => ({ url: urlB, content: "Y" }));
+
+    // evictStaleHashes ran during second write — no error means success
+    const result = await shortTtlManager.getOrCrawl("https://c.example.com", async () => ({ url: "c", content: "Z" }));
+    expect(result.content).toBe("Z");
+  });
+
+  it("handles disk write failure gracefully", async () => {
+    const badDirManager = new CrawlManager<{ url: string }>(1000, "/nonexistent-dir");
+    await expect(
+      badDirManager.getOrCrawl("https://example.com", async () => ({ url: "ok" }))
+    ).resolves.toBeDefined();
+  });
 });

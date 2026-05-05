@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ScoredUrl } from "./types";
-import { extractMetadata } from "./crawler";
+import { extractMetadata, isFallbackPage } from "./crawler";
 
 describe("extractMetadata", () => {
   it('parses Jina Markdown format with Title prefix', () => {
@@ -98,8 +98,44 @@ ${longContent}
 `;
 
     const result = extractMetadata(markdown, 'https://example.ai/');
-    
+
     expect(result.content?.length).toBeLessThanOrEqual(3000);
+  });
+});
+
+describe("isFallbackPage", () => {
+  it("returns true when title contains 404", () => {
+    const content = "<html><head><title>404 - Page Not Found</title></head></html>";
+    expect(isFallbackPage(content, "https://example.com/deep/nested/path")).toBe(true);
+  });
+
+  it("returns false for homepage URL", () => {
+    const content = "<html><head><title>404 - Page Not Found</title></head></html>";
+    expect(isFallbackPage(content, "https://example.com/")).toBe(false);
+  });
+
+  it("returns false for empty content", () => {
+    expect(isFallbackPage("", "https://example.com/page")).toBe(false);
+  });
+
+  it("does not throw on malformed URL", () => {
+    const content = "<html><head><title>Site</title></head></html>";
+    expect(() => isFallbackPage(content, "not-a-url")).not.toThrow();
+  });
+
+  it("returns true for site not found title", () => {
+    const content = "<html><head><title>Site Not Found | Provider</title></head></html>";
+    expect(isFallbackPage(content, "https://example.com/page")).toBe(true);
+  });
+
+  it("returns true for page not found title", () => {
+    const content = "<html><head><title>Page Not Found | MySite</title></head></html>";
+    expect(isFallbackPage(content, "https://example.com/nonexistent")).toBe(true);
+  });
+
+  it("returns false for normal page title", () => {
+    const content = "<html><head><title>About Us - Company</title></head></html>";
+    expect(isFallbackPage(content, "https://example.com/about")).toBe(false);
   });
 });
 

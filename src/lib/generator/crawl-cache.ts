@@ -1,8 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
 
-// Railway: set CRAWL_CACHE_DIR=/tmp/.cache in Railway Dashboard env vars
-// Or use any writable directory via CRAWL_CACHE_DIR environment variable
 const CACHE_DIR = process.env.CRAWL_CACHE_DIR ?? ".cache";
 
 function getDefaultTtlMs(): number {
@@ -21,6 +19,7 @@ class CrawlManager<T> {
   private readonly ttlMs: number;
   private readonly cacheDir: string;
   private readonly cacheFile: string;
+  private contentHashes = new Map<string, { url: string; timestamp: number }>();
 
   constructor(ttlMs?: number, cacheDir?: string) {
     this.ttlMs = ttlMs ?? getDefaultTtlMs();
@@ -31,6 +30,26 @@ class CrawlManager<T> {
   private isExpired(entry: CacheEntry<unknown>): boolean {
     if (this.ttlMs === 0) return true;
     return Date.now() - entry.timestamp > this.ttlMs;
+  }
+
+  private hashContent(content: string): string {
+    // FNV-1a — fast non-crypto hash with good distribution for content dedup
+    let hash = 2166136261;
+    for (let i = 0; i < content.length; i++) {
+      hash ^= content.charCodeAt(i);
+      hash = (hash * 16777619) & 0xffffffff;
+    }
+    return (hash >>> 0).toString(36);
+  }
+
+  private evictStaleHashes(): void {
+    if (this.ttlMs === 0) return;
+    const now = Date.now();
+    for (const [h, entry] of this.contentHashes) {
+      if (now - entry.timestamp > this.ttlMs) {
+        this.contentHashes.delete(h);
+      }
+    }
   }
 
   private async loadDiskCache(): Promise<void> {
@@ -89,6 +108,24 @@ class CrawlManager<T> {
       .then(async (data) => {
         const entry: CacheEntry<T> = { data, timestamp: Date.now() };
         this.memory.set(url, entry);
+
+        if (typeof data === "object" && data !== null && "content" in data) {
+          const content = String((data as Record<string, unknown>)["content"]);
+          if (content) {
+            const hash = this.hashContent(content);
+            const existingEntry = this.contentHashes.get(hash);
+            if (existingEntry && existingEntry.url !== url) {
+              const existingData = this.memory.get(existingEntry.url);
+              if (existingData) {
+                this.memory.set(url, existingData);
+              }
+            } else {
+              this.contentHashes.set(hash, { url, timestamp: Date.now() });
+            }
+            this.evictStaleHashes();
+          }
+        }
+
         await this.writeDiskCache();
         return data;
       })
