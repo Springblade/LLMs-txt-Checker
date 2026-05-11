@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DiscoverResult, FileType, FileGenerateResult, QuotaError } from "@/lib/discovery/types";
 import { FILE_TIER } from "@/lib/discovery/types";
@@ -35,7 +35,7 @@ const TIER_MAP: Record<string, Tier> = {
   complete: "optional",
 };
 
-export default function ResultsPage() {
+function ResultsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawUrl = searchParams.get("url") ?? "";
@@ -372,5 +372,13 @@ export default function ResultsPage() {
         isGenerating={isGeneratingAll}
       />
     </div>
+  );
+}
+
+export default function ResultsPage() {
+  return (
+    <Suspense fallback={<ResultsSkeleton />}>
+      <ResultsPageInner />
+    </Suspense>
   );
 }
