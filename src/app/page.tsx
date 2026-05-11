@@ -1,369 +1,174 @@
 "use client";
 
-import { useState } from "react";
-import { SmartForm } from "@/components/smart-form";
-import SiteHeader from "@/components/site-header";
-import AppFooter from "@/components/app-footer";
-import { ResultSection } from "@/components/result-section";
-import type { DiscoverResult, FileType, FileGenerateResult, QuotaError } from "@/lib/discovery/types";
+import { useRouter } from "next/navigation";
+import { HeroSection } from "@/components/landing/hero-section";
+import { ProblemSection } from "@/components/landing/problem-section";
+import { WorkflowSection } from "@/components/landing/workflow-section";
+import { FileShowcaseSection } from "@/components/landing/file-showcase-section";
 
 export default function HomePage() {
-  const [result, setResult] = useState<DiscoverResult | null>(null);
-  const [generatingFiles, setGeneratingFiles] = useState<Map<FileType, FileGenerateResult>>(new Map());
-  const [inProgressFiles, setInProgressFiles] = useState<Set<FileType>>(new Set());
-  const [quotaError, setQuotaError] = useState<QuotaError | null>(null);
+  const router = useRouter();
 
-  const handleResult = (r: DiscoverResult) => {
-    setResult(r);
-  };
-
-  const handleGenerate = async (fileType: FileType) => {
-    if (!result) return;
-
-    // Add to in-progress set so spinner shows immediately
-    setInProgressFiles((prev) => new Set([...prev, fileType]));
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: result.origin, fileType }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setGeneratingFiles((prev) => {
-          const next = new Map(prev);
-          if (data.success && data.content) {
-            next.set(fileType, {
-              type: fileType,
-              success: true,
-              content: data.content,
-              errors: data.errors ?? [],
-              warnings: data.warnings ?? [],
-              checklist: data.checklist ?? [],
-            });
-          } else if (data.error) {
-            next.set(fileType, {
-              type: fileType,
-              success: false,
-              content: "",
-              errors: data.errors ?? [{ rule: "generation_failed", message: data.error }],
-              warnings: data.warnings ?? [],
-              checklist: data.checklist ?? [],
-            });
-            // Capture quota/rate limit errors
-            if (data.errorCode === "QUOTA_EXHAUSTED" || data.errorCode === "RATE_LIMITED") {
-              setQuotaError({
-                errorCode: data.errorCode,
-                message: data.error,
-                suggestions: data.suggestions ?? [],
-              });
-            }
-          }
-          return next;
-        });
-      } else if (res.status === 429) {
-        // HTTP 429 = rate limit exceeded
-        const data = await res.json();
-        setQuotaError({
-          errorCode: data.errorCode ?? "RATE_LIMITED",
-          message: data.error ?? "Rate limit exceeded",
-          suggestions: data.suggestions ?? ["Wait a few minutes and try again"],
-        });
-      } else {
-        // Other errors (500, etc.)
-        try {
-          const data = await res.json();
-          setGeneratingFiles((prev) => {
-            const next = new Map(prev);
-            next.set(fileType, {
-              type: fileType,
-              success: false,
-              content: "",
-              errors: data.errors ?? [{ rule: "generation_failed", message: data.error ?? `HTTP ${res.status}` }],
-              warnings: [],
-              checklist: [],
-            });
-            return next;
-          });
-        } catch {
-          // JSON parse failed
-          setGeneratingFiles((prev) => {
-            const next = new Map(prev);
-            next.set(fileType, {
-              type: fileType,
-              success: false,
-              content: "",
-              errors: [{ rule: "generation_failed", message: `Server error (HTTP ${res.status})` }],
-              warnings: [],
-              checklist: [],
-            });
-            return next;
-          });
-        }
-      }
-    } catch (e) {
-      // Network error
-      setGeneratingFiles((prev) => {
-        const next = new Map(prev);
-        next.set(fileType, {
-          type: fileType,
-          success: false,
-          content: "",
-          errors: [{ rule: "generation_failed", message: "Network error. Please check your connection." }],
-          warnings: [],
-          checklist: [],
-        });
-        return next;
-      });
-    } finally {
-      // Remove from in-progress set
-      setInProgressFiles((prev) => {
-        const next = new Set(prev);
-        next.delete(fileType);
-        return next;
-      });
-    }
-  };
-
-  const handleGenerateAll = async () => {
-    if (!result) return;
-
-    const missingFileTypes = result.missingFiles;
-
-    // Add all to in-progress set so spinners show immediately
-    setInProgressFiles(new Set(missingFileTypes));
-
-    try {
-      const nextMap = new Map<FileType, FileGenerateResult>();
-
-      for (const fileType of missingFileTypes) {
-        const res = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: result.origin, fileType }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.content) {
-            nextMap.set(fileType, {
-              type: fileType,
-              success: true,
-              content: data.content,
-              errors: data.errors ?? [],
-              warnings: data.warnings ?? [],
-              checklist: data.checklist ?? [],
-            });
-          } else if (data.error) {
-            nextMap.set(fileType, {
-              type: fileType,
-              success: false,
-              content: "",
-              errors: data.errors ?? [{ rule: "generation_failed", message: data.error }],
-              warnings: data.warnings ?? [],
-              checklist: data.checklist ?? [],
-            });
-            // Capture quota/rate limit errors
-            if (data.errorCode === "QUOTA_EXHAUSTED" || data.errorCode === "RATE_LIMITED") {
-              setQuotaError({
-                errorCode: data.errorCode,
-                message: data.error,
-                suggestions: data.suggestions ?? [],
-              });
-            }
-          }
-        } else if (res.status === 429) {
-          const data = await res.json();
-          setQuotaError({
-            errorCode: data.errorCode ?? "RATE_LIMITED",
-            message: data.error ?? "Rate limit exceeded",
-            suggestions: data.suggestions ?? ["Wait a few minutes and try again"],
-          });
-        } else {
-          // Other errors
-          try {
-            const data = await res.json();
-            nextMap.set(fileType, {
-              type: fileType,
-              success: false,
-              content: "",
-              errors: data.errors ?? [{ rule: "generation_failed", message: data.error ?? `HTTP ${res.status}` }],
-              warnings: [],
-              checklist: [],
-            });
-          } catch {
-            nextMap.set(fileType, {
-              type: fileType,
-              success: false,
-              content: "",
-              errors: [{ rule: "generation_failed", message: `Server error (HTTP ${res.status})` }],
-              warnings: [],
-              checklist: [],
-            });
-          }
-        }
-      }
-      setGeneratingFiles(new Map(nextMap));
-    } catch (e) {
-      // Network error - mark all as failed
-      const errorMap = new Map<FileType, FileGenerateResult>();
-      for (const ft of missingFileTypes) {
-        errorMap.set(ft, {
-          type: ft,
-          success: false,
-          content: "",
-          errors: [{ rule: "generation_failed", message: "Network error. Please check your connection." }],
-          warnings: [],
-          checklist: [],
-        });
-      }
-      setGeneratingFiles(errorMap);
-    } finally {
-      setInProgressFiles(new Set());
-    }
-  };
-
-  const handleReset = () => {
-    setResult(null);
-    setGeneratingFiles(new Map());
-    setInProgressFiles(new Set());
-    setQuotaError(null);
+  const handleNavigate = (url: string) => {
+    router.push(`/results?url=${encodeURIComponent(url)}`);
   };
 
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
         minHeight: "100vh",
-        backgroundColor: "#ffffff",
+        background: "var(--mm-bg)",
+        backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(20, 86, 240, 0.08) 0%, transparent 60%)",
       }}
     >
-      <SiteHeader onLogoClick={() => { handleReset(); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
-
-      {/* Hero + Form */}
-      <section
+      {/* Header */}
+      <header
         style={{
-          backgroundColor: "#ffffff",
-          paddingTop: "5rem",
-          paddingBottom: "2rem",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          background: "rgba(9,9,14,0.8)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid var(--mm-border)",
         }}
       >
         <div
           style={{
-            maxWidth: "1280px",
-            marginLeft: "auto",
-            marginRight: "auto",
-            paddingLeft: "1.5rem",
-            paddingRight: "1.5rem",
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "16px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          {/* Hero content — centered */}
+          {/* Logo */}
           <div
             style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: 22,
+              fontWeight: 700,
+              color: "var(--mm-text)",
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
-              textAlign: "center",
+              gap: 8,
             }}
           >
-            {/* Label */}
             <span
               style={{
-                display: "block",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
-                color: "#8e8e93",
-                marginBottom: "0.375rem",
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "var(--mm-brand)",
+                boxShadow: "0 0 10px var(--mm-brand)",
               }}
-            >
-              FOR AI AGENTS
-            </span>
+            />
+            Aivify
+          </div>
 
-            {/* Headline */}
-            <h1
+          {/* Nav */}
+          <nav style={{ display: "flex", alignItems: "center", gap: 32 }}>
+            <a
+              href="#features"
               style={{
-                fontFamily: '"Outfit", sans-serif',
-                fontSize: "clamp(2.5rem, 8vw, 5rem)",
+                color: "var(--mm-text-muted)",
+                textDecoration: "none",
+                fontSize: 14,
                 fontWeight: 500,
-                letterSpacing: "-0.025em",
-                lineHeight: 1.1,
-                color: "#222222",
-                marginBottom: "0.625rem",
+                transition: "color 0.2s",
               }}
             >
-              Free AI Discovery Scanner
-            </h1>
-
-            {/* Subtext */}
-            <p
+              Features
+            </a>
+            <a
+              href="#files"
               style={{
-                fontSize: "1.125rem",
-                color: "#45515e",
-                lineHeight: 1.6,
-                maxWidth: "44ch",
-                marginBottom: 0,
+                color: "var(--mm-text-muted)",
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: 500,
+                transition: "color 0.2s",
               }}
             >
-              Check any website for AI-ready files. Missing? We generate them for you automatically.
-            </p>
-          </div>
-
-          {/* Form Card */}
-          <div
-            style={{
-              marginTop: "1.25rem",
-              backgroundColor: "#ffffff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "16px",
-              padding: "1.25rem",
-              maxWidth: "38rem",
-              marginLeft: "auto",
-              marginRight: "auto",
-              boxShadow: "0 0 15px rgba(44,30,116,0.16)",
-            }}
-          >
-            <SmartForm onResult={handleResult} />
-          </div>
+              File Types
+            </a>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "var(--mm-text-muted)",
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+              </svg>
+            </a>
+          </nav>
         </div>
-      </section>
+      </header>
 
-      {/* Inline Results */}
-      {result && (
-        <section
+      <main>
+        <HeroSection onNavigate={handleNavigate} />
+        <ProblemSection />
+        <WorkflowSection />
+        <FileShowcaseSection />
+      </main>
+
+      {/* Footer */}
+      <footer
+        style={{
+          padding: "48px 24px",
+          borderTop: "1px solid var(--mm-border)",
+          marginTop: 40,
+        }}
+      >
+        <div
           style={{
-            backgroundColor: "#ffffff",
-            paddingBottom: "4rem",
+            maxWidth: 1100,
+            margin: "0 auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 24,
           }}
         >
           <div
             style={{
-              maxWidth: "1280px",
-              marginLeft: "auto",
-              marginRight: "auto",
-              paddingLeft: "1.5rem",
-              paddingRight: "1.5rem",
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: 18,
+              fontWeight: 700,
+              color: "var(--mm-text)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
             }}
           >
-            <ResultSection
-              result={result}
-              generatingFiles={generatingFiles}
-              inProgressFiles={inProgressFiles}
-              quotaError={quotaError}
-              onGenerate={handleGenerate}
-              onGenerateAll={handleGenerateAll}
-              onReset={handleReset}
-              onDismissQuotaError={() => setQuotaError(null)}
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--mm-brand)",
+                boxShadow: "0 0 8px var(--mm-brand)",
+              }}
             />
+            Aivify
           </div>
-        </section>
-      )}
-
-      <AppFooter />
+          <p style={{ color: "var(--mm-text-muted)", fontSize: 13 }}>
+            Open source. Built for the AI web.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

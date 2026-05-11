@@ -26,7 +26,7 @@ export async function crawlWebsite(url: string): Promise<{
   const filtered = filterUrls(deduplicated, []);
 
   // Fetch llms.txt from the origin (if it exists)
-  let origin = new URL(url).origin;
+  const origin = new URL(url).origin;
   const llmsTxtContent = await fetchLlmsTxt(origin);
 
   // Take top 50 URLs, convert to ScoredUrl format for crawlPages
