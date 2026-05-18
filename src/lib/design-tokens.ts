@@ -1,5 +1,5 @@
 /**
- * Dark theme design tokens — matching Aivify demo aesthetic.
+ * Aivify design tokens — dark theme values.
  * All components reference these via CSS variables; this file documents
  * the intent behind each token value.
  */
@@ -40,3 +40,18 @@ export const tierInfo = {
 } as const;
 
 export type Tier = keyof typeof tierInfo;
+
+export const layout = {
+  sidebarWidth: 244,
+  rightPanelWidth: 288,
+  headerHeight: 46,
+} as const;
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  '2xl': 32,
+} as const;

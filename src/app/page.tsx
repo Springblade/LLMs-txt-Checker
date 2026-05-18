@@ -1,17 +1,32 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { HeroSection } from "@/components/landing/hero-section";
+import { SocialProofStrip } from "@/components/landing/social-proof-strip";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { WorkflowSection } from "@/components/landing/workflow-section";
 import { FileShowcaseSection } from "@/components/landing/file-showcase-section";
+import { PricingSection } from "@/components/landing/pricing-section";
+import { TestimonialsSection } from "@/components/landing/testimonials-section";
+import { FaqAccordion } from "@/components/landing/faq-accordion";
+import { Logo } from "@/components/site-header";
 
 export default function HomePage() {
   const router = useRouter();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleNavigate = (url: string) => {
     router.push(`/results?url=${encodeURIComponent(url)}`);
   };
+
+  const navLinks = [
+    { label: "Features", href: "#features" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "FAQ", href: "#faq" },
+  ];
+
+  const closeMobileNav = () => setMobileNavOpen(false);
 
   return (
     <div
@@ -40,67 +55,48 @@ export default function HomePage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            position: "relative",
           }}
         >
           {/* Logo */}
-          <div
-            style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontSize: 22,
-              fontWeight: 700,
-              color: "var(--mm-text)",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: "var(--mm-brand)",
-                boxShadow: "0 0 10px var(--mm-brand)",
-              }}
-            />
-            Aivify
+          <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }} className="site-header-logo">
+            <Logo />
           </div>
 
-          {/* Nav */}
-          <nav style={{ display: "flex", alignItems: "center", gap: 32 }}>
-            <a
-              href="#features"
-              style={{
-                color: "var(--mm-text-muted)",
-                textDecoration: "none",
-                fontSize: 14,
-                fontWeight: 500,
-                transition: "color 0.2s",
-              }}
-            >
-              Features
-            </a>
-            <a
-              href="#files"
-              style={{
-                color: "var(--mm-text-muted)",
-                textDecoration: "none",
-                fontSize: 14,
-                fontWeight: 500,
-                transition: "color 0.2s",
-              }}
-            >
-              File Types
-            </a>
+          {/* Desktop Nav */}
+          <nav
+            className="desktop-nav"
+            style={{ display: "flex", alignItems: "center", gap: 32 }}
+          >
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--mm-text)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "var(--mm-text-muted)"; }}
+                style={{
+                  color: "var(--mm-text-muted)",
+                  textDecoration: "none",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  transition: "color 0.2s",
+                }}
+              >
+                {link.label}
+              </a>
+            ))}
             <a
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
+              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--mm-text)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "var(--mm-text-muted)"; }}
               style={{
                 color: "var(--mm-text-muted)",
                 textDecoration: "none",
                 display: "flex",
                 alignItems: "center",
+                transition: "color 0.2s",
               }}
             >
               <svg
@@ -113,14 +109,92 @@ export default function HomePage() {
               </svg>
             </a>
           </nav>
+
+          {/* Mobile hamburger */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            aria-label="Toggle menu"
+            aria-expanded={mobileNavOpen}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 4,
+              display: "none",
+              color: "var(--mm-text-muted)",
+            }}
+          >
+            {mobileNavOpen ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
+
+          {/* Mobile nav drawer */}
+          {mobileNavOpen && (
+            <nav
+              className="mobile-nav-drawer"
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                background: "rgba(9,9,14,0.98)",
+                backdropFilter: "blur(12px)",
+                borderBottom: "1px solid var(--mm-border)",
+                padding: "16px 24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+                zIndex: 99,
+              }}
+            >
+              {[...navLinks, { label: "GitHub", href: "https://github.com", external: true }].map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target={link.href.startsWith("http") ? "_blank" : undefined}
+                  rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                  onClick={closeMobileNav}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--mm-text)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--mm-text-muted)"; }}
+                  style={{
+                    color: "var(--mm-text-muted)",
+                    textDecoration: "none",
+                    fontSize: 15,
+                    fontWeight: 500,
+                    padding: "12px 0",
+                    borderBottom: "1px solid var(--mm-border)",
+                    transition: "color 0.2s",
+                    display: "block",
+                  }}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          )}
         </div>
       </header>
 
       <main>
         <HeroSection onNavigate={handleNavigate} />
+        <SocialProofStrip />
         <ProblemSection />
         <WorkflowSection />
         <FileShowcaseSection />
+        <PricingSection />
+        <TestimonialsSection />
+        <FaqAccordion />
       </main>
 
       {/* Footer */}
@@ -142,28 +216,7 @@ export default function HomePage() {
             gap: 24,
           }}
         >
-          <div
-            style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontSize: 18,
-              fontWeight: 700,
-              color: "var(--mm-text)",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "var(--mm-brand)",
-                boxShadow: "0 0 8px var(--mm-brand)",
-              }}
-            />
-            Aivify
-          </div>
+          <Logo />
           <p style={{ color: "var(--mm-text-muted)", fontSize: 13 }}>
             Open source. Built for the AI web.
           </p>

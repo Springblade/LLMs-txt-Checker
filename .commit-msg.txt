@@ -1,0 +1,11 @@
+feat: add logo navigation, upgrade modal, and landing page improvements
+
+- Wrap SiteLogo in anchor tag to navigate to home on click
+- Add use-generation-quota hook with 2 free generations per origin
+- Add upgrade modal with billing placeholder
+- Add pricing section with free/tier plans
+- Add results header, sidebar, right panel, skeleton components
+- Add social proof strip, testimonials, FAQ accordion
+- Add code preview, file tab bar, icon sidebar components
+- Add url-badge and missing-file-state components
+- Update design tokens and global styles

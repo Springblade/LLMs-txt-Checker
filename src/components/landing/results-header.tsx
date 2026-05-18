@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/site-header";
 import Link from "next/link";
 
 interface ResultsHeaderProps {
@@ -30,31 +31,7 @@ export function ResultsHeader({ url }: ResultsHeaderProps) {
         }}
       >
         {/* Logo */}
-        <Link
-          href="/"
-          style={{
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: 20,
-            fontWeight: 700,
-            color: "var(--mm-text)",
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "var(--mm-brand)",
-              boxShadow: "0 0 10px var(--mm-brand)",
-            }}
-          />
-          Aivify
-        </Link>
+        <Logo />
 
         {/* URL badge */}
         <div

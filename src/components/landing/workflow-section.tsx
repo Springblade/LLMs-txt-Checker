@@ -58,6 +58,7 @@ const steps: Step[] = [
 export function WorkflowSection() {
   return (
     <section
+      id="features"
       style={{
         padding: "80px 24px",
         maxWidth: 1100,

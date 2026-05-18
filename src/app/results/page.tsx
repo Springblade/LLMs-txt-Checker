@@ -1,39 +1,57 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { DiscoverResult, FileType, FileGenerateResult, QuotaError } from "@/lib/discovery/types";
+import type { DiscoverResult, FileType, FileScanResult } from "@/lib/discovery/types";
 import { FILE_TIER } from "@/lib/discovery/types";
-import type { Tier } from "@/lib/design-tokens";
-import { ResultsHeader } from "@/components/landing/results-header";
-import { ScoreSection } from "@/components/landing/score-section";
-import { TabFilter } from "@/components/landing/tab-filter";
-import { FileCardDetail } from "@/components/landing/file-card-detail";
-import { BulkActionsBar } from "@/components/landing/bulk-actions-bar";
+import type { FileTier } from "@/lib/discovery/types";
+
 import { ResultsSkeleton } from "@/components/landing/results-skeleton";
+import { IconSidebar } from "@/components/landing/icon-sidebar";
+import { CodePreview } from "@/components/landing/code-preview";
+import { ResultsRightPanel } from "@/components/landing/results-right-panel";
+import { MissingFileState } from "@/components/landing/missing-file-state";
+import { FileTabBar } from "@/components/landing/file-tab-bar";
+import type { TabFile } from "@/components/landing/file-tab-bar";
+import { UrlBadge } from "@/components/landing/url-badge";
+import { SiteLogo } from "@/components/site-logo";
+import { FILE_DESCRIPTIONS } from "@/lib/file-descriptions";
+import { UpgradeModal } from "@/components/landing/upgrade-modal";
+import {
+  getGenerationCount,
+  isOverGenerationLimit,
+  incrementGenerationCount,
+  GENERATION_LIMIT,
+} from "@/hooks/use-generation-quota";
 
-function computeScore(result: DiscoverResult): number {
-  const total = result.files.length;
-  if (total === 0) return 0;
-  const found = result.files.filter((f) => f.found).length;
-  return Math.round((found / total) * 100);
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function handleDownload(file: FileScanResult) {
+  const blob = new Blob([file.content ?? ""], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file.type;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
-function computeTierLabel(score: number): { label: string; color: string; description: string } {
-  if (score >= 86)
-    return { label: "Excellent", color: "#22c55e", description: "Your site has excellent AI discovery coverage." };
-  if (score >= 61)
-    return { label: "Good", color: "#1456f0", description: "Your site has good AI discovery coverage. A few improvements recommended." };
-  if (score >= 31)
-    return { label: "Fair", color: "#eab308", description: "Your site has basic AI discovery coverage. Adding essential missing files would significantly improve AI agent understanding." };
-  return { label: "Poor", color: "#ef4444", description: "Your site lacks most AI discovery files. Start by adding the essential files." };
+function toPanelFileResult(file: FileScanResult) {
+  const status: "found" | "missing" | "partial" = file.found ? "found" : file.content ? "partial" : "missing";
+  const tier = FILE_TIER[file.type];
+  return {
+    name: file.type,
+    tier,
+    status,
+    lines: file.content ? file.content.split("\n").length : 0,
+    url: file.url || null,
+    content: file.content || null,
+  };
 }
 
-const TIER_MAP: Record<string, Tier> = {
-  essential: "essential",
-  recommended: "recommended",
-  complete: "optional",
-};
+// ─── Page Component ───────────────────────────────────────────────────────────
 
 function ResultsPageInner() {
   const router = useRouter();
@@ -43,12 +61,11 @@ function ResultsPageInner() {
   const [result, setResult] = useState<DiscoverResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [, setGeneratingFiles] = useState<Map<FileType, FileGenerateResult>>(new Map());
   const [inProgressFiles, setInProgressFiles] = useState<Set<FileType>>(new Set());
-  const [, setQuotaError] = useState<QuotaError | null>(null);
-  const [activeTab, setActiveTab] = useState("all");
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Active file state
+  const [activeFile, setActiveFile] = useState<FileScanResult | undefined>(undefined);
 
   useEffect(() => {
     if (!rawUrl) {
@@ -81,64 +98,89 @@ function ResultsPageInner() {
     fetchResults();
   }, [rawUrl, router]);
 
+  // Initialize activeFile when result arrives
   useEffect(() => {
     if (!result) return;
-    setSelectedFiles(new Set(result.missingFiles));
+    if (!activeFile && result.files.length > 0) {
+      setActiveFile(result.files[0]);
+    }
+  }, [result, activeFile]);
+
+  // Sync activeFile when result updates
+  useEffect(() => {
+    if (!result || !activeFile) return;
+    const updated = result.files.find((f) => f.type === activeFile.type);
+    if (updated && updated !== activeFile) {
+      setActiveFile(updated);
+    }
+  }, [result, activeFile]);
+
+  // Tier counts for strip
+  const tierCounts = useMemo(() => {
+    if (!result) return undefined;
+    const counts: Record<FileTier, number> = { essential: 0, recommended: 0, complete: 0 };
+    for (const f of result.files) {
+      counts[FILE_TIER[f.type]]++;
+    }
+    return counts;
   }, [result]);
+
+  // All files as tabs
+  const allTabs: TabFile[] = useMemo(
+    () =>
+      result
+        ? result.files.map((f) => {
+            const status: "found" | "missing" | "partial" = f.found ? "found" : f.content ? "partial" : "missing";
+            return { type: f.type, status, tier: FILE_TIER[f.type] };
+          })
+        : [],
+    [result]
+  );
 
   const handleGenerate = async (fileType: FileType) => {
     if (!result) return;
+
+    const origin = result.origin;
+
+    // Client-side quota gate — block before API call
+    if (isOverGenerationLimit(origin)) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setInProgressFiles((prev) => new Set([...prev, fileType]));
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: result.origin, fileType }),
+        body: JSON.stringify({ url: origin, fileType }),
       });
       const data = await res.json();
-      setGeneratingFiles((prev) => {
-        const next = new Map(prev);
-        if (data.success && data.content) {
-          next.set(fileType, {
-            type: fileType,
-            success: true,
-            content: data.content,
-            errors: data.errors ?? [],
-            warnings: data.warnings ?? [],
-            checklist: data.checklist ?? [],
-          });
-        } else if (data.error) {
-          next.set(fileType, {
-            type: fileType,
-            success: false,
-            content: "",
-            errors: data.errors ?? [{ rule: "generation_failed", message: data.error }],
-            warnings: data.warnings ?? [],
-            checklist: data.checklist ?? [],
-          });
-          if (data.errorCode === "QUOTA_EXHAUSTED" || data.errorCode === "RATE_LIMITED") {
-            setQuotaError({
-              errorCode: data.errorCode,
-              message: data.error,
-              suggestions: data.suggestions ?? [],
-            });
-          }
-        }
-        return next;
-      });
-    } catch {
-      setGeneratingFiles((prev) => {
-        const next = new Map(prev);
-        next.set(fileType, {
+
+      if (data.success && data.content) {
+        // Increment quota counter on successful generation
+        incrementGenerationCount(origin);
+        const generatedFile: FileScanResult = {
           type: fileType,
-          success: false,
-          content: "",
-          errors: [{ rule: "network_error", message: "Network error." }],
-          warnings: [],
-          checklist: [],
+          found: true,
+          content: data.content,
+          checklist: data.checklist ?? [],
+          errors: data.errors ?? data.validation?.errors ?? [],
+          warnings: data.warnings ?? data.validation?.warnings ?? [],
+          url: "",
+        };
+        setResult((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            files: prev.files.map((f) =>
+              f.type === fileType ? generatedFile : f,
+            ),
+          };
         });
-        return next;
-      });
+      }
+    } catch {
+      // swallow — inProgressFiles still cleared in finally
     } finally {
       setInProgressFiles((prev) => {
         const next = new Set(prev);
@@ -148,229 +190,179 @@ function ResultsPageInner() {
     }
   };
 
-  const handleToggle = (name: string) => {
-    setSelectedFiles((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
+  const handleFileSelect = (fileType: string) => {
+    const file = result?.files.find((f) => f.type === fileType);
+    if (file) setActiveFile(file);
   };
 
-  const handleSelectAllMissing = () => {
-    if (!result) return;
-    setSelectedFiles(new Set(result.missingFiles));
-  };
+  const scannedUrl = result?.origin ?? rawUrl;
+  const showMissingState =
+    activeFile && !activeFile.found && !activeFile.content;
 
-  const handleClearAll = () => setSelectedFiles(new Set());
+  const usedCount = result ? getGenerationCount(result.origin) : 0;
 
-  const handleGenerateAll = async () => {
-    if (!result) return;
-    const toGenerate = result.missingFiles.filter((f) => selectedFiles.has(f));
-    if (toGenerate.length === 0) return;
+  // ── Error / loading states ──────────────────────────────────────────────────
 
-    setIsGeneratingAll(true);
-    setInProgressFiles(new Set(toGenerate));
-
-    const nextMap = new Map<FileType, FileGenerateResult>();
-
-    for (const ft of toGenerate) {
-      try {
-        const res = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: result.origin, fileType: ft }),
-        });
-        const data = await res.json();
-        if (data.success && data.content) {
-          nextMap.set(ft, {
-            type: ft,
-            success: true,
-            content: data.content,
-            errors: data.errors ?? [],
-            warnings: data.warnings ?? [],
-            checklist: data.checklist ?? [],
-          });
-        } else if (data.error) {
-          nextMap.set(ft, {
-            type: ft,
-            success: false,
-            content: "",
-            errors: data.errors ?? [{ rule: "generation_failed", message: data.error }],
-            warnings: data.warnings ?? [],
-            checklist: data.checklist ?? [],
-          });
-          if (data.errorCode === "QUOTA_EXHAUSTED" || data.errorCode === "RATE_LIMITED") {
-            setQuotaError({
-              errorCode: data.errorCode,
-              message: data.error,
-              suggestions: data.suggestions ?? [],
-            });
-          }
-        }
-      } catch {
-        nextMap.set(ft, {
-          type: ft,
-          success: false,
-          content: "",
-          errors: [{ rule: "network_error", message: "Network error." }],
-          warnings: [],
-          checklist: [],
-        });
-      }
-    }
-
-    setGeneratingFiles((prev) => new Map([...prev, ...nextMap]));
-    setInProgressFiles(new Set());
-    setIsGeneratingAll(false);
-  };
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: "100vh", background: "var(--mm-bg)" }}>
-        <ResultsHeader url={rawUrl} />
-        <ResultsSkeleton />
-      </div>
-    );
-  }
-
-  if (error || !result) {
+  if (error || (!loading && !result)) {
     return (
       <div
         style={{
           minHeight: "100vh",
-          background: "var(--mm-bg)",
+          background: "var(--bg)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
         <div style={{ textAlign: "center", padding: 48 }}>
-          <p style={{ color: "var(--mm-error)", marginBottom: 16 }}>{error ?? "Something went wrong."}</p>
-          <a href="/" style={{ color: "var(--mm-brand)" }}>Go back home</a>
+          <p style={{ color: "var(--error)", marginBottom: 16 }}>{error ?? "Something went wrong."}</p>
+          <a href="/" style={{ color: "var(--brand)" }}>Go back home</a>
         </div>
       </div>
     );
   }
 
-  const score = computeScore(result);
-  const tierInfo = computeTierLabel(score);
-  const foundCount = result.files.filter((f) => f.found).length;
-  const missingCount = result.files.filter((f) => !f.found).length;
+  if (loading || !result) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", background: "var(--bg)" }}>
+        {/* Header */}
+        <div style={{ height: 56, borderBottom: "1px solid var(--mm-border)", background: "var(--mm-bg)", flexShrink: 0 }} />
+        <ResultsSkeleton />
+      </div>
+    );
+  }
 
-  const counts = {
-    all: result.files.length,
-    essential: result.files.filter((f) => FILE_TIER[f.type] === "essential").length,
-    recommended: result.files.filter((f) => FILE_TIER[f.type] === "recommended").length,
-    optional: result.files.filter((f) => FILE_TIER[f.type] === "complete").length,
-  };
-
-  const filteredFiles =
-    activeTab === "all"
-      ? result.files
-      : result.files.filter((f) => {
-          const ft = FILE_TIER[f.type];
-          return ft === activeTab || (activeTab === "optional" && ft === "complete");
-        });
+  // ── Main layout ───────────────────────────────────────────────────────────
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--mm-bg)",
-        backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(20, 86, 240, 0.08) 0%, transparent 60%)",
-      }}
-    >
-      <ResultsHeader url={rawUrl} />
-
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 120px" }}>
-        <div
-          style={{
-            height: 1,
-            background: `linear-gradient(90deg, transparent 0%, var(--mm-border) 20%, var(--mm-border) 80%, transparent 100%)`,
-          }}
-        />
-
-        <ScoreSection
-          score={score}
-          tier={tierInfo.label}
-          tierColor={tierInfo.color}
-          tierDescription={tierInfo.description}
-          pagesScanned={0}
-          foundCount={foundCount}
-          missingCount={missingCount}
-          partialCount={0}
-        />
-
-        <div
-          style={{
-            height: 1,
-            background: `linear-gradient(90deg, transparent 0%, var(--mm-border) 20%, var(--mm-border) 80%, transparent 100%)`,
-            marginBottom: 48,
-          }}
-        />
-
-        {/* Files section */}
-        <div style={{ animation: "mm-fade-in 0.6s ease-out 0.3s both" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", background: "var(--bg)" }}>
+      {/* Header */}
+      <div
+        style={{
+          height: 56,
+          borderBottom: "1px solid var(--mm-border)",
+          display: "flex",
+          alignItems: "center",
+          padding: "0 16px",
+          gap: 12,
+          background: "var(--mm-bg)",
+          flexShrink: 0,
+        }}
+      >
+        <SiteLogo height={28} />
+        <UrlBadge url={scannedUrl} />
+        {result && (
           <div
+            title={`${usedCount} of ${GENERATION_LIMIT} free generations used`}
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 24,
-              flexWrap: "wrap",
-              gap: 16,
+              gap: 5,
+              padding: "4px 10px",
+              borderRadius: 20,
+              border: "1px solid",
+              borderColor: usedCount >= GENERATION_LIMIT ? "#eab308" : "#27272a",
+              background: usedCount >= GENERATION_LIMIT ? "rgba(234,179,8,0.08)" : "transparent",
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: "'DM Sans', sans-serif",
+              color: usedCount >= GENERATION_LIMIT ? "#eab308" : "#71717a",
+              flexShrink: 0,
+              transition: "border-color 0.2s, background 0.2s, color 0.2s",
             }}
           >
-            <h2
-              style={{
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: "1.25rem",
-                fontWeight: 600,
-                color: "var(--mm-text)",
-              }}
-            >
-              Discovery Files
-            </h2>
-            <TabFilter activeTab={activeTab} onTabChange={setActiveTab} counts={counts} />
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            {usedCount} / {GENERATION_LIMIT}
           </div>
+        )}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {filteredFiles.map((file, idx) => {
-              const status = file.found ? "found" : "missing";
-              const tierKey = FILE_TIER[file.type];
-              const tier: Tier = TIER_MAP[tierKey] ?? "optional";
-              return (
-                <FileCardDetail
-                  key={file.type}
-                  file={{
-                    name: file.type,
-                    tier,
-                    status,
-                    lines: file.content ? file.content.split("\n").length : 0,
-                    content: file.content || null,
-                    checklist: file.checklist,
-                  }}
-                  isSelected={selectedFiles.has(file.type)}
-                  isGenerating={inProgressFiles.has(file.type)}
-                  onToggle={handleToggle}
-                  onGenerate={handleGenerate}
-                  delay={0.1 + idx * 0.06}
-                />
-              );
-            })}
-          </div>
+        <div style={{ marginLeft: "auto" }}>
+          <a
+            href="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: "1px solid var(--mm-border)",
+              background: "var(--mm-bg-secondary)",
+              color: "var(--mm-text-muted)",
+              textDecoration: "none",
+              fontSize: 12,
+              fontWeight: 500,
+              transition: "background 0.15s, color 0.15s",
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            Scan new
+          </a>
         </div>
-      </main>
+      </div>
 
-      <BulkActionsBar
-        selectedCount={selectedFiles.size}
-        totalMissing={missingCount}
-        onSelectAll={handleSelectAllMissing}
-        onClear={handleClearAll}
-        onGenerateAll={handleGenerateAll}
-        isGenerating={isGeneratingAll}
-      />
+      {/* Body */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        {/* Nav rail */}
+        <IconSidebar />
+
+        {/* Main content area */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* Tab bar with tier strip */}
+          <FileTabBar
+            files={allTabs}
+            activeFileType={activeFile?.type}
+            onFileSelect={handleFileSelect}
+            tierCounts={tierCounts}
+          />
+
+          {/* Content body */}
+          {showMissingState ? (
+            <MissingFileState
+              file={{ name: activeFile.type }}
+              description={FILE_DESCRIPTIONS[activeFile.type]}
+              onGenerate={() => handleGenerate(activeFile.type)}
+              isGenerating={inProgressFiles.has(activeFile.type)}
+            />
+          ) : (
+            <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+              {/* Code preview */}
+              <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <CodePreview
+                  content={activeFile?.content ?? ""}
+                  lineCount={activeFile?.content?.split("\n").length ?? 0}
+                />
+              </div>
+
+              {/* Right panel */}
+              {activeFile && (
+                <ResultsRightPanel
+                  file={toPanelFileResult(activeFile)}
+                  checklist={activeFile.checklist}
+                  onGenerate={() => handleGenerate(activeFile.type)}
+                  onDownload={() => handleDownload(activeFile)}
+                  onRegenerate={() => handleGenerate(activeFile.type)}
+                  isGenerating={inProgressFiles.has(activeFile.type)}
+                  allFiles={result.files.map((f) => toPanelFileResult(f))}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Upgrade modal */}
+      {result && (
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          usedCount={usedCount}
+          limit={GENERATION_LIMIT}
+        />
+      )}
     </div>
   );
 }

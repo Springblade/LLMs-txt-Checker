@@ -2,8 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
 /* ═══════════════════════════════════════════════════════════════════════════
-   MiniMax-inspired Light Design System
+   Aivify Design System — Dark + Light Theme
    AI Visibility Scanner — AI Discovery Hub
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -49,6 +51,22 @@
   --mm-info-bg: #f0f9ff;
   --mm-info-border: #bae6fd;
 
+  /* ── Semantic Card Colors ─────────────────────────────────────────── */
+  --mm-card-what-bg: #eef2ff;
+  --mm-card-what-border: #c7d2fe;
+  --mm-card-what-icon: #6366f1;
+  --mm-card-what-label: #4338ca;
+
+  --mm-card-why-bg: #f5f3ff;
+  --mm-card-why-border: #ddd6fe;
+  --mm-card-why-icon: #7c3aed;
+  --mm-card-why-label: #6d28d9;
+
+  --mm-card-consequence-bg: #fff1f2;
+  --mm-card-consequence-border: #fecdd3;
+  --mm-card-consequence-icon: #e11d48;
+  --mm-card-consequence-label: #be123c;
+
   /* ── Border Radius Scale ───────────────────────────────────────────────── */
   --mm-radius-sm: 4px;
   --mm-radius: 8px;
@@ -73,8 +91,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Dark Theme (Aivify Landing + Results Pages)
-   Matching demo: #09090e bg, blue #1456f0, pink #ea5ec1
+   Dashboard Layout Tokens (Dark Theme)
+   Used by results dashboard: sidebar, code preview, right panel
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 [data-theme="dark"] {
@@ -85,6 +103,20 @@
   --mm-surface: #09090e;
   --mm-border: #27272a;
   --mm-border-strong: #3f3f46;
+
+  /* ── Dashboard Layout ──────────────────────────────────────────────────── */
+  --sidebar-width: 244px;
+  --icon-sidebar-width: 48px;
+  --right-panel-width: 288px;
+
+  /* ── Component Radii ────────────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* ── Code Preview ───────────────────────────────────────────────────────── */
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   /* ── Text ─────────────────────────────────────────────────────────────── */
   --mm-text: #e4e4e7;
@@ -119,7 +151,23 @@
   --mm-info-bg: rgba(59, 130, 246, 0.1);
   --mm-info-border: rgba(59, 130, 246, 0.2);
 
-  /* ── Shadow Scale ──────────────────────────────────────────────────────── */
+  /* ── Semantic Card Colors ─────────────────────────────────────────── */
+  --mm-card-what-bg: rgba(99, 102, 241, 0.08);
+  --mm-card-what-border: rgba(129, 140, 248, 0.2);
+  --mm-card-what-icon: #818cf8;
+  --mm-card-what-label: #a5b4fc;
+
+  --mm-card-why-bg: rgba(139, 92, 246, 0.08);
+  --mm-card-why-border: rgba(167, 139, 250, 0.2);
+  --mm-card-why-icon: #a78bfa;
+  --mm-card-why-label: #c4b5fd;
+
+  --mm-card-consequence-bg: rgba(244, 63, 94, 0.08);
+  --mm-card-consequence-border: rgba(251, 113, 133, 0.2);
+  --mm-card-consequence-icon: #fb7185;
+  --mm-card-consequence-label: #fda4af;
+
+  /* ── Shadow Scale ──────────────────────────────────────────────────── */
   --mm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --mm-shadow-md: 0 0 22.576px rgba(0, 0, 0, 0.4);
   --mm-shadow-lg: 0 0 15px rgba(79, 70, 229, 0.15);
@@ -553,4 +601,70 @@ body {
 
 [data-theme="dark"] .footer-dark a:hover {
   color: var(--mm-text);
+}
+
+/* ── Landing Page Responsive Nav ─────────────────────────────────────────── */
+
+@media (min-width: 769px) {
+  .mobile-menu-btn {
+    display: none !important;
+  }
+  .mobile-nav-drawer {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+}
+
+  /* ── Results Icon Sidebar ─────────────────────────────────────────────────── */
+
+.icon-sidebar-btn:hover {
+  background-color: var(--mm-bg-secondary) !important;
+  color: var(--mm-text) !important;
+}
+
+/* ── Unified Header URL Badge ─────────────────────────────────────────── */
+
+.unified-header__url-badge:hover {
+  background-color: var(--mm-bg-tertiary) !important;
+  border-color: var(--mm-border-strong) !important;
+}
+
+/* ── Results Tab Bar ───────────────────────────────────────────────────── */
+
+.results-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.results-tab-bar__tab {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.results-tab-bar__tab:hover {
+  background: var(--mm-bg-secondary);
+}
+
+.results-tab-bar__tab.active {
+  background: var(--mm-bg-tertiary);
+}
+
+/* ── Mobile Logo Size ────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .site-header-logo button svg {
+    height: 24px !important;
+  }
 }

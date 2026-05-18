@@ -52,6 +52,7 @@ function BulletItem({ color, text }: BulletItemProps) {
 export function ProblemSection() {
   return (
     <section
+      id="problem"
       style={{
         padding: "80px 24px",
         maxWidth: 1100,
@@ -159,17 +160,17 @@ export function ProblemSection() {
               color: "var(--mm-text)",
             }}
           >
-            <span style={{ color: "var(--mm-pink)" }}>
+            <span style={{ color: "var(--mm-accent)" }}>
               <BrainIcon />
             </span>
             AI Agent Reading
           </h3>
           <ul style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <BulletItem color="var(--mm-pink)" text="Only sees raw HTML and text content" />
-            <BulletItem color="var(--mm-pink)" text="Needs explicit file paths and sitemaps" />
-            <BulletItem color="var(--mm-pink)" text="Requires structured metadata for context" />
-            <BulletItem color="var(--mm-pink)" text="Relies on llms.txt, ai.txt, and similar files" />
-            <BulletItem color="var(--mm-pink)" text="Must trust documentation you provide" />
+            <BulletItem color="var(--mm-accent)" text="Only sees raw HTML and text content" />
+            <BulletItem color="var(--mm-accent)" text="Needs explicit file paths and sitemaps" />
+            <BulletItem color="var(--mm-accent)" text="Requires structured metadata for context" />
+            <BulletItem color="var(--mm-accent)" text="Relies on llms.txt, ai.txt, and similar files" />
+            <BulletItem color="var(--mm-accent)" text="Must trust documentation you provide" />
           </ul>
         </div>
       </div>
