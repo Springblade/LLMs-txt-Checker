@@ -1,21 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DiscoverResult, FileType, FileScanResult } from "@/lib/discovery/types";
 import { FILE_TIER } from "@/lib/discovery/types";
 import type { FileTier } from "@/lib/discovery/types";
 
 import { ResultsSkeleton } from "@/components/landing/results-skeleton";
-import { IconSidebar } from "@/components/landing/icon-sidebar";
-import { CodePreview } from "@/components/landing/code-preview";
-import { ResultsRightPanel } from "@/components/landing/results-right-panel";
-import { MissingFileState } from "@/components/landing/missing-file-state";
-import { FileTabBar } from "@/components/landing/file-tab-bar";
-import type { TabFile } from "@/components/landing/file-tab-bar";
-import { UrlBadge } from "@/components/landing/url-badge";
+import { AuditProgressPanel } from "@/components/audit";
+import { FileCard } from "@/components/audit";
 import { SiteLogo } from "@/components/site-logo";
-import { FILE_DESCRIPTIONS } from "@/lib/file-descriptions";
 import { UpgradeModal } from "@/components/landing/upgrade-modal";
 import {
   getGenerationCount,
@@ -23,6 +17,7 @@ import {
   incrementGenerationCount,
   GENERATION_LIMIT,
 } from "@/hooks/use-generation-quota";
+import { tierInfo } from "@/lib/design-tokens";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,19 +33,6 @@ function handleDownload(file: FileScanResult) {
   URL.revokeObjectURL(url);
 }
 
-function toPanelFileResult(file: FileScanResult) {
-  const status: "found" | "missing" | "partial" = file.found ? "found" : file.content ? "partial" : "missing";
-  const tier = FILE_TIER[file.type];
-  return {
-    name: file.type,
-    tier,
-    status,
-    lines: file.content ? file.content.split("\n").length : 0,
-    url: file.url || null,
-    content: file.content || null,
-  };
-}
-
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 function ResultsPageInner() {
@@ -64,78 +46,23 @@ function ResultsPageInner() {
   const [inProgressFiles, setInProgressFiles] = useState<Set<FileType>>(new Set());
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // Active file state
-  const [activeFile, setActiveFile] = useState<FileScanResult | undefined>(undefined);
-
   useEffect(() => {
     if (!rawUrl) {
       router.replace("/");
       return;
     }
-
-    const fetchResults = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/discover", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: rawUrl }),
-        });
-        const data = await res.json();
-        if (!res.ok || data.error) {
-          setError(data.error ?? "Something went wrong.");
-          return;
-        }
-        setResult(data as DiscoverResult);
-      } catch {
-        setError("Network error. Please check your connection.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResults();
+    setLoading(true);
   }, [rawUrl, router]);
 
-  // Initialize activeFile when result arrives
-  useEffect(() => {
-    if (!result) return;
-    if (!activeFile && result.files.length > 0) {
-      setActiveFile(result.files[0]);
-    }
-  }, [result, activeFile]);
+  const handleAuditComplete = (apiResult: DiscoverResult) => {
+    setResult(apiResult);
+    setLoading(false);
+  };
 
-  // Sync activeFile when result updates
-  useEffect(() => {
-    if (!result || !activeFile) return;
-    const updated = result.files.find((f) => f.type === activeFile.type);
-    if (updated && updated !== activeFile) {
-      setActiveFile(updated);
-    }
-  }, [result, activeFile]);
-
-  // Tier counts for strip
-  const tierCounts = useMemo(() => {
-    if (!result) return undefined;
-    const counts: Record<FileTier, number> = { essential: 0, recommended: 0, complete: 0 };
-    for (const f of result.files) {
-      counts[FILE_TIER[f.type]]++;
-    }
-    return counts;
-  }, [result]);
-
-  // All files as tabs
-  const allTabs: TabFile[] = useMemo(
-    () =>
-      result
-        ? result.files.map((f) => {
-            const status: "found" | "missing" | "partial" = f.found ? "found" : f.content ? "partial" : "missing";
-            return { type: f.type, status, tier: FILE_TIER[f.type] };
-          })
-        : [],
-    [result]
-  );
+  const handleAuditError = (message: string) => {
+    setError(message);
+    setLoading(false);
+  };
 
   const handleGenerate = async (fileType: FileType) => {
     if (!result) return;
@@ -190,15 +117,7 @@ function ResultsPageInner() {
     }
   };
 
-  const handleFileSelect = (fileType: string) => {
-    const file = result?.files.find((f) => f.type === fileType);
-    if (file) setActiveFile(file);
-  };
-
   const scannedUrl = result?.origin ?? rawUrl;
-  const showMissingState =
-    activeFile && !activeFile.found && !activeFile.content;
-
   const usedCount = result ? getGenerationCount(result.origin) : 0;
 
   // ── Error / loading states ──────────────────────────────────────────────────
@@ -227,7 +146,11 @@ function ResultsPageInner() {
       <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", background: "var(--bg)" }}>
         {/* Header */}
         <div style={{ height: 56, borderBottom: "1px solid var(--mm-border)", background: "var(--mm-bg)", flexShrink: 0 }} />
-        <ResultsSkeleton />
+        {loading ? (
+          <AuditProgressPanel url={rawUrl} onComplete={handleAuditComplete} onError={handleAuditError} />
+        ) : (
+          <ResultsSkeleton />
+        )}
       </div>
     );
   }
@@ -250,7 +173,21 @@ function ResultsPageInner() {
         }}
       >
         <SiteLogo height={28} />
-        <UrlBadge url={scannedUrl} />
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 12,
+          color: "#71717a",
+          padding: "4px 10px",
+          borderRadius: 6,
+          border: "1px solid #27272a",
+          maxWidth: 480,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          flex: 1,
+        }}>
+          {scannedUrl}
+        </span>
         {result && (
           <div
             title={`${usedCount} of ${GENERATION_LIMIT} free generations used`}
@@ -307,51 +244,127 @@ function ResultsPageInner() {
 
       {/* Body */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Nav rail */}
-        <IconSidebar />
-
         {/* Main content area */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          {/* Tab bar with tier strip */}
-          <FileTabBar
-            files={allTabs}
-            activeFileType={activeFile?.type}
-            onFileSelect={handleFileSelect}
-            tierCounts={tierCounts}
-          />
+          {/* Summary strip */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 20,
+              padding: "12px 24px",
+              borderBottom: "1px solid #18181f",
+              background: "var(--bg)",
+              flexShrink: 0,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                color: "#52525b",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              Scan Results
+            </span>
+            {result && (
+              <>
+                <span style={{ fontSize: 11, color: "#22c55e", fontFamily: "'JetBrains Mono', monospace" }}>
+                  {result.files.filter((f) => f.found).length} found
+                </span>
+                <span style={{ fontSize: 11, color: "#ef4444", fontFamily: "'JetBrains Mono', monospace" }}>
+                  {result.files.filter((f) => !f.found && !f.content).length} missing
+                </span>
+              </>
+            )}
+          </div>
 
-          {/* Content body */}
-          {showMissingState ? (
-            <MissingFileState
-              file={{ name: activeFile.type }}
-              description={FILE_DESCRIPTIONS[activeFile.type]}
-              onGenerate={() => handleGenerate(activeFile.type)}
-              isGenerating={inProgressFiles.has(activeFile.type)}
-            />
-          ) : (
-            <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-              {/* Code preview */}
-              <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                <CodePreview
-                  content={activeFile?.content ?? ""}
-                  lineCount={activeFile?.content?.split("\n").length ?? 0}
-                />
-              </div>
+          {/* File cards scrollable area */}
+          <div style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+            {(["essential", "recommended", "complete"] as FileTier[]).map((tier) => {
+              const tierFiles = result.files.filter((f) => FILE_TIER[f.type] === tier);
+              if (tierFiles.length === 0) return null;
+              const info = tierInfo[tier];
+              return (
+                <div key={tier} style={{ marginBottom: 40 }}>
+                  {/* Tier header */}
+                  <div
+                    style={{
+                      padding: "0 0 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: info.color,
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#e4e4e7",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {info.label}
+                      </span>
+                      <span style={{ fontSize: 11, color: "#52525b" }}>
+                        · {tierFiles.length} files
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 1,
+                        background: `linear-gradient(to right, ${info.color}22, transparent)`,
+                      }}
+                    />
+                  </div>
 
-              {/* Right panel */}
-              {activeFile && (
-                <ResultsRightPanel
-                  file={toPanelFileResult(activeFile)}
-                  checklist={activeFile.checklist}
-                  onGenerate={() => handleGenerate(activeFile.type)}
-                  onDownload={() => handleDownload(activeFile)}
-                  onRegenerate={() => handleGenerate(activeFile.type)}
-                  isGenerating={inProgressFiles.has(activeFile.type)}
-                  allFiles={result.files.map((f) => toPanelFileResult(f))}
-                />
-              )}
-            </div>
-          )}
+                  {/* Cards grid */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(2, 1fr)",
+                      gap: 12,
+                      alignItems: "start",
+                    }}
+                  >
+                    {tierFiles.map((file) => (
+                      <FileCard
+                        key={file.type}
+                        fileType={file.type}
+                        tier={FILE_TIER[file.type]}
+                        found={file.found}
+                        content={file.content}
+                        checklist={file.checklist}
+                        isGenerating={inProgressFiles.has(file.type)}
+                        onGenerate={() => {
+                          if (isOverGenerationLimit(result.origin)) {
+                            setShowUpgradeModal(true);
+                            return;
+                          }
+                          void handleGenerate(file.type);
+                        }}
+                        onDownload={() => handleDownload(file)}
+                        onRegenerate={() => void handleGenerate(file.type)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
       {/* Upgrade modal */}

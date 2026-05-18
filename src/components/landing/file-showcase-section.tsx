@@ -4,21 +4,21 @@ import { tierInfo, type Tier } from "@/lib/design-tokens";
 
 const fileTypes: Array<{ name: string; tier: Tier; desc: string }> = [
   { name: "llms.txt", tier: "essential", desc: "Primary machine-readable site map for AI agents. Lists all public pages with descriptions." },
-  { name: "llm.txt", tier: "essential", desc: "Alternative format gaining traction. Mirrors llms.txt purpose with slightly different syntax." },
   { name: "ai.txt", tier: "essential", desc: "Authoritative AI discovery file. Can include brand guidelines and content policies." },
   { name: "faq-ai.txt", tier: "recommended", desc: "Structured Q&A pairs that train AI to answer common questions about your product." },
   { name: "brand.txt", tier: "recommended", desc: "Brand voice, tone, and messaging guidelines for consistent AI-generated content." },
-  { name: "developer-ai.txt", tier: "recommended", desc: "Technical documentation for AI agents that need to integrate with your APIs." },
-  { name: "llms.html", tier: "optional", desc: "HTML alternative for llms.txt with richer formatting and metadata support." },
-  { name: "robots-ai.txt", tier: "optional", desc: "AI-specific crawl directives extending standard robots.txt behavior." },
-  { name: "identity.json", tier: "optional", desc: "Structured identity data for verifying your organization and content authenticity." },
-  { name: "ai.json", tier: "optional", desc: "Comprehensive AI configuration file with metadata, endpoints, and policies." },
+  { name: "identity.json", tier: "recommended", desc: "Structured identity data for verifying your organization and content authenticity." },
+  { name: "ai.json", tier: "recommended", desc: "Comprehensive AI configuration file with metadata, endpoints, and policies." },
+  { name: "llm.txt", tier: "complete", desc: "Alternative format gaining traction. Mirrors llms.txt purpose with slightly different syntax." },
+  { name: "developer-ai.txt", tier: "complete", desc: "Technical documentation for AI agents that need to integrate with your APIs." },
+  { name: "llms.html", tier: "complete", desc: "HTML alternative for llms.txt with richer formatting and metadata support." },
+  { name: "robots-ai.txt", tier: "complete", desc: "AI-specific crawl directives extending standard robots.txt behavior." },
 ];
 
 const groupedFiles = {
   essential: fileTypes.filter((f) => f.tier === "essential"),
   recommended: fileTypes.filter((f) => f.tier === "recommended"),
-  optional: fileTypes.filter((f) => f.tier === "optional"),
+  complete: fileTypes.filter((f) => f.tier === "complete"),
 };
 
 interface FileCardProps {

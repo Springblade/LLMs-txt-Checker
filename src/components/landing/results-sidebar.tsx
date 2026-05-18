@@ -67,7 +67,7 @@ function IconGitHub() {
 const TIER_LABELS: Record<FileTier, string> = {
   essential: 'Essential',
   recommended: 'Recommended',
-  complete: 'Optional',
+  complete: 'Power',
 };
 
 const TIER_DOT_COLORS: Record<FileTier, string> = {

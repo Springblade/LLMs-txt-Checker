@@ -165,7 +165,7 @@ export function buildChecklist(
       return {
         id: rule.id,
         label: rule.label,
-        status: "failed" as const,
+        status: "skipped" as const,
         message,
       };
     }

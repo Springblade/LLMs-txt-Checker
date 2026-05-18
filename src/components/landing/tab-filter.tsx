@@ -10,7 +10,7 @@ const TABS = [
   { id: "all", label: "All" },
   { id: "essential", label: "Essential" },
   { id: "recommended", label: "Recommended" },
-  { id: "optional", label: "Optional" },
+  { id: "optional", label: "Power" },
 ];
 
 export function TabFilter({ activeTab, onTabChange, counts }: TabFilterProps) {

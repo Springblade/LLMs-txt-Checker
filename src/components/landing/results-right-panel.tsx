@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { ChecklistItem } from "@/lib/discovery/types";
 import type { FileTier } from "@/lib/discovery/types";
+import { TIER_COLORS } from "@/lib/discovery/types";
 
 type FileStatus = 'found' | 'missing' | 'partial';
 
@@ -21,9 +22,9 @@ interface StatsBarProps {
 
 function StatsBar({ files }: StatsBarProps) {
   const stats = [
-    { label: 'Found', value: files.filter((f) => f.status === 'found').length, color: t.success },
-    { label: 'Missing', value: files.filter((f) => f.status === 'missing').length, color: t.error },
-    { label: 'Partial', value: files.filter((f) => f.status === 'partial').length, color: t.warning },
+    { label: 'Found', value: files.filter((f) => f.status === 'found').length, color: TIER_COLORS.essential.color },
+    { label: 'Missing', value: files.filter((f) => f.status === 'missing').length, color: TIER_COLORS.complete.color },
+    { label: 'Partial', value: files.filter((f) => f.status === 'partial').length, color: TIER_COLORS.recommended.color },
   ];
 
   return (
@@ -265,13 +266,17 @@ function ChecklistItemRow({ item }: { item: ChecklistItem }) {
       ? t.success
       : item.status === "warning"
         ? t.warning
-        : t.error;
+        : item.status === "skipped"
+          ? t.textMuted
+          : t.error;
   const bgColor =
     item.status === "passed"
       ? t.successBg
       : item.status === "warning"
         ? t.warningBg
-        : t.errorBg;
+        : item.status === "skipped"
+          ? "rgba(113,113,122,0.08)"
+          : t.errorBg;
 
   return (
     <div
@@ -297,6 +302,8 @@ function ChecklistItemRow({ item }: { item: ChecklistItem }) {
           <CheckCircleIcon />
         ) : item.status === "warning" ? (
           <AlertIcon />
+        ) : item.status === "skipped" ? (
+          <span style={{ fontSize: 12, lineHeight: 1 }}>—</span>
         ) : (
           <XIcon />
         )}

@@ -137,6 +137,7 @@ function PricingCard({ tier }: { tier: typeof TIERS[number] }) {
           : "none",
         transition: "border-color 0.2s, transform 0.2s, box-shadow 0.2s",
         position: "relative",
+        zIndex: 1,
       }}
     >
       {tier.highlighted && (
@@ -146,15 +147,17 @@ function PricingCard({ tier }: { tier: typeof TIERS[number] }) {
             top: -1,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "linear-gradient(90deg, transparent, #818cf8, transparent)",
-            padding: "2px 48px",
-            borderRadius: "0 0 4px 4px",
+            background: "rgba(129,140,248,0.15)",
+            border: "1px solid #818cf8",
+            padding: "3px 14px",
+            borderRadius: 20,
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
             color: "#818cf8",
             whiteSpace: "nowrap",
+            pointerEvents: "none",
           }}
         >
           Most Popular

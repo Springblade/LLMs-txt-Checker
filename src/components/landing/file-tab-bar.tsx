@@ -3,14 +3,9 @@
 import { useState } from 'react';
 import type { FileTier } from '@/lib/discovery/types';
 import { TIER_COLORS } from '@/lib/discovery/types';
+import { tierInfo } from '@/lib/design-tokens';
 
 type FileStatus = 'found' | 'missing' | 'partial';
-
-const TIER_LABELS: Record<FileTier, string> = {
-  essential: 'Essential',
-  recommended: 'Recommended',
-  complete: 'Optional',
-};
 
 export interface TabFile {
   type: string;
@@ -90,7 +85,7 @@ export function FileTabBar({ files, activeFileType, onFileSelect, tierCounts }: 
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {TIER_LABELS[tier]} · {tierCounts[tier]}
+                  {tierInfo[tier].label} · {tierCounts[tier]}
                 </button>
               ) : null,
             )}

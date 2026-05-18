@@ -24,18 +24,18 @@ export const colors = {
 export const tierInfo = {
   essential: {
     label: "Essential",
-    color: "#22c55e",
+    color: "#10b981",
     description: "Core discovery files every site needs",
   },
   recommended: {
     label: "Recommended",
-    color: "#eab308",
+    color: "#f59e0b",
     description: "Enhances AI understanding of your content",
   },
-  optional: {
-    label: "Optional",
-    color: "#71717a",
-    description: "Advanced customization for power users",
+  complete: {
+    label: "Complete",
+    color: "#8b5cf6",
+    description: "Full implementation for maximum AI understanding",
   },
 } as const;
 
