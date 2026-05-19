@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { discover } from "@/lib/discovery";
-import { getCachedSiteCrawl } from "@/lib/generator/site-crawl-cache";
+import { crawlWebsite } from "@/lib/generator";
+import { getOrCrawlSite, buildDescription } from "@/lib/generator/site-crawl-cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -38,16 +38,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await discover(origin);
-    const cachedCrawl = getCachedSiteCrawl(origin);
-
-    return NextResponse.json({
-      ...result,
-      crawlResult: cachedCrawl ?? undefined,
+    const result = await getOrCrawlSite(origin, async () => {
+      const crawl = await crawlWebsite(origin);
+      const description = buildDescription(crawl.pages, crawl.origin, crawl.siteName);
+      return { ...crawl, description };
     });
+
+    return NextResponse.json(result);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("[api/discover]", message, e);
+    console.error("[api/crawl]", message, e);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

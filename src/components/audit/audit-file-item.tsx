@@ -10,14 +10,14 @@ interface AuditFileItemProps {
 
 const STATUS_CONFIG: Record<
   FileItemStatus,
-  { icon: string; color: string; iconColor: string }
+  { icon: string; bgColor: string; textColor: string }
 > = {
-  idle: { icon: "◌", color: "var(--mm-text-subtle)", iconColor: "var(--mm-text-subtle)" },
-  running: { icon: "", color: "var(--mm-text-muted)", iconColor: "var(--mm-text-muted)" },
-  pass: { icon: "✓", color: "#22c55e", iconColor: "#22c55e" },
-  fail: { icon: "✗", color: "#ef4444", iconColor: "#ef4444" },
-  warning: { icon: "⚠", color: "#eab308", iconColor: "#eab308" },
-  missing: { icon: "✗", color: "#ef4444", iconColor: "#ef4444" },
+  idle: { icon: "○", bgColor: "transparent", textColor: "var(--mm-text-subtle)" },
+  running: { icon: "", bgColor: "transparent", textColor: "var(--mm-text-muted)" },
+  pass: { icon: "✓", bgColor: "#22c55e20", textColor: "#22c55e" },
+  fail: { icon: "✗", bgColor: "#ef444420", textColor: "#ef4444" },
+  warning: { icon: "⚠", bgColor: "#eab30820", textColor: "#eab308" },
+  missing: { icon: "–", bgColor: "#ef444420", textColor: "#ef4444" },
 };
 
 export function AuditFileItem({ filename, status, delay = 0 }: AuditFileItemProps) {
@@ -28,17 +28,19 @@ export function AuditFileItem({ filename, status, delay = 0 }: AuditFileItemProp
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 8,
-        padding: "5px 0",
-        opacity: status === "idle" ? 0.4 : 1,
-        transition: "opacity 0.2s ease",
+        gap: 6,
+        padding: "6px 10px",
+        borderRadius: 6,
+        background: config.bgColor,
+        opacity: status === "idle" ? 0.5 : 1,
+        transition: "all 0.2s ease",
         animationDelay: `${delay}ms`,
       }}
     >
       {status === "running" ? (
         <svg
-          width="14"
-          height="14"
+          width="12"
+          height="12"
           viewBox="0 0 24 24"
           fill="none"
           stroke="var(--mm-text-muted)"
@@ -52,11 +54,10 @@ export function AuditFileItem({ filename, status, delay = 0 }: AuditFileItemProp
       ) : (
         <span
           style={{
-            fontSize: 13,
-            color: config.iconColor,
-            fontFamily: "ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace",
-            width: 14,
-            textAlign: "center",
+            fontSize: 11,
+            color: config.textColor,
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 600,
             flexShrink: 0,
           }}
         >
@@ -65,10 +66,10 @@ export function AuditFileItem({ filename, status, delay = 0 }: AuditFileItemProp
       )}
       <span
         style={{
-          fontSize: 12,
-          fontFamily: "ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace",
-          color: config.color,
-          letterSpacing: "0.02em",
+          fontSize: 11,
+          fontFamily: "'DM Sans', sans-serif",
+          color: config.textColor,
+          letterSpacing: "0.01em",
         }}
       >
         {filename}

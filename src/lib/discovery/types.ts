@@ -76,12 +76,22 @@ export interface FileGenerateResult {
   checklist: ChecklistItem[];
 }
 
+export interface CrawlResult {
+  siteName: string;
+  origin: string;
+  description: string;
+  pages: Array<{ url: string; title: string; description: string; category?: string }>;
+  llmsTxtContent?: string;
+  cachedAt?: number;
+}
+
 export interface DiscoverResult {
   origin: string;
   files: FileScanResult[];
   missingFiles: FileType[];
   generating?: FileGenerateResult[];
   suggestions: Suggestion[];
+  crawlResult?: CrawlResult;
 }
 
 export interface Suggestion {

@@ -1,5 +1,6 @@
 import type { FileGenerateResult, FileType, CrawledData } from "./types";
 import { crawlWebsite } from "@/lib/generator";
+import { getOrCrawlSite, buildDescription } from "@/lib/generator/site-crawl-cache";
 import { generateByType } from "@/lib/generator/ai-generators";
 import { validateByType } from "@/lib/ai-discovery-scanner";
 import { buildChecklist } from "@/lib/ai-discovery-scanner";
@@ -94,7 +95,11 @@ export async function generateFile(
   fileType: FileType,
   origin: string
 ): Promise<FileGenerateResult> {
-  const crawlResult = await crawlWebsite(origin);
+  const crawlResult = await getOrCrawlSite(origin, async () => {
+    const crawl = await crawlWebsite(origin);
+    const description = buildDescription(crawl.pages, crawl.origin, crawl.siteName);
+    return { ...crawl, description };
+  });
   const crawlData: CrawledData = {
     siteName: crawlResult.siteName,
     origin: crawlResult.origin,
@@ -108,7 +113,11 @@ export async function generateAllMissing(
   fileTypes: FileType[],
   origin: string
 ): Promise<FileGenerateResult[]> {
-  const crawlResult = await crawlWebsite(origin);
+  const crawlResult = await getOrCrawlSite(origin, async () => {
+    const crawl = await crawlWebsite(origin);
+    const description = buildDescription(crawl.pages, crawl.origin, crawl.siteName);
+    return { ...crawl, description };
+  });
   const crawlData: CrawledData = {
     siteName: crawlResult.siteName,
     origin: crawlResult.origin,
