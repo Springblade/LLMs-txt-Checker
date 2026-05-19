@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DiscoverResult, FileType, FileScanResult } from "@/lib/discovery/types";
 import { FILE_TIER } from "@/lib/discovery/types";
@@ -11,6 +11,7 @@ import { AuditProgressPanel } from "@/components/audit";
 import { FileCard } from "@/components/audit";
 import { SiteLogo } from "@/components/site-logo";
 import { UpgradeModal } from "@/components/landing/upgrade-modal";
+import { SummaryCard } from "@/components/results/summary-card";
 import {
   getGenerationCount,
   isOverGenerationLimit,
@@ -54,10 +55,10 @@ function ResultsPageInner() {
     setLoading(true);
   }, [rawUrl, router]);
 
-  const handleAuditComplete = (apiResult: DiscoverResult) => {
+  const handleAuditComplete = useCallback((apiResult: DiscoverResult) => {
     setResult(apiResult);
     setLoading(false);
-  };
+  }, []);
 
   const handleAuditError = (message: string) => {
     setError(message);
@@ -283,6 +284,12 @@ function ResultsPageInner() {
 
           {/* File cards scrollable area */}
           <div style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+            {/* Summary Card */}
+            {result.crawlResult && (
+              <div style={{ marginBottom: 16 }}>
+                <SummaryCard crawlResult={result.crawlResult} />
+              </div>
+            )}
             {(["essential", "recommended", "complete"] as FileTier[]).map((tier) => {
               const tierFiles = result.files.filter((f) => FILE_TIER[f.type] === tier);
               if (tierFiles.length === 0) return null;
